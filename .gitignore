@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# AI Model checkpoints and weights cache
+*.pt
+*.bin
+*.onnx
+models_cache/
+downloads/
+
+# Audio scratch and recordings
+*.wav
+*.mp3
+*.m4a
+recordings/
+uploads/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

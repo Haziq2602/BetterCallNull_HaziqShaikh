@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard - Real-Time Speech Emotion & Call Triage Console</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Header / Status Bar -->
+    <header class="app-header">
+        <div class="brand">
+            <span class="badge-live">● LIVE DISPATCH</span>
+            <h1>CYBERGUARD // <span>SER TRIAGE CONSOLE</span></h1>
+        </div>
+        <div class="system-status">
+            <span class="status-indicator online"></span>
+            <span class="status-text">AI On-Premise Engine: ACTIVE (Air-Gapped)</span>
+        </div>
+    </header>
+
+    <main class="console-grid">
+        <!-- Left: Incoming Call Queue (Prioritization) -->
+        <section class="panel queue-panel">
+            <div class="panel-header">
+                <h2>INCOMING CALL QUEUE</h2>
+                <span class="queue-count">3 ACTIVE</span>
+            </div>
+            <div class="call-list" id="callQueue">
+                <div class="call-card critical active">
+                    <div class="card-top">
+                        <span class="call-id">#CALL-9823</span>
+                        <span class="badge priority-crit">CRITICAL</span>
+                    </div>
+                    <div class="card-meta">
+                        <span>Duration: 00:24</span>
+                        <span>Score: <strong>93</strong>/100</span>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag">#DIGITAL_ARREST</span>
+                        <span class="tag">#ACUTE_PANIC</span>
+                    </div>
+                </div>
+
+                <div class="call-card elevated">
+                    <div class="card-top">
+                        <span class="call-id">#CALL-9821</span>
+                        <span class="badge priority-elev">ELEVATED</span>
+                    </div>
+                    <div class="card-meta">
+                        <span>Duration: 01:10</span>
+                        <span>Score: <strong>62</strong>/100</span>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag">#BANKING_PHISHING</span>
+                    </div>
+                </div>
+
+                <div class="call-card routine">
+                    <div class="card-top">
+                        <span class="call-id">#CALL-9819</span>
+                        <span class="badge priority-rout">ROUTINE</span>
+                    </div>
+                    <div class="card-meta">
+                        <span>Duration: 03:45</span>
+                        <span>Score: <strong>24</strong>/100</span>
+                    </div>
+                    <div class="card-tags">
+                        <span class="tag">#STATUS_INQUIRY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forensic Case Upload -->
+            <div class="upload-box">
+                <h3>FORENSIC CASE AUDIO</h3>
+                <p>Upload recorded scam call / wiretap</p>
+                <input type="file" id="audioUpload" accept=".wav,.mp3">
+                <button class="btn-secondary" id="btnUpload">Upload & Analyze File</button>
+            </div>
+        </section>
+
+        <!-- Center: Live Active Call Analytics -->
+        <section class="panel active-call-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>ACTIVE CALL MONITOR: <span id="activeCallId">#CALL-9823</span></h2>
+                    <p class="subtitle">Live Multimodal Telemetry Stream</p>
+                </div>
+                <div class="live-priority-indicator">
+                    <span class="pill-label">TRIAGE STATUS</span>
+                    <span class="pill-value critical" id="livePriority">CRITICAL</span>
+                </div>
+            </div>
+
+            <!-- Waveform & Audio Meter -->
+            <div class="visualizer-container">
+                <canvas id="waveformCanvas" width="800" height="120"></canvas>
+                <div class="waveform-footer">
+                    <span>Pitch Volatility: <strong id="pitchStd">48.6 Hz (ERRATIC)</strong></span>
+                    <span>Vocal Tremors: <strong id="voiceTremor">DETECTED</strong></span>
+                    <span>Energy: <strong id="voiceEnergy">SUPPRESSED WHISPER</strong></span>
+                </div>
+            </div>
+
+            <!-- Real-Time Transcript & Context Tags -->
+            <div class="transcript-box">
+                <div class="section-title">LIVE TRANSCRIPTION & THREAT EXTRACTION</div>
+                <div class="transcript-content" id="liveTranscript">
+                    "They told me they are from CBI Mumbai and my bank account is linked to money laundering... they said I cannot disconnect this call or local police will reach my home..."
+                </div>
+                <div class="tags-container" id="liveTags">
+                    <span class="tag red">#DIGITAL_ARREST_SCAM</span>
+                    <span class="tag red">#ACUTE_PANIC</span>
+                    <span class="tag yellow">#VOCAL_TREMORS</span>
+                </div>
+            </div>
+
+            <!-- Investigator Action Advisory -->
+            <div class="advisory-box">
+                <div class="advisory-icon">⚠️</div>
+                <div class="advisory-text">
+                    <strong>INVESTIGATOR ADVISORY:</strong>
+                    <span id="advisoryText">High probability of active digital arrest coercion. Initiate bank account freeze advisory immediately.</span>
+                </div>
+            </div>
+
+            <!-- Controls (Live Simulation / Mic) -->
+            <div class="controls-bar">
+                <button class="btn-primary" id="btnLiveMic">Start Live Mic Triage</button>
+                <button class="btn-warning" id="btnSimulatePanic">Simulate Scam Distress Call</button>
+                <button class="btn-secondary" id="btnSimulateCalm">Simulate Calm Inquiry</button>
+            </div>
+        </section>
+
+        <!-- Right: Emotion Radar & Multimodal Breakdown -->
+        <section class="panel telemetry-panel">
+            <div class="panel-header">
+                <h2>EMOTION & ACOUSTICS</h2>
+            </div>
+
+            <!-- Gauge Metric -->
+            <div class="urgency-gauge">
+                <div class="gauge-value" id="urgencyValue">93</div>
+                <div class="gauge-label">URGENCY SCORE / 100</div>
+            </div>
+
+            <!-- Emotion Bars -->
+            <div class="metrics-list">
+                <div class="metric-row">
+                    <div class="metric-header">
+                        <span>Fear & Panic</span>
+                        <span id="valFear">86%</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill bar-red" id="fillFear" style="width: 86%"></div></div>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-header">
+                        <span>Sadness & Crying</span>
+                        <span id="valSad">64%</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill bar-red" id="fillSad" style="width: 64%"></div></div>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-header">
+                        <span>Anger & Hostility</span>
+                        <span id="valAngry">08%</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill bar-amber" id="fillAngry" style="width: 8%"></div></div>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-header">
+                        <span>Baseline / Neutral</span>
+                        <span id="valNeutral">04%</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill bar-green" id="fillNeutral" style="width: 4%"></div></div>
+                </div>
+            </div>
+
+            <!-- Responsible AI Disclaimer -->
+            <div class="disclaimer-card">
+                <span class="icon">ℹ️</span>
+                <p><strong>Responsible AI Notice:</strong> Emotion scores are indicative triage signals to prioritize officer intervention. They do not constitute judicial evidence of truthfulness or legal guilt.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
