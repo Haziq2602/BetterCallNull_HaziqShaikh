@@ -9,6 +9,16 @@ STRIDE_DURATION_SEC = 1.0  # Hop size between successive analyses
 
 import os
 
+# Automatically load .env file if present in project root
+_env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path, "r", encoding="utf-8") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip().strip("'\""))
+
 # Models Configuration
 EMOTION_MODEL_ID = "emotion2vec/emotion2vec_plus_seed"
 HF_SPACE_URL = os.getenv("HF_SPACE_URL", "rikazike/cybercrime-ser-engine")
@@ -17,7 +27,7 @@ WHISPER_MODEL_SIZE = "tiny.en"  # Fast CPU transcription
 
 # Urgency Thresholds
 CRITICAL_THRESHOLD = 75.0
-ELEVATED_THRESHOLD = 45.0
+ELEVATED_THRESHOLD = 30.0
 
 # Cybercrime Keyword Taxonomy mapped to Threat Tags and Risk Points
 KEYWORD_TAXONOMY = {
