@@ -31,12 +31,14 @@ class SpeechToTextTranscriber:
         """
         if self.model is not None and len(audio_chunk) > 0:
             try:
-                # Transcribe with beam_size=1 for maximum real-time speed
+                # Transcribe with beam_size=1, temperature=0.0 for maximum real-time speed
                 segments, _ = self.model.transcribe(
                     audio_chunk.astype(np.float32), 
                     beam_size=1,
                     language="en",
-                    vad_filter=True  # Built-in Whisper VAD to skip pure silence
+                    vad_filter=True,  # Built-in Whisper VAD to skip pure silence
+                    temperature=0.0,
+                    without_timestamps=True
                 )
                 text = " ".join([seg.text for seg in segments]).strip()
                 if text:

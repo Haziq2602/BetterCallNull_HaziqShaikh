@@ -14,6 +14,7 @@ class SpeechEmotionModel:
     def __init__(self, space_url: str = HF_SPACE_URL):
         self.space_url = space_url
         self.client = None
+        self.last_emotions = {"neutral": 0.90, "fearful": 0.02, "sad": 0.03, "angry": 0.02, "surprised": 0.03}
         self._init_client()
 
     def _init_client(self):
@@ -69,10 +70,11 @@ class SpeechEmotionModel:
                     for key in ["fearful", "sad", "angry", "neutral", "surprised"]:
                         if key not in clean:
                             clean[key] = 0.0
+                    self.last_emotions = clean
                     return clean
 
             except Exception as e:
-                print(f"[WARN] Error calling HF SER Space ({e}). Using heuristic fallback.")
+                print(f"[WARN] Error calling HF SER Space ({e}). Using smoothed state.")
             finally:
                 if temp_path and os.path.exists(temp_path):
                     try:
@@ -83,5 +85,6 @@ class SpeechEmotionModel:
         # Fallback heuristic simulation if HF space is offline or initializing
         rms = float(np.sqrt(np.mean(audio_chunk**2))) if len(audio_chunk) > 0 else 0.0
         if rms > 0.15:
-            return {"fearful": 0.82, "sad": 0.55, "angry": 0.18, "neutral": 0.08, "surprised": 0.12}
-        return {"neutral": 0.88, "fearful": 0.05, "sad": 0.04, "angry": 0.02, "surprised": 0.01}
+            self.last_emotions = {"fearful": 0.82, "sad": 0.55, "angry": 0.18, "neutral": 0.08, "surprised": 0.12}
+            return self.last_emotions
+        return self.last_emotions
