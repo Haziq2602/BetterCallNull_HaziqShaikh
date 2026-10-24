@@ -8,11 +8,12 @@ from typing import Dict
 import os
 import tempfile
 import numpy as np
-from backend.config import HF_SPACE_URL
+from backend.config import HF_SPACE_URL, HF_TOKEN
 
 class SpeechEmotionModel:
-    def __init__(self, space_url: str = HF_SPACE_URL):
+    def __init__(self, space_url: str = HF_SPACE_URL, hf_token: str = HF_TOKEN):
         self.space_url = space_url
+        self.hf_token = hf_token
         self.client = None
         self.last_emotions = {"neutral": 0.90, "fearful": 0.02, "sad": 0.03, "angry": 0.02, "surprised": 0.03}
         self._init_client()
@@ -21,8 +22,10 @@ class SpeechEmotionModel:
         if self.space_url:
             try:
                 from gradio_client import Client
-                self.client = Client(self.space_url)
-                print(f"[INFO] Connected to Hugging Face SER Space: {self.space_url}")
+                token = self.hf_token if self.hf_token else None
+                self.client = Client(self.space_url, hf_token=token)
+                auth_str = "authenticated" if token else "unauthenticated"
+                print(f"[INFO] Connected to Hugging Face SER Space: {self.space_url} ({auth_str})")
             except Exception as e:
                 print(f"[WARN] Could not connect to HF Space ({e}). Falling back to heuristic mode.")
                 self.client = None

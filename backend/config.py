@@ -12,6 +12,7 @@ import os
 # Models Configuration
 EMOTION_MODEL_ID = "emotion2vec/emotion2vec_plus_seed"
 HF_SPACE_URL = os.getenv("HF_SPACE_URL", "rikazike/cybercrime-ser-engine")
+HF_TOKEN = os.getenv("HF_TOKEN", "")  # Free Hugging Face Read Token for ZeroGPU quota
 WHISPER_MODEL_SIZE = "tiny.en"  # Fast CPU transcription
 
 # Urgency Thresholds
