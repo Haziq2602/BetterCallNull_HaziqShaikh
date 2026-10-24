@@ -12,9 +12,11 @@ import time
 
 from backend.models.emotion_model import SpeechEmotionModel
 from backend.models.acoustic_dsp import AcousticAnalyzer
-from backend.models.stt_whisper import SpeechToTextTranscriber
+from backend.models.stt_groq import SpeechToTextTranscriber
+from backend.models.situation_analyzer import HybridSituationAnalyzer
 from backend.core.urgency_engine import calculate_multimodal_urgency
 from backend.core.audio_buffer import AudioStreamBuffer
+from backend.core.forensic_analyzer import analyze_forensic_recording
 
 app = FastAPI(title="Cybercrime Speech Emotion & Triage API", version="1.0.0")
 
@@ -31,6 +33,7 @@ app.add_middleware(
 emotion_model = SpeechEmotionModel()
 acoustic_analyzer = AcousticAnalyzer()
 stt_model = SpeechToTextTranscriber()
+situation_analyzer = HybridSituationAnalyzer()
 
 @app.get("/api/health")
 def health_check():
@@ -57,9 +60,28 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
     latest_window = None
     is_connected = True
 
+    latest_transcript = "..."
+    latest_situation = None
+    stt_in_progress = False
+    speech_history = []
+
+    async def run_stt_async(chunk: np.ndarray, current_emotions, current_pitch):
+        nonlocal latest_transcript, latest_situation, stt_in_progress
+        try:
+            text = await asyncio.to_thread(stt_model.transcribe, chunk)
+            if text:
+                latest_transcript = text
+                # Semantically analyze the situation with Groq Llama (with 0ms local fallback)
+                sit = await asyncio.to_thread(situation_analyzer.analyze_situation, text, current_emotions, current_pitch)
+                latest_situation = sit
+        except Exception:
+            pass
+        finally:
+            stt_in_progress = False
+
     # Background analysis worker: always analyzes the freshest window and drops stale backlog
     async def analysis_worker():
-        nonlocal latest_window, is_connected
+        nonlocal latest_window, is_connected, latest_transcript, latest_situation, stt_in_progress, speech_history
         while is_connected:
             if latest_window is not None:
                 # Atomically extract freshest window and clear slot
@@ -68,13 +90,14 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
 
                 # Silence gate
                 if call_buffer.is_silent(current_window):
+                    speech_history.clear()
                     payload = {
                         "call_id": call_id,
                         "timestamp": time.strftime("%H:%M:%S"),
                         "dominant_emotion": "NEUTRAL",
                         "emotion_breakdown": {"neutral": 0.95, "fearful": 0.01, "sad": 0.01, "angry": 0.01},
                         "acoustic_metrics": {"pitch_std": 0.0, "voice_tremor": False, "rms": 0.0},
-                        "transcript": "...",
+                        "transcript": latest_transcript if latest_transcript != "..." else "...",
                         "detected_tags": ["#STABLE_LINE"],
                         "urgency_score": 10.0,
                         "priority_level": "ROUTINE",
@@ -88,15 +111,26 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
                     continue
 
                 try:
-                    # Run Pillar 1 (SER), Pillar 2 (DSP), and Pillar 3 (STT) concurrently across worker threads
+                    # Run Pillar 1 (SER) and Pillar 2 (DSP) concurrently (<50ms response)
                     ser_task = asyncio.to_thread(emotion_model.predict, current_window)
                     dsp_task = asyncio.to_thread(acoustic_analyzer.analyze, current_window)
-                    stt_task = asyncio.to_thread(stt_model.transcribe, current_window)
 
-                    emotions, acoustics, transcript = await asyncio.gather(ser_task, dsp_task, stt_task)
+                    emotions, acoustics = await asyncio.gather(ser_task, dsp_task)
 
-                    # Multimodal Fusion
-                    triage = calculate_multimodal_urgency(emotions, acoustics["pitch_std"], transcript)
+                    speech_history.append(current_window)
+                    # Trigger async STT & semantic situation reasoning on coherent phrase window (~3s) if idle
+                    if not stt_in_progress:
+                        if len(speech_history) >= 2:
+                            stt_chunk = np.concatenate(speech_history[-2:])
+                            speech_history = speech_history[-1:]
+                        else:
+                            stt_chunk = current_window.copy()
+                        stt_in_progress = True
+                        asyncio.create_task(run_stt_async(stt_chunk, emotions, acoustics["pitch_std"]))
+
+                    # Multimodal Fusion with latest transcript and situation assessment
+                    active_text = latest_transcript if latest_transcript != "..." else ""
+                    triage = calculate_multimodal_urgency(emotions, acoustics["pitch_std"], active_text, latest_situation)
 
                     payload = {
                         "call_id": call_id,
@@ -104,11 +138,12 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
                         "dominant_emotion": max(emotions, key=emotions.get).upper() if emotions else "NEUTRAL",
                         "emotion_breakdown": emotions,
                         "acoustic_metrics": acoustics,
-                        "transcript": transcript,
+                        "transcript": latest_transcript,
                         "detected_tags": triage["tags"],
                         "urgency_score": triage["urgency_score"],
                         "priority_level": triage["priority_level"],
                         "investigator_advisory": triage["investigator_advisory"],
+                        "red_flags": triage.get("red_flags", []),
                         "responsible_ai_disclaimer": "Indicative signal to assist officer triage; not legal proof of guilt, honesty, or intention."
                     }
 
@@ -403,13 +438,14 @@ async def investigate_recording(
         with open(sample_path, "rb") as f:
             audio_source = f.read()
 
-    # Run complete forensic analysis across all 3 pillars
+    # Run complete forensic analysis across all 3 pillars with hybrid situation evaluation
     results = analyze_forensic_recording(
         source=audio_source,
         filename=filename,
         emotion_model=emotion_model,
         acoustic_analyzer=acoustic_analyzer,
-        stt_model=stt_model
+        stt_model=stt_model,
+        situation_analyzer=situation_analyzer
     )
 
     return results

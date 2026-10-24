@@ -6,7 +6,7 @@ Pillar 2: Acoustic Biomarkers & Pitch Volatility (SciPy DSP)
 Pillar 3: Speech-to-Text & Threat Taxonomy (faster-whisper)
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import io
 import math
 import concurrent.futures
@@ -16,7 +16,7 @@ from scipy import signal
 
 from backend.models.emotion_model import SpeechEmotionModel
 from backend.models.acoustic_dsp import AcousticAnalyzer
-from backend.models.stt_whisper import SpeechToTextTranscriber
+from backend.models.stt_groq import SpeechToTextTranscriber
 from backend.core.urgency_engine import calculate_multimodal_urgency
 from backend.config import SAMPLE_RATE, CRITICAL_THRESHOLD, ELEVATED_THRESHOLD
 
@@ -45,12 +45,14 @@ def analyze_forensic_recording(
     emotion_model: SpeechEmotionModel,
     acoustic_analyzer: AcousticAnalyzer,
     stt_model: SpeechToTextTranscriber,
+    situation_analyzer: Optional[Any] = None,
     window_sec: float = 3.0,
     stride_sec: float = 2.5
 ) -> Dict[str, Any]:
     """
     Full chronological forensic breakdown of a recorded scam call / wiretap.
     Uses concurrent processing for sub-5s response on complete call recordings.
+    Supports hybrid Groq LLM situation evaluation with automatic local fallback.
     """
     audio = load_audio_to_16k_mono(source)
     duration_sec = len(audio) / SAMPLE_RATE
@@ -69,7 +71,21 @@ def analyze_forensic_recording(
 
     # Transcribe entire file for complete clean text
     full_transcript = stt_model.transcribe(audio)
-    overall_threats = stt_model.extract_threat_keywords(full_transcript)
+
+    # Hybrid situation assessment (LLM if available, local keyword regex fallback)
+    if situation_analyzer:
+        situation = situation_analyzer.analyze_situation(full_transcript)
+        overall_threats = {
+            "tags": situation.get("tags", []),
+            "matched_words": situation.get("matched_threats", []),
+            "threat_points": situation.get("threat_points", 0.0),
+            "red_flags": situation.get("red_flags", []),
+            "advisory": situation.get("officer_advisory", "")
+        }
+    else:
+        overall_threats = stt_model.extract_threat_keywords(full_transcript)
+        overall_threats["red_flags"] = []
+        overall_threats["advisory"] = ""
 
     window_samples = int(window_sec * SAMPLE_RATE)
     stride_samples = int(stride_sec * SAMPLE_RATE)
@@ -97,10 +113,10 @@ def analyze_forensic_recording(
         step = math.ceil(len(chunks_meta) / 12)
         chunks_meta = chunks_meta[::step]
 
-    # Pre-compute DSP and STT locally (very fast, <100ms total)
+    # Pre-compute DSP locally (instantaneous, <20ms total)
     for c in chunks_meta:
         c["acoustics"] = acoustic_analyzer.analyze(c["chunk"])
-        c["chunk_text"] = stt_model.transcribe(c["chunk"])
+        c["chunk_text"] = ""
 
     # Run emotion model in parallel thread pool (max 6 workers for Hugging Face Space)
     def fetch_emotion(chunk_data):
@@ -169,7 +185,8 @@ def analyze_forensic_recording(
         summary = f"Suspicious activity / moderate caller distress noted ({', '.join(all_tags) if all_tags else 'Elevated Stress'}). Secondary officer review recommended."
     else:
         overall_priority = "ROUTINE"
-        summary = "No overt extortion, threat keywords, or severe panic patterns detected. Standard administrative queue."
+    if overall_threats.get("advisory"):
+        summary = f"{overall_threats['advisory']}"
 
     return {
         "filename": filename,
@@ -180,5 +197,6 @@ def analyze_forensic_recording(
         "primary_threat_tags": sorted(list(all_tags)),
         "full_transcript": full_transcript if full_transcript else "(No distinct voice speech recognized)",
         "summary": summary,
+        "red_flags": overall_threats.get("red_flags", []),
         "timeline": timeline
     }

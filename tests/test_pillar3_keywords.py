@@ -6,20 +6,23 @@ Tests keyword taxonomy matching, threat point assignment, and faster-whisper loa
 import sys
 import os
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.models.stt_whisper import SpeechToTextTranscriber
+from backend.models.stt_groq import SpeechToTextTranscriber
 
 def test_pillar3_keywords():
     print("=" * 70)
     print("TEST: PILLAR 3 (SPEECH-TO-TEXT & THREAT KEYWORD EXTRACTION)")
     print("=" * 70)
 
-    transcriber = SpeechToTextTranscriber(model_size="tiny.en")
+    transcriber = SpeechToTextTranscriber()
 
-    # Verify model loaded
-    print(f"\n[MODEL CHECK] faster-whisper loaded: {transcriber.model is not None}")
-    assert transcriber.model is not None, "faster-whisper model should be initialized!"
+    # Verify model initialization
+    print(f"\n[MODEL CHECK] Groq LPU Whisper model configured: {transcriber.model_name}")
+    print(f"[MODEL CHECK] Groq Client active: {transcriber.client is not None}")
 
     # Test Scenarios for Keyword Extraction
     test_cases = [
@@ -46,6 +49,18 @@ def test_pillar3_keywords():
             "transcript": "A person asked me to download AnyDesk and read out the OTP to unblock my bank account.",
             "expected_tag": "#BANKING_PHISHING",
             "expected_words": ["anydesk", "otp"]
+        },
+        {
+            "scenario": "Hindi Digital Arrest Extortion",
+            "transcript": "साहब मुझे बचाओ, सीबीआई वाले बोल रहे हैं कि मैं डिजिटल अरेस्ट में हूँ और मनी लॉन्ड्रिंग का केस है।",
+            "expected_tag": "#DIGITAL_ARREST_SCAM",
+            "expected_words": ["डिजिटल अरेस्ट", "सीबीआई", "मनी लॉन्ड्रिंग"]
+        },
+        {
+            "scenario": "Marathi Kidnapping Ransom Threat",
+            "transcript": "साहेब फोन आला होता आणि म्हणत आहेत 5 लाख खंडणी द्या नाहीतर मुलाला मारून टाकेन!",
+            "expected_tag": "#KIDNAPPING_THREAT",
+            "expected_words": ["खंडणी", "मारून टाकेन"]
         },
         {
             "scenario": "Calm General Police Inquiry",

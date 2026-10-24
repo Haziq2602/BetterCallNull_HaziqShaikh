@@ -11,8 +11,9 @@ transformers>=4.40.0
 funasr>=1.0.0
 modelscope>=1.14.0
 
-# Speech-to-Text
-faster-whisper>=1.0.0
+# Speech-to-Text (Groq LPU Whisper & Google Gemini)
+groq>=0.18.0
+google-genai>=2.30.0
 
 # Audio Processing & DSP
 librosa>=0.10.1
