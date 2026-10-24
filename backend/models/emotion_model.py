@@ -16,6 +16,7 @@ class SpeechEmotionModel:
         self.hf_token = hf_token
         self.client = None
         self.last_emotions = {"neutral": 0.90, "fearful": 0.02, "sad": 0.03, "angry": 0.02, "surprised": 0.03}
+        self._quota_cooldown_until = 0.0
         self._init_client()
 
     def _init_client(self):
@@ -23,7 +24,10 @@ class SpeechEmotionModel:
             try:
                 from gradio_client import Client
                 token = self.hf_token if self.hf_token else None
-                self.client = Client(self.space_url, hf_token=token)
+                try:
+                    self.client = Client(self.space_url, token=token)
+                except TypeError:
+                    self.client = Client(self.space_url, hf_token=token)
                 auth_str = "authenticated" if token else "unauthenticated"
                 print(f"[INFO] Connected to Hugging Face SER Space: {self.space_url} ({auth_str})")
             except Exception as e:
@@ -37,7 +41,8 @@ class SpeechEmotionModel:
         """
         Receives 16 kHz numpy audio array and returns emotion probabilities.
         """
-        if self.client is not None and len(audio_chunk) > 0:
+        import time
+        if self.client is not None and len(audio_chunk) > 0 and time.time() >= self._quota_cooldown_until:
             temp_path = None
             try:
                 import wave
@@ -77,7 +82,12 @@ class SpeechEmotionModel:
                     return clean
 
             except Exception as e:
-                print(f"[WARN] Error calling HF SER Space ({e}). Using smoothed state.")
+                err_msg = str(e)
+                if "ZeroGPU quota" in err_msg or "exceeded your free" in err_msg:
+                    self._quota_cooldown_until = time.time() + 300.0  # 5 min cooldown
+                    print(f"[WARN] Hugging Face ZeroGPU quota reached. Activating 5-min local heuristic fallback.")
+                else:
+                    print(f"[WARN] Error calling HF SER Space ({err_msg}). Using smoothed state.")
             finally:
                 if temp_path and os.path.exists(temp_path):
                     try:

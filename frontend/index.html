@@ -26,60 +26,36 @@
         <!-- Left: Incoming Call Queue (Prioritization) -->
         <section class="panel queue-panel">
             <div class="panel-header">
-                <h2>INCOMING CALL QUEUE</h2>
-                <span class="queue-count">3 ACTIVE</span>
+                <div>
+                    <h2>INCOMING CALL QUEUE</h2>
+                    <span class="queue-count" id="queueCount">3 ACTIVE CHANNELS</span>
+                </div>
+                <button class="btn-sm btn-outline" id="btnSimulateIncoming" title="Simulate incoming emergency 112/1930 call">+ Incoming Call</button>
             </div>
             <div class="call-list" id="callQueue">
-                <div class="call-card critical active">
-                    <div class="card-top">
-                        <span class="call-id">#CALL-9823</span>
-                        <span class="badge priority-crit">CRITICAL</span>
-                    </div>
-                    <div class="card-meta">
-                        <span>Duration: 00:24</span>
-                        <span>Score: <strong>93</strong>/100</span>
-                    </div>
-                    <div class="card-tags">
-                        <span class="tag">#DIGITAL_ARREST</span>
-                        <span class="tag">#ACUTE_PANIC</span>
-                    </div>
-                </div>
-
-                <div class="call-card elevated">
-                    <div class="card-top">
-                        <span class="call-id">#CALL-9821</span>
-                        <span class="badge priority-elev">ELEVATED</span>
-                    </div>
-                    <div class="card-meta">
-                        <span>Duration: 01:10</span>
-                        <span>Score: <strong>62</strong>/100</span>
-                    </div>
-                    <div class="card-tags">
-                        <span class="tag">#BANKING_PHISHING</span>
-                    </div>
-                </div>
-
-                <div class="call-card routine">
-                    <div class="card-top">
-                        <span class="call-id">#CALL-9819</span>
-                        <span class="badge priority-rout">ROUTINE</span>
-                    </div>
-                    <div class="card-meta">
-                        <span>Duration: 03:45</span>
-                        <span>Score: <strong>24</strong>/100</span>
-                    </div>
-                    <div class="card-tags">
-                        <span class="tag">#STATUS_INQUIRY</span>
-                    </div>
-                </div>
+                <!-- Dynamically populated from /api/call-queue -->
             </div>
 
-            <!-- Forensic Case Upload -->
+            <!-- Forensic Case Upload & Wiretap Library -->
             <div class="upload-box">
                 <h3>FORENSIC CASE AUDIO</h3>
-                <p>Upload recorded scam call / wiretap</p>
+                <p>Select pre-recorded wiretap or upload audio</p>
+                <select id="sampleSelect" class="form-select">
+                    <option value="">-- Load Pre-Recorded Wiretap --</option>
+                    <option value="sample_digital_arrest">Digital Arrest / CBI Impersonation</option>
+                    <option value="sample_kidnap_threat">Child Kidnapping & Violent Ransom</option>
+                    <option value="sample_routine_bank">Routine Bank Query & FIR Verification</option>
+                </select>
+                <button class="btn-secondary" id="btnLoadSample">Analyze Selected Wiretap</button>
+                
+                <div style="text-align: center; font-size: 0.7rem; color: var(--text-muted); margin: 0.2rem 0;">— OR UPLOAD FILE —</div>
                 <input type="file" id="audioUpload" accept=".wav,.mp3">
                 <button class="btn-secondary" id="btnUpload">Upload & Analyze File</button>
+
+                <div class="loading-indicator" id="forensicLoading">
+                    <div class="spinner"></div>
+                    <span>Analyzing 3 pillars across timeline...</span>
+                </div>
             </div>
         </section>
 
@@ -191,6 +167,76 @@
         </section>
     </main>
 
-    <script src="js/app.js?v=2"></script>
+    <!-- Forensic Investigation Modal -->
+    <div class="modal-overlay" id="forensicModal">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>🔍 FORENSIC CASE WIRE障 REPORT: <span id="modalFilename" style="color:var(--accent-red)">CASE_EVIDENCE.WAV</span></h3>
+                <button class="modal-close-btn" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Hero Score & Meta -->
+                <div class="forensic-hero">
+                    <div class="forensic-score-box">
+                        <div class="score-val" id="modalScore" style="color:var(--accent-red)">88</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">PEAK URGENCY</div>
+                        <div style="margin-top:0.5rem;"><span class="badge priority-crit" id="modalPriority">CRITICAL</span></div>
+                    </div>
+                    <div class="forensic-details">
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                            <span>Duration: <strong id="modalDuration">00:24</strong></span>
+                            <span>Analysis Engine: <strong>3-Pillar Multimodal v2</strong></span>
+                        </div>
+                        <div id="modalTags" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                            <span class="tag red">#DIGITAL_ARREST</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-primary); line-height:1.4; background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:6px;">
+                            <strong>Investigator Brief:</strong> <span id="modalSummary">High likelihood of active digital arrest coercion.</span>
+                        </div>
+                        <!-- Audio Player -->
+                        <audio id="modalAudioPlayer" controls class="forensic-audio-player"></audio>
+                    </div>
+                </div>
+
+                <!-- Full Transcript -->
+                <div class="transcript-box">
+                    <div class="section-title">FULL AUDIO TRANSCRIPT (FASTER-WHISPER)</div>
+                    <div class="transcript-content" id="modalFullTranscript" style="font-size:0.9rem; max-height:120px; overflow-y:auto;">
+                        "..."
+                    </div>
+                </div>
+
+                <!-- Second-by-Second Distress Timeline -->
+                <div>
+                    <div class="section-title" style="margin-bottom:0.5rem;">CHRONOLOGICAL 3-PILLAR TELEMETRY TIMELINE</div>
+                    <div class="timeline-table-wrapper">
+                        <table class="timeline-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Urgency</th>
+                                    <th>Priority</th>
+                                    <th>Dominant Emotion</th>
+                                    <th>Pitch Volatility</th>
+                                    <th>Tremor</th>
+                                    <th>Detected Keywords / Threat Tags</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTimelineBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                    <button class="btn-primary" id="btnLoadIntoMonitor">Load Into Active Call Monitor</button>
+                    <button class="btn-secondary" id="btnCloseModalBottom">Close Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=3"></script>
 </body>
 </html>
