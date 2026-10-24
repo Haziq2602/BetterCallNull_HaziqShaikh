@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,192 +8,264 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
 </head>
+
 <body class="dark-theme">
-    <!-- Header / Status Bar -->
-    <header class="app-header">
-        <div class="brand">
-            <span class="badge-live">● LIVE DISPATCH</span>
-            <h1>CYBERGUARD // <span>SER TRIAGE CONSOLE</span></h1>
-        </div>
-        <div class="system-status">
-            <span class="status-indicator online"></span>
-            <span class="status-text">AI On-Premise Engine: ACTIVE (Air-Gapped)</span>
-        </div>
-    </header>
+    <div class="app-shell">
 
-    <main class="console-grid">
-        <!-- Left: Incoming Call Queue (Prioritization) -->
-        <section class="panel queue-panel">
-            <div class="panel-header">
+        <!-- Top bar -->
+        <header class="app-header">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9-4.8-.7-8-4.5-8-9V6l8-3z" />
+                        <path d="M9 12l2 2 4-4" />
+                    </svg>
+                </span>
                 <div>
-                    <h2>INCOMING CALL QUEUE</h2>
-                    <span class="queue-count" id="queueCount">3 ACTIVE CHANNELS</span>
-                </div>
-                <button class="btn-sm btn-outline" id="btnSimulateIncoming" title="Simulate incoming emergency 112/1930 call">+ Incoming Call</button>
-            </div>
-            <div class="queue-alert" id="queueAlert">⚠️ All available pre-recorded calls from the library are currently active in the queue. No more pre-recorded calls available.</div>
-            <div class="call-list" id="callQueue">
-                <!-- Dynamically populated from /api/call-queue -->
-            </div>
-
-            <!-- Forensic Case Upload & Wiretap Library -->
-            <div class="upload-box">
-                <h3>FORENSIC CASE AUDIO</h3>
-                <p>Select pre-recorded wiretap or upload audio</p>
-                <select id="sampleSelect" class="form-select">
-                    <option value="">-- Load Pre-Recorded Wiretap --</option>
-                    <option value="sample_digital_arrest">Digital Arrest / CBI Impersonation</option>
-                    <option value="sample_kidnap_threat">Child Kidnapping & Violent Ransom</option>
-                    <option value="sample_routine_bank">Routine Bank Query & FIR Verification</option>
-                </select>
-                <button class="btn-secondary" id="btnLoadSample">Analyze Selected Wiretap</button>
-                
-                <div style="text-align: center; font-size: 0.7rem; color: var(--text-muted); margin: 0.2rem 0;">— OR UPLOAD FILE —</div>
-                <input type="file" id="audioUpload" accept=".wav,.mp3">
-                <button class="btn-secondary" id="btnUpload">Upload & Analyze File</button>
-
-                <div class="loading-indicator" id="forensicLoading">
-                    <div class="spinner"></div>
-                    <span>Analyzing 3 pillars across timeline...</span>
+                    <h1 class="brand-name">CyberGuard</h1>
+                    <p class="brand-sub">Speech emotion triage console</p>
                 </div>
             </div>
-        </section>
-
-        <!-- Center: Live Active Call Analytics -->
-        <section class="panel active-call-panel">
-            <div class="panel-header">
-                <div>
-                    <h2>ACTIVE CALL MONITOR: <span id="activeCallId">#CALL-9823</span></h2>
-                    <p class="subtitle">Live Multimodal Telemetry Stream</p>
-                </div>
-                <div class="live-priority-indicator">
-                    <span class="pill-label">TRIAGE STATUS</span>
-                    <span class="pill-value critical" id="livePriority">CRITICAL</span>
+            <div class="header-status">
+                <span class="badge-live">● Live dispatch</span>
+                <div class="system-status">
+                    <span class="status-indicator online"></span>
+                    <span class="status-text">AI On-Premise Engine: ACTIVE (Air-Gapped)</span>
                 </div>
             </div>
+        </header>
 
-            <!-- Waveform & Audio Meter -->
-            <div class="visualizer-container">
-                <canvas id="waveformCanvas" width="800" height="120"></canvas>
-                <div class="waveform-footer">
-                    <span>Pitch Volatility: <strong id="pitchStd">48.6 Hz (ERRATIC)</strong></span>
-                    <span>Vocal Tremors: <strong id="voiceTremor">DETECTED</strong></span>
-                    <span>Energy: <strong id="voiceEnergy">SUPPRESSED WHISPER</strong></span>
-                </div>
-            </div>
+        <div class="console-grid">
 
-            <!-- Real-Time Transcript & Context Tags -->
-            <div class="transcript-box">
-                <div class="section-title">LIVE TRANSCRIPTION & THREAT EXTRACTION</div>
-                <div class="transcript-content" id="liveTranscript">
-                    "They told me they are from CBI Mumbai and my bank account is linked to money laundering... they said I cannot disconnect this call or local police will reach my home..."
-                </div>
-                <div class="tags-container" id="liveTags">
-                    <span class="tag red">#DIGITAL_ARREST_SCAM</span>
-                    <span class="tag red">#ACUTE_PANIC</span>
-                    <span class="tag yellow">#VOCAL_TREMORS</span>
-                </div>
-            </div>
-
-            <!-- Investigator Action Advisory -->
-            <div class="advisory-box">
-                <div class="advisory-icon">⚠️</div>
-                <div class="advisory-text">
-                    <strong>INVESTIGATOR ADVISORY:</strong>
-                    <span id="advisoryText">High probability of active digital arrest coercion. Initiate bank account freeze advisory immediately.</span>
-                </div>
-            </div>
-
-            <!-- Controls (Live Simulation / Mic) -->
-            <div class="controls-bar">
-                <button class="btn-primary" id="btnLiveMic">Start Live Mic Triage</button>
-                <button class="btn-warning" id="btnSimulatePanic">Simulate Scam Distress Call</button>
-                <button class="btn-secondary" id="btnSimulateCalm">Simulate Calm Inquiry</button>
-            </div>
-        </section>
-
-        <!-- Right: Emotion Radar & Multimodal Breakdown -->
-        <section class="panel telemetry-panel">
-            <div class="panel-header">
-                <h2>EMOTION & ACOUSTICS</h2>
-            </div>
-
-            <!-- Gauge Metric -->
-            <div class="urgency-gauge">
-                <div class="gauge-value" id="urgencyValue">93</div>
-                <div class="gauge-label">URGENCY SCORE / 100</div>
-            </div>
-
-            <!-- Emotion Bars -->
-            <div class="metrics-list">
-                <div class="metric-row">
-                    <div class="metric-header">
-                        <span>Fear & Panic</span>
-                        <span id="valFear">86%</span>
+            <!-- Left: Incoming Call Queue (Prioritization) + Forensic Case Audio -->
+            <aside class="panel queue-panel sidebar">
+                <div class="panel-header">
+                    <div>
+                        <h2>Incoming calls</h2>
+                        <span class="queue-count" id="queueCount">3 ACTIVE CHANNELS</span>
                     </div>
-                    <div class="bar-bg"><div class="bar-fill bar-red" id="fillFear" style="width: 86%"></div></div>
+                    <button class="btn-sm btn-outline" id="btnSimulateIncoming"
+                        title="Simulate incoming emergency 112/1930 call">+ Incoming Call</button>
+                </div>
+                <div class="queue-alert" id="queueAlert" role="status">⚠️ All available pre-recorded calls from the
+                    library are currently active in the queue. No more pre-recorded calls available.</div>
+                <div class="call-list" id="callQueue">
+                    <!-- Dynamically populated from /api/call-queue -->
                 </div>
 
-                <div class="metric-row">
-                    <div class="metric-header">
-                        <span>Sadness & Crying</span>
-                        <span id="valSad">64%</span>
+                <!-- Forensic Case Upload & Wiretap Library -->
+                <details class="upload-box">
+                    <summary>
+                        <span class="upload-title">Forensic case audio</span>
+                        <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </summary>
+                    <div class="upload-body">
+                        <p>Select a pre-recorded wiretap or upload audio</p>
+                        <label class="visually-hidden" for="sampleSelect">Pre-recorded wiretap</label>
+                        <select id="sampleSelect" class="form-select">
+                            <option value="">-- Load Pre-Recorded Wiretap --</option>
+                            <option value="sample_digital_arrest">Digital Arrest / CBI Impersonation</option>
+                            <option value="sample_kidnap_threat">Child Kidnapping & Violent Ransom</option>
+                            <option value="sample_routine_bank">Routine Bank Query & FIR Verification</option>
+                        </select>
+                        <button class="btn-secondary" id="btnLoadSample">Analyze Selected Wiretap</button>
+
+                        <div class="upload-divider">or upload a file</div>
+                        <label class="visually-hidden" for="audioUpload">Audio file to analyze (.wav or .mp3)</label>
+                        <input type="file" id="audioUpload" accept=".wav,.mp3">
+                        <button class="btn-secondary" id="btnUpload">Upload & Analyze File</button>
+
+                        <div class="loading-indicator" id="forensicLoading" role="status">
+                            <div class="spinner"></div>
+                            <span>Analyzing 3 pillars across timeline...</span>
+                        </div>
                     </div>
-                    <div class="bar-bg"><div class="bar-fill bar-red" id="fillSad" style="width: 64%"></div></div>
-                </div>
+                </details>
+            </aside>
 
-                <div class="metric-row">
-                    <div class="metric-header">
-                        <span>Anger & Hostility</span>
-                        <span id="valAngry">08%</span>
+            <!-- Right: Active call workspace -->
+            <main class="panel active-call-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Active call <span class="call-ref" id="activeCallId">#CALL-9823</span></h2>
+                        <p class="subtitle">Live multimodal telemetry stream</p>
                     </div>
-                    <div class="bar-bg"><div class="bar-fill bar-amber" id="fillAngry" style="width: 8%"></div></div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-header">
-                        <span>Baseline / Neutral</span>
-                        <span id="valNeutral">04%</span>
+                    <div class="live-priority-indicator">
+                        <span class="pill-label">Triage status</span>
+                        <span class="pill-value critical" id="livePriority">CRITICAL</span>
                     </div>
-                    <div class="bar-bg"><div class="bar-fill bar-green" id="fillNeutral" style="width: 4%"></div></div>
                 </div>
-            </div>
 
-            <!-- Responsible AI Disclaimer -->
-            <div class="disclaimer-card">
-                <span class="icon">ℹ️</span>
-                <p><strong>Responsible AI Notice:</strong> Emotion scores are indicative triage signals to prioritize officer intervention. They do not constitute judicial evidence of truthfulness or legal guilt.</p>
-            </div>
-        </section>
-    </main>
+                <!-- Triage summary: score + investigator advisory -->
+                <section class="summary-band">
+                    <div class="urgency-gauge">
+                        <div class="gauge-value" id="urgencyValue">93</div>
+                        <div class="gauge-label">Urgency score<br>out of 100</div>
+                    </div>
+                    <div class="advisory-box">
+                        <div class="advisory-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 4l9 16H3L12 4z" />
+                                <path d="M12 10v4" />
+                                <path d="M12 17.5v.01" />
+                            </svg>
+                        </div>
+                        <div class="advisory-text">
+                            <strong>Investigator advisory</strong>
+                            <span id="advisoryText">High probability of active digital arrest coercion. Initiate bank
+                                account freeze advisory immediately.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="detail-grid">
+                    <div class="detail-main">
+                        <!-- Waveform & Audio Meter -->
+                        <section class="block">
+                            <h3 class="block-title">Voice signal</h3>
+                            <div class="visualizer-container">
+                                <canvas id="waveformCanvas" width="800" height="120" role="img"
+                                    aria-label="Live audio waveform"></canvas>
+                            </div>
+                            <div class="waveform-footer">
+                                <div class="signal-metric"><span>Pitch volatility</span><strong id="pitchStd">48.6 Hz
+                                        (ERRATIC)</strong></div>
+                                <div class="signal-metric"><span>Vocal tremors</span><strong
+                                        id="voiceTremor">DETECTED</strong></div>
+                                <div class="signal-metric"><span>Energy</span><strong id="voiceEnergy">SUPPRESSED
+                                        WHISPER</strong></div>
+                            </div>
+                        </section>
+
+                        <!-- Real-Time Transcript & Context Tags -->
+                        <section class="block transcript-box">
+                            <h3 class="block-title">Live transcript and threat extraction</h3>
+                            <div class="transcript-content" id="liveTranscript">
+                                "They told me they are from CBI Mumbai and my bank account is linked to money
+                                laundering... they said I cannot disconnect this call or local police will reach my
+                                home..."
+                            </div>
+                            <div class="tags-container" id="liveTags">
+                                <span class="tag red">#DIGITAL_ARREST_SCAM</span>
+                                <span class="tag red">#ACUTE_PANIC</span>
+                                <span class="tag yellow">#VOCAL_TREMORS</span>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Emotion Bars -->
+                    <section class="block emotion-block">
+                        <h3 class="block-title">Emotion</h3>
+                        <div class="metrics-list">
+                            <div class="metric-row">
+                                <div class="metric-header">
+                                    <span>Fear & Panic</span>
+                                    <span id="valFear">86%</span>
+                                </div>
+                                <div class="bar-bg">
+                                    <div class="bar-fill bar-red" id="fillFear" style="width: 86%"></div>
+                                </div>
+                            </div>
+
+                            <div class="metric-row">
+                                <div class="metric-header">
+                                    <span>Sadness & Crying</span>
+                                    <span id="valSad">64%</span>
+                                </div>
+                                <div class="bar-bg">
+                                    <div class="bar-fill bar-red" id="fillSad" style="width: 64%"></div>
+                                </div>
+                            </div>
+
+                            <div class="metric-row">
+                                <div class="metric-header">
+                                    <span>Anger & Hostility</span>
+                                    <span id="valAngry">08%</span>
+                                </div>
+                                <div class="bar-bg">
+                                    <div class="bar-fill bar-amber" id="fillAngry" style="width: 8%"></div>
+                                </div>
+                            </div>
+
+                            <div class="metric-row">
+                                <div class="metric-header">
+                                    <span>Baseline / Neutral</span>
+                                    <span id="valNeutral">04%</span>
+                                </div>
+                                <div class="bar-bg">
+                                    <div class="bar-fill bar-green" id="fillNeutral" style="width: 4%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Controls (Live Simulation / Mic) -->
+                <div class="controls-bar">
+                    <button class="btn-primary" id="btnLiveMic">Start Live Mic Triage</button>
+                    <div class="demo-group" role="group" aria-label="Demo scenarios">
+                        <span class="demo-label">Demo scenarios</span>
+                        <button class="btn-warning" id="btnSimulatePanic">Simulate Scam Distress Call</button>
+                        <button class="btn-secondary" id="btnSimulateCalm">Simulate Calm Inquiry</button>
+                    </div>
+                </div>
+
+                <!-- Responsible AI Disclaimer -->
+                <div class="disclaimer-card">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 11v5" />
+                            <path d="M12 8v.01" />
+                        </svg>
+                    </span>
+                    <p><strong>Responsible AI Notice:</strong> Emotion scores are indicative triage signals to
+                        prioritize officer intervention. They do not constitute judicial evidence of truthfulness or
+                        legal guilt.</p>
+                </div>
+            </main>
+        </div>
+    </div>
 
     <!-- Forensic Investigation Modal -->
     <div class="modal-overlay" id="forensicModal">
-        <div class="modal-window">
+        <div class="modal-window" role="dialog" aria-modal="true" aria-labelledby="forensicModalTitle">
             <div class="modal-header">
-                <h3>🔍 FORENSIC CASE WIRE障 REPORT: <span id="modalFilename" style="color:var(--accent-red)">CASE_EVIDENCE.WAV</span></h3>
-                <button class="modal-close-btn" id="btnCloseModal">&times;</button>
+                <h3 id="forensicModalTitle">Forensic case wiretap report: <span id="modalFilename"
+                        class="accent-text">CASE_EVIDENCE.WAV</span></h3>
+                <button class="modal-close-btn" id="btnCloseModal" aria-label="Close report">&times;</button>
             </div>
             <div class="modal-body">
                 <!-- Hero Score & Meta -->
                 <div class="forensic-hero">
                     <div class="forensic-score-box">
-                        <div class="score-val" id="modalScore" style="color:var(--accent-red)">88</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">PEAK URGENCY</div>
-                        <div style="margin-top:0.5rem;"><span class="badge priority-crit" id="modalPriority">CRITICAL</span></div>
+                        <div class="score-val" id="modalScore">88</div>
+                        <div class="score-caption">Peak urgency</div>
+                        <div class="score-badge"><span class="badge priority-crit" id="modalPriority">CRITICAL</span>
+                        </div>
                     </div>
                     <div class="forensic-details">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                        <div class="forensic-meta">
                             <span>Duration: <strong id="modalDuration">00:24</strong></span>
-                            <span>Analysis Engine: <strong>3-Pillar Multimodal v2</strong></span>
+                            <span>Analysis engine: <strong>3-Pillar Multimodal v2</strong></span>
                         </div>
-                        <div id="modalTags" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <div id="modalTags" class="tag-row">
                             <span class="tag red">#DIGITAL_ARREST</span>
                         </div>
-                        <div style="font-size:0.85rem; color:var(--text-primary); line-height:1.4; background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:6px;">
-                            <strong>Investigator Brief:</strong> <span id="modalSummary">High likelihood of active digital arrest coercion.</span>
+                        <div class="brief-box">
+                            <strong>Investigator brief:</strong> <span id="modalSummary">High likelihood of active
+                                digital arrest coercion.</span>
                         </div>
                         <!-- Audio Player -->
                         <audio id="modalAudioPlayer" controls class="forensic-audio-player"></audio>
@@ -200,16 +273,16 @@
                 </div>
 
                 <!-- Full Transcript -->
-                <div class="transcript-box">
-                    <div class="section-title">FULL AUDIO TRANSCRIPT (FASTER-WHISPER)</div>
-                    <div class="transcript-content" id="modalFullTranscript" style="font-size:0.9rem; max-height:120px; overflow-y:auto;">
+                <div class="transcript-box inset">
+                    <h4 class="block-title">Full audio transcript (faster-whisper)</h4>
+                    <div class="transcript-content is-scroll" id="modalFullTranscript">
                         "..."
                     </div>
                 </div>
 
                 <!-- Second-by-Second Distress Timeline -->
                 <div>
-                    <div class="section-title" style="margin-bottom:0.5rem;">CHRONOLOGICAL 3-PILLAR TELEMETRY TIMELINE</div>
+                    <h4 class="block-title">Chronological 3-pillar telemetry timeline</h4>
                     <div class="timeline-table-wrapper">
                         <table class="timeline-table">
                             <thead>
@@ -230,7 +303,7 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                <div class="modal-actions">
                     <button class="btn-primary" id="btnLoadIntoMonitor">Load Into Active Call Monitor</button>
                     <button class="btn-secondary" id="btnCloseModalBottom">Close Report</button>
                 </div>
@@ -240,29 +313,31 @@
 
     <!-- Live Call Final Forensic Debrief Modal -->
     <div class="modal-overlay" id="liveFinalModal">
-        <div class="modal-window">
+        <div class="modal-window" role="dialog" aria-modal="true" aria-labelledby="liveFinalModalTitle">
             <div class="modal-header">
-                <h3>🎙️ LIVE CALL CONCLUDED // MULTIMODAL FORENSIC DEBRIEF</h3>
-                <button class="modal-close-btn" id="btnCloseLiveModal">&times;</button>
+                <h3 id="liveFinalModalTitle">Live call concluded: multimodal forensic debrief</h3>
+                <button class="modal-close-btn" id="btnCloseLiveModal" aria-label="Close debrief">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="forensic-hero">
                     <div class="forensic-score-box">
-                        <div class="score-val" id="liveModalPeakScore" style="color:var(--accent-red)">0</div>
-                        <div style="font-size:0.75rem; color:var(--text-muted);">PEAK URGENCY</div>
-                        <div style="margin-top:0.5rem;"><span class="badge priority-crit" id="liveModalPriority">CRITICAL</span></div>
+                        <div class="score-val" id="liveModalPeakScore">0</div>
+                        <div class="score-caption">Peak urgency</div>
+                        <div class="score-badge"><span class="badge priority-crit"
+                                id="liveModalPriority">CRITICAL</span></div>
                     </div>
                     <div class="forensic-details">
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-                            <span>Call Channel: <strong id="liveModalCallId">#CALL-LIVE-DISPATCH</strong></span>
-                            <span>Session Duration: <strong id="liveModalDuration">00:00</strong></span>
-                            <span>Avg Urgency: <strong id="liveModalAvgScore">0/100</strong></span>
+                        <div class="forensic-meta">
+                            <span>Call channel: <strong id="liveModalCallId">#CALL-LIVE-DISPATCH</strong></span>
+                            <span>Session duration: <strong id="liveModalDuration">00:00</strong></span>
+                            <span>Avg urgency: <strong id="liveModalAvgScore">0/100</strong></span>
                         </div>
-                        <div id="liveModalTags" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <div id="liveModalTags" class="tag-row">
                             <span class="tag green">#STABLE_LINE</span>
                         </div>
-                        <div style="font-size:0.85rem; color:var(--text-primary); line-height:1.4; background:rgba(0,0,0,0.3); padding:0.6rem; border-radius:6px;">
-                            <strong>Final Investigator Disposition:</strong> <span id="liveModalAdvisory">Triage analysis complete.</span>
+                        <div class="brief-box">
+                            <strong>Final investigator disposition:</strong> <span id="liveModalAdvisory">Triage
+                                analysis complete.</span>
                         </div>
                         <!-- Recorded Live Audio Playback -->
                         <audio id="liveModalAudioPlayer" controls class="forensic-audio-player"></audio>
@@ -272,35 +347,35 @@
                 <!-- Live Call Statistics Chips -->
                 <div class="stats-grid">
                     <div class="stat-chip">
-                        <span class="chip-label">DOMINANT EMOTION</span>
-                        <span class="chip-val" id="liveModalDominantEmo" style="color:var(--accent-red)">NEUTRAL</span>
+                        <span class="chip-label">Dominant emotion</span>
+                        <span class="chip-val" id="liveModalDominantEmo">NEUTRAL</span>
                     </div>
                     <div class="stat-chip">
-                        <span class="chip-label">MAX PITCH VOLATILITY</span>
-                        <span class="chip-val" id="liveModalPitchStd">0.0 Hz</span>
+                        <span class="chip-label">Max pitch volatility</span>
+                        <span class="chip-val chip-plain" id="liveModalPitchStd">0.0 Hz</span>
                     </div>
                     <div class="stat-chip">
-                        <span class="chip-label">VOICE TREMORS DETECTED</span>
-                        <span class="chip-val" id="liveModalTremorCount" style="color:var(--accent-amber)">0 SPIKES</span>
+                        <span class="chip-label">Voice tremors detected</span>
+                        <span class="chip-val chip-amber" id="liveModalTremorCount">0 SPIKES</span>
                     </div>
                     <div class="stat-chip">
-                        <span class="chip-label">WORDS TRANSCRIBED</span>
-                        <span class="chip-val" id="liveModalWordCount">0 WORDS</span>
+                        <span class="chip-label">Words transcribed</span>
+                        <span class="chip-val chip-plain" id="liveModalWordCount">0 WORDS</span>
                     </div>
                 </div>
 
                 <!-- Complete Consolidated Transcript -->
-                <div class="transcript-box">
-                    <div class="section-title">COMPLETE LIVE SESSION TRANSCRIPT (WHISPER)</div>
-                    <div class="transcript-content" id="liveModalFullTranscript" style="font-size:0.9rem; max-height:110px; overflow-y:auto;">
+                <div class="transcript-box inset">
+                    <h4 class="block-title">Complete live session transcript (whisper)</h4>
+                    <div class="transcript-content is-scroll" id="liveModalFullTranscript">
                         "..."
                     </div>
                 </div>
 
                 <!-- Live Progression Timeline -->
                 <div>
-                    <div class="section-title" style="margin-bottom:0.5rem;">REAL-TIME MULTIMODAL TELEMETRY PROGRESSION</div>
-                    <div class="timeline-table-wrapper" style="max-height:160px; overflow-y:auto;">
+                    <h4 class="block-title">Real-time multimodal telemetry progression</h4>
+                    <div class="timeline-table-wrapper is-short">
                         <table class="timeline-table">
                             <thead>
                                 <tr>
@@ -319,7 +394,7 @@
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                <div class="modal-actions">
                     <button class="btn-primary" id="btnSaveLiveCall">Retain in Active Call History</button>
                     <button class="btn-secondary" id="btnCloseLiveModalBottom">Close Report</button>
                 </div>
@@ -329,4 +404,5 @@
 
     <script src="js/app.js?v=4"></script>
 </body>
+
 </html>
