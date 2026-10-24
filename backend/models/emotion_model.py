@@ -1,42 +1,72 @@
 """
-Pillar 1: Speech Emotion Recognition using emotion2vec+ (FunASR).
+Pillar 1: Speech Emotion Recognition Client.
+Connects to the dedicated Hugging Face Space running emotion2vec+ (Alibaba / FunASR).
+Includes fallback heuristic for offline/local development without GPU.
 """
 
 from typing import Dict
+import os
+import tempfile
 import numpy as np
+import soundfile as sf
+from backend.config import HF_SPACE_URL
 
 class SpeechEmotionModel:
-    def __init__(self, model_id: str = "iic/emotion2vec_plus_seed"):
-        self.model_id = model_id
-        self.model = None
-        self._load_model()
+    def __init__(self, space_url: str = HF_SPACE_URL):
+        self.space_url = space_url
+        self.client = None
+        self._init_client()
 
-    def _load_model(self):
-        try:
-            from funasr import AutoModel
-            self.model = AutoModel(model=self.model_id, hub="hf")
-            print(f"[INFO] emotion2vec+ loaded successfully: {self.model_id}")
-        except Exception as e:
-            print(f"[WARN] Failed to load emotion2vec+ ({e}). Using mock heuristic analyzer for development.")
-            self.model = None
+    def _init_client(self):
+        if self.space_url:
+            try:
+                from gradio_client import Client
+                self.client = Client(self.space_url)
+                print(f"[INFO] Connected to Hugging Face SER Space: {self.space_url}")
+            except Exception as e:
+                print(f"[WARN] Could not connect to HF Space ({e}). Falling back to heuristic mode.")
+                self.client = None
+        else:
+            print("[INFO] No HF_SPACE_URL configured. Running SER in local heuristic mode.")
+            self.client = None
 
     def predict(self, audio_chunk: np.ndarray, sample_rate: int = 16000) -> Dict[str, float]:
         """
         Receives 16 kHz numpy audio array and returns emotion probabilities.
         """
-        if self.model is not None:
+        if self.client is not None and len(audio_chunk) > 0:
+            temp_path = None
             try:
-                res = self.model.generate(audio_chunk, granularity="utterance", extract_embedding=False)
-                # Map outputs to normalized dict
-                if res and isinstance(res, list) and len(res) > 0:
-                    labels = res[0].get("labels", [])
-                    scores = res[0].get("scores", [])
-                    return dict(zip(labels, scores))
-            except Exception as e:
-                print(f"[ERROR] Inference error in emotion2vec+: {e}")
+                from gradio_client import handle_file
+                # Write audio chunk to a temporary WAV file for transfer
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                    temp_path = tmp.name
+                    sf.write(temp_path, audio_chunk.astype(np.float32), sample_rate)
 
-        # Fallback heuristic simulation if model is downloading or running on basic environment
+                # Call Hugging Face Space /predict endpoint
+                result = self.client.predict(
+                    audio_path=handle_file(temp_path),
+                    api_name="/predict"
+                )
+
+                # Result from Gradio is either a dict or confidences list
+                if isinstance(result, dict) and "confidences" in result:
+                    res_dict = {item["label"].lower(): item["confidence"] for item in result["confidences"]}
+                    return res_dict
+                elif isinstance(result, dict):
+                    return result
+
+            except Exception as e:
+                print(f"[WARN] Error calling HF SER Space ({e}). Using heuristic fallback.")
+            finally:
+                if temp_path and os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
+
+        # Fallback heuristic simulation if HF space is offline or initializing
         rms = float(np.sqrt(np.mean(audio_chunk**2))) if len(audio_chunk) > 0 else 0.0
         if rms > 0.15:
-            return {"fearful": 0.78, "sad": 0.45, "angry": 0.20, "neutral": 0.10}
-        return {"neutral": 0.85, "fearful": 0.08, "sad": 0.04, "angry": 0.03}
+            return {"fearful": 0.82, "sad": 0.55, "angry": 0.18, "neutral": 0.08, "surprised": 0.12}
+        return {"neutral": 0.88, "fearful": 0.05, "sad": 0.04, "angry": 0.02, "surprised": 0.01}

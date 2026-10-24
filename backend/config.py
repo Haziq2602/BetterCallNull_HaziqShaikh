@@ -7,9 +7,12 @@ SAMPLE_RATE = 16000  # 16 kHz Mono required by emotion2vec+ and Whisper
 CHUNK_DURATION_SEC = 2.0  # Sliding window size
 STRIDE_DURATION_SEC = 1.0  # Hop size between successive analyses
 
+import os
+
 # Models Configuration
 EMOTION_MODEL_ID = "iic/emotion2vec_plus_seed"  # Fast streaming variant
-WHISPER_MODEL_SIZE = "base.en"  # Fast CPU/GPU transcription
+HF_SPACE_URL = os.getenv("HF_SPACE_URL", "")  # e.g. "https://your-user-cybercrime-ser.hf.space"
+WHISPER_MODEL_SIZE = "tiny.en"  # Fast CPU transcription
 
 # Urgency Thresholds
 CRITICAL_THRESHOLD = 75.0
