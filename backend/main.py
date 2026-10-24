@@ -414,6 +414,7 @@ async def investigate_recording(
 
     return results
 
-# Mount static frontend directory
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Mount static frontend directory (robust path relative to project root)
+_frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 

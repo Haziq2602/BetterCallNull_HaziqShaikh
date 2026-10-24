@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Speech
 
-$dir = "c:\AIML\Projects\vecna-verse\11\backend\data\sample_recordings"
+$dir = Join-Path $PSScriptRoot "sample_recordings"
 if (!(Test-Path -Path $dir)) {
     New-Item -ItemType Directory -Path $dir -Force
 }
