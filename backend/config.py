@@ -10,8 +10,8 @@ STRIDE_DURATION_SEC = 1.0  # Hop size between successive analyses
 import os
 
 # Models Configuration
-EMOTION_MODEL_ID = "iic/emotion2vec_plus_seed"  # Fast streaming variant
-HF_SPACE_URL = os.getenv("HF_SPACE_URL", "")  # e.g. "https://your-user-cybercrime-ser.hf.space"
+EMOTION_MODEL_ID = "emotion2vec/emotion2vec_plus_seed"
+HF_SPACE_URL = os.getenv("HF_SPACE_URL", "rikazike/cybercrime-ser-engine")
 WHISPER_MODEL_SIZE = "tiny.en"  # Fast CPU transcription
 
 # Urgency Thresholds

@@ -8,7 +8,6 @@ from typing import Dict
 import os
 import tempfile
 import numpy as np
-import soundfile as sf
 from backend.config import HF_SPACE_URL
 
 class SpeechEmotionModel:
@@ -37,24 +36,40 @@ class SpeechEmotionModel:
         if self.client is not None and len(audio_chunk) > 0:
             temp_path = None
             try:
+                import wave
                 from gradio_client import handle_file
-                # Write audio chunk to a temporary WAV file for transfer
+
+                # Write audio chunk to a standard 16-bit PCM WAV file
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                     temp_path = tmp.name
-                    sf.write(temp_path, audio_chunk.astype(np.float32), sample_rate)
 
-                # Call Hugging Face Space /predict endpoint
+                with wave.open(temp_path, "wb") as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(sample_rate)
+                    pcm16 = (np.clip(audio_chunk, -1.0, 1.0) * 32767).astype(np.int16)
+                    wf.writeframes(pcm16.tobytes())
+
+                # Call Hugging Face Space /predict_emotion endpoint
                 result = self.client.predict(
                     audio_path=handle_file(temp_path),
-                    api_name="/predict"
+                    api_name="/predict_emotion"
                 )
 
-                # Result from Gradio is either a dict or confidences list
-                if isinstance(result, dict) and "confidences" in result:
-                    res_dict = {item["label"].lower(): item["confidence"] for item in result["confidences"]}
-                    return res_dict
-                elif isinstance(result, dict):
-                    return result
+                if isinstance(result, str):
+                    import json
+                    result = json.loads(result)
+
+                if isinstance(result, dict):
+                    clean = {}
+                    for k, v in result.items():
+                        norm_k = str(k).split("/")[-1].strip().lower()
+                        if norm_k in ["fearful", "sad", "angry", "neutral", "surprised", "disgusted", "happy"]:
+                            clean[norm_k] = max(clean.get(norm_k, 0.0), round(float(v), 4))
+                    for key in ["fearful", "sad", "angry", "neutral", "surprised"]:
+                        if key not in clean:
+                            clean[key] = 0.0
+                    return clean
 
             except Exception as e:
                 print(f"[WARN] Error calling HF SER Space ({e}). Using heuristic fallback.")
