@@ -2,6 +2,18 @@ import os
 import gradio as gr
 from funasr import AutoModel
 
+# Import spaces for Hugging Face ZeroGPU compatibility
+try:
+    import spaces
+except ImportError:
+    class MockSpaces:
+        @staticmethod
+        def GPU(fn=None, **kwargs):
+            if fn is not None:
+                return fn
+            return lambda f: f
+    spaces = MockSpaces()
+
 # Load SOTA emotion2vec+ foundation model
 print("[INFO] Loading emotion2vec+ model...")
 try:
@@ -10,6 +22,7 @@ except Exception:
     ser_model = AutoModel(model="iic/emotion2vec_plus_seed", hub="ms")
 print("[INFO] emotion2vec+ loaded successfully.")
 
+@spaces.GPU
 def predict_emotion(audio_path):
     if audio_path is None:
         return {"neutral": 1.0}
