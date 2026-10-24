@@ -152,9 +152,10 @@ from pydantic import BaseModel
 
 from backend.core.forensic_analyzer import analyze_forensic_recording
 
-# Persistent In-Memory Call Queue for Multi-Call Triage Console
-ACTIVE_CALL_QUEUE: List[Dict[str, Any]] = [
+# Comprehensive Pre-Recorded Cybercrime Emergency Scenario Library
+PRE_RECORDED_SCENARIOS: List[Dict[str, Any]] = [
     {
+        "scenario_id": "sc_digital_arrest",
         "call_id": "CALL-9823",
         "caller_number": "+91 98721 00912",
         "caller_label": "Suspect: Virtual VoIP (Mumbai CBI Spoof)",
@@ -172,6 +173,7 @@ ACTIVE_CALL_QUEUE: List[Dict[str, Any]] = [
         "status": "ACTIVE"
     },
     {
+        "scenario_id": "sc_kidnap_threat",
         "call_id": "CALL-9821",
         "caller_number": "+91 88201 94013",
         "caller_label": "Suspect: Extortion Burner",
@@ -189,6 +191,7 @@ ACTIVE_CALL_QUEUE: List[Dict[str, Any]] = [
         "status": "QUEUED"
     },
     {
+        "scenario_id": "sc_routine_bank",
         "call_id": "CALL-9819",
         "caller_number": "+91 94112 55820",
         "caller_label": "Citizen: Verified Caller",
@@ -204,8 +207,47 @@ ACTIVE_CALL_QUEUE: List[Dict[str, Any]] = [
         "advisory": "Standard inquiry regarding past cyber complaint. Standard operational queue.",
         "sample_audio": "/api/sample-recordings/sample_routine_bank.wav",
         "status": "QUEUED"
+    },
+    {
+        "scenario_id": "sc_sextortion",
+        "call_id": "CALL-9815",
+        "caller_number": "+91 70192 43109",
+        "caller_label": "Blackmail Intercept",
+        "duration": "00:30",
+        "urgency_score": 89.0,
+        "priority_level": "CRITICAL",
+        "tags": ["#SEXTORTION_BLACKMAIL", "#ACUTE_DISTRESS"],
+        "dominant_emotion": "FEARFUL",
+        "pitch_std": 48.2,
+        "voice_tremor": True,
+        "emotions": {"fearful": 0.84, "sad": 0.52, "angry": 0.15, "neutral": 0.03, "surprised": 0.05},
+        "transcript": "Someone recorded a compromised video of me on WhatsApp and is threatening to broadcast it to my family and workplace if I don't send fifty thousand in bitcoin!",
+        "advisory": "Active sextortion coercion in progress. Instruct victim not to pay, preserve chat metadata, report to cyber cell.",
+        "sample_audio": "/api/sample-recordings/sample_digital_arrest.wav",
+        "status": "QUEUED"
+    },
+    {
+        "scenario_id": "sc_upi_phishing",
+        "call_id": "CALL-9812",
+        "caller_number": "+91 99104 88312",
+        "caller_label": "Victim: Financial Fraud",
+        "duration": "00:20",
+        "urgency_score": 62.0,
+        "priority_level": "ELEVATED",
+        "tags": ["#UPI_PHISHING_FRAUD", "#FINANCIAL_DURESS"],
+        "dominant_emotion": "ANGRY",
+        "pitch_std": 32.5,
+        "voice_tremor": False,
+        "emotions": {"fearful": 0.30, "sad": 0.25, "angry": 0.65, "neutral": 0.10, "surprised": 0.05},
+        "transcript": "I clicked an electricity bill cancellation link and twenty-five thousand rupees got debited via UPI immediately! Please freeze the recipient UPI ID right now!",
+        "advisory": "Financial fraud in progress. Promptly record UPI transaction ID, notify NPCI / bank nodal officer to freeze debit trail.",
+        "sample_audio": "/api/sample-recordings/sample_routine_bank.wav",
+        "status": "QUEUED"
     }
 ]
+
+# Initialize Active Queue with first 3 scenarios
+ACTIVE_CALL_QUEUE: List[Dict[str, Any]] = [dict(s) for s in PRE_RECORDED_SCENARIOS[:3]]
 
 SAMPLE_RECORDINGS = [
     {
@@ -237,15 +279,23 @@ SAMPLE_RECORDINGS = [
     }
 ]
 
+def get_remaining_pre_recorded_count() -> int:
+    active_ids = {c.get("scenario_id") for c in ACTIVE_CALL_QUEUE if c.get("status") != "RESOLVED"}
+    return sum(1 for s in PRE_RECORDED_SCENARIOS if s["scenario_id"] not in active_ids)
+
 @app.get("/api/call-queue")
 def get_call_queue():
     """
-    Returns active calls in dispatch queue sorted by Urgency Score descending.
+    Returns active calls in dispatch queue sorted by Urgency Score descending,
+    along with the remaining available count of pre-recorded library calls.
     """
     sorted_queue = sorted(ACTIVE_CALL_QUEUE, key=lambda c: c.get("urgency_score", 0), reverse=True)
+    remaining = get_remaining_pre_recorded_count()
     return {
         "count": len(sorted_queue),
-        "calls": sorted_queue
+        "calls": sorted_queue,
+        "remaining_pre_recorded": remaining,
+        "total_pre_recorded": len(PRE_RECORDED_SCENARIOS)
     }
 
 class CallActionPayload(BaseModel):
@@ -270,56 +320,39 @@ def update_call_action(payload: CallActionPayload):
                     if other["status"] == "ACTIVE":
                         other["status"] = "QUEUED"
                 call["status"] = "ACTIVE"
-            return {"status": "success", "call": call}
+            return {"status": "success", "call": call, "remaining_pre_recorded": get_remaining_pre_recorded_count()}
     return {"status": "error", "message": "Call ID not found"}
 
 @app.post("/api/call-queue/simulate-incoming")
 def simulate_incoming_call():
     """
-    Simulates a new incoming 112 / 1930 Cyber Emergency call into the queue.
+    Adds the next unadded pre-recorded emergency call from the library into the active queue.
+    If all pre-recorded scenarios have already been loaded, returns an exhausted notification.
     """
-    import random
-    new_id = f"CALL-{random.randint(1000, 9999)}"
-    scenarios = [
-        {
-            "tags": ["#SEXTORTION_BLACKMAIL", "#ACUTE_DISTRESS"],
-            "score": 89.0,
-            "priority": "CRITICAL",
-            "emotion": "FEARFUL",
-            "transcript": "Someone hacked my video call and is blackmailing me saying they will send it to my contacts if I don't pay immediately...",
-            "advisory": "Sextortion blackmail coercion. Instruct victim not to delete chat logs or transfer money.",
-            "audio": "/api/sample-recordings/sample_digital_arrest.wav"
-        },
-        {
-            "tags": ["#UPI_PHISHING_FRAUD"],
-            "score": 58.0,
-            "priority": "ELEVATED",
-            "emotion": "ANGRY",
-            "transcript": "I clicked an electricity bill link and twenty-five thousand rupees got debited via UPI just now!",
-            "advisory": "Financial fraud in progress. Promptly record UPI transaction ID and initiate bank freeze.",
-            "audio": "/api/sample-recordings/sample_routine_bank.wav"
+    active_ids = {c.get("scenario_id") for c in ACTIVE_CALL_QUEUE if c.get("status") != "RESOLVED"}
+    available_scenarios = [s for s in PRE_RECORDED_SCENARIOS if s["scenario_id"] not in active_ids]
+
+    if not available_scenarios:
+        return {
+            "status": "exhausted",
+            "message": "All available pre-recorded calls from the library are currently active in the queue. No more pre-recorded calls available.",
+            "remaining_pre_recorded": 0,
+            "total_pre_recorded": len(PRE_RECORDED_SCENARIOS)
         }
-    ]
-    sc = random.choice(scenarios)
-    new_call = {
-        "call_id": new_id,
-        "caller_number": f"+91 {random.randint(70000, 99999)} {random.randint(10000, 99999)}",
-        "caller_label": "Incoming Emergency Dispatch",
-        "duration": "00:05",
-        "urgency_score": sc["score"],
-        "priority_level": sc["priority"],
-        "tags": sc["tags"],
-        "dominant_emotion": sc["emotion"],
-        "pitch_std": 38.5,
-        "voice_tremor": True if sc["priority"] == "CRITICAL" else False,
-        "emotions": {"fearful": 0.70, "sad": 0.40, "angry": 0.20, "neutral": 0.10, "surprised": 0.05},
-        "transcript": sc["transcript"],
-        "advisory": sc["advisory"],
-        "sample_audio": sc["audio"],
-        "status": "QUEUED"
-    }
+
+    # Take the next available scenario
+    chosen = available_scenarios[0]
+    new_call = dict(chosen)
+    new_call["status"] = "QUEUED"
     ACTIVE_CALL_QUEUE.insert(0, new_call)
-    return {"status": "success", "call": new_call}
+
+    remaining = get_remaining_pre_recorded_count()
+    return {
+        "status": "success",
+        "call": new_call,
+        "remaining_pre_recorded": remaining,
+        "total_pre_recorded": len(PRE_RECORDED_SCENARIOS)
+    }
 
 @app.get("/api/sample-recordings")
 def list_sample_recordings():

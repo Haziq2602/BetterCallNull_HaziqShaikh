@@ -1,6 +1,8 @@
 /**
  * CyberGuard - Front-End Logic & Live Triage Dashboard Controller
- * Multi-call Dispatch Queue, Forensic Wiretap Timeline, and 3-Pillar Real-Time Streaming
+ * Multi-call Dispatch Queue with Library Exhaustion Control,
+ * Live Microphone Streaming with Cumulative Final Analysis Debrief,
+ * and Forensic Wiretap Timeline Investigation.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -30,9 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const valNeutral = document.getElementById("valNeutral");
     const fillNeutral = document.getElementById("fillNeutral");
 
-    // Queue & Buttons
+    // Queue & Action Elements
     const callQueue = document.getElementById("callQueue");
     const queueCount = document.getElementById("queueCount");
+    const queueAlert = document.getElementById("queueAlert");
     const btnSimulateIncoming = document.getElementById("btnSimulateIncoming");
     const btnSimulatePanic = document.getElementById("btnSimulatePanic");
     const btnSimulateCalm = document.getElementById("btnSimulateCalm");
@@ -45,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnUpload = document.getElementById("btnUpload");
     const forensicLoading = document.getElementById("forensicLoading");
 
-    // Forensic Modal Elements
+    // Forensic Modal Elements (Recorded Wiretaps)
     const forensicModal = document.getElementById("forensicModal");
     const modalFilename = document.getElementById("modalFilename");
     const modalScore = document.getElementById("modalScore");
@@ -60,13 +63,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseModalBottom = document.getElementById("btnCloseModalBottom");
     const btnLoadIntoMonitor = document.getElementById("btnLoadIntoMonitor");
 
+    // Live Call Final Forensic Modal Elements
+    const liveFinalModal = document.getElementById("liveFinalModal");
+    const liveModalPeakScore = document.getElementById("liveModalPeakScore");
+    const liveModalPriority = document.getElementById("liveModalPriority");
+    const liveModalCallId = document.getElementById("liveModalCallId");
+    const liveModalDuration = document.getElementById("liveModalDuration");
+    const liveModalAvgScore = document.getElementById("liveModalAvgScore");
+    const liveModalTags = document.getElementById("liveModalTags");
+    const liveModalAdvisory = document.getElementById("liveModalAdvisory");
+    const liveModalAudioPlayer = document.getElementById("liveModalAudioPlayer");
+    const liveModalDominantEmo = document.getElementById("liveModalDominantEmo");
+    const liveModalPitchStd = document.getElementById("liveModalPitchStd");
+    const liveModalTremorCount = document.getElementById("liveModalTremorCount");
+    const liveModalWordCount = document.getElementById("liveModalWordCount");
+    const liveModalFullTranscript = document.getElementById("liveModalFullTranscript");
+    const liveModalTimelineBody = document.getElementById("liveModalTimelineBody");
+    const btnCloseLiveModal = document.getElementById("btnCloseLiveModal");
+    const btnCloseLiveModalBottom = document.getElementById("btnCloseLiveModalBottom");
+    const btnSaveLiveCall = document.getElementById("btnSaveLiveCall");
+
     let currentForensicData = null;
     let localCallsState = [];
     let currentSelectedCallId = "CALL-9823";
+    let remainingPreRecorded = 3;
 
-    // Synthetic Waveform generator
-    let waveAmplitude = 20;
-    let waveFrequency = 0.06;
+    // Synthetic Waveform Generator
+    let waveAmplitude = 18;
+    let waveFrequency = 0.05;
     let waveColor = "#ef4444";
 
     function drawWaveform() {
@@ -99,9 +123,31 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!res.ok) throw new Error("Failed to fetch queue");
             const data = await res.json();
             localCallsState = data.calls || [];
+            remainingPreRecorded = typeof data.remaining_pre_recorded === "number" ? data.remaining_pre_recorded : 0;
+            updatePreRecordedAvailability(remainingPreRecorded);
             renderCallQueue();
         } catch (err) {
             console.warn("[QUEUE] Fetch error, using fallback state:", err);
+        }
+    }
+
+    function updatePreRecordedAvailability(count) {
+        if (!btnSimulateIncoming) return;
+        if (count <= 0) {
+            if (queueAlert) {
+                queueAlert.textContent = "⚠️ All available pre-recorded calls from the library are currently active in the queue. No more pre-recorded calls available.";
+                queueAlert.classList.add("active");
+            }
+            btnSimulateIncoming.classList.add("btn-disabled");
+            btnSimulateIncoming.textContent = "+ Incoming (Exhausted)";
+            btnSimulateIncoming.title = "No more pre-recorded calls available in library";
+        } else {
+            if (queueAlert) {
+                queueAlert.classList.remove("active");
+            }
+            btnSimulateIncoming.classList.remove("btn-disabled");
+            btnSimulateIncoming.textContent = `+ Incoming Call (${count} left)`;
+            btnSimulateIncoming.title = "Add next pre-recorded cyber emergency call from library";
         }
     }
 
@@ -109,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!callQueue) return;
         callQueue.innerHTML = "";
 
-        // Filter out resolved calls
+        // Filter active (unresolved) calls
         const activeCalls = localCallsState.filter(c => c.status !== "RESOLVED");
         if (queueCount) {
             queueCount.textContent = `${activeCalls.length} ACTIVE CHANNELS`;
@@ -122,25 +168,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             const isSelected = call.call_id === currentSelectedCallId;
             const priorityLower = (call.priority_level || "ROUTINE").toLowerCase();
+            const isLive = call.call_id.startsWith("CALL-LIVE");
 
             card.className = `call-card ${priorityLower} ${isSelected ? "active" : ""}`;
             card.id = `card-${call.call_id}`;
 
-            let badgeClass = "priority-rout";
-            if (call.priority_level === "CRITICAL") badgeClass = "priority-crit";
-            else if (call.priority_level === "ELEVATED") badgeClass = "priority-elev";
+            let badgeHtml = "";
+            if (isLive) {
+                badgeHtml = `<span class="badge-live-call">● LIVE INTERCEPT</span>`;
+            } else if (call.priority_level === "CRITICAL") {
+                badgeHtml = `<span class="badge priority-crit">CRITICAL</span>`;
+            } else if (call.priority_level === "ELEVATED") {
+                badgeHtml = `<span class="badge priority-elev">ELEVATED</span>`;
+            } else {
+                badgeHtml = `<span class="badge priority-rout">ROUTINE</span>`;
+            }
 
             const tagsHtml = (call.tags || []).map(t => `<span class="tag ${call.priority_level === 'CRITICAL' ? 'red' : 'yellow'}">${t}</span>`).join(" ");
 
             card.innerHTML = `
                 <div class="card-top">
                     <span class="call-id">#${call.call_id}</span>
-                    <span class="badge ${badgeClass}">${call.priority_level}</span>
+                    ${badgeHtml}
                 </div>
                 <div class="caller-info">${call.caller_number || ''} ${call.caller_label ? '• ' + call.caller_label : ''}</div>
                 <div class="card-meta">
                     <span>Duration: ${call.duration || '00:00'}</span>
-                    <span>Score: <strong>${Math.round(call.urgency_score)}</strong>/100</span>
+                    <span>Score: <strong>${Math.round(call.urgency_score || 0)}</strong>/100</span>
                 </div>
                 <div class="card-tags">
                     ${tagsHtml}
@@ -151,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
 
-            // Card click switches active monitored call
+            // Card click switches active monitored channel
             card.addEventListener("click", (e) => {
                 if (e.target.tagName === "BUTTON") return;
                 setActiveCall(call);
@@ -187,6 +241,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ call_id: callId, action: action })
             });
             if (res.ok) {
+                const data = await res.json();
+                if (typeof data.remaining_pre_recorded === "number") {
+                    remainingPreRecorded = data.remaining_pre_recorded;
+                    updatePreRecordedAvailability(remainingPreRecorded);
+                }
                 await loadCallQueue();
             }
         } catch (err) {
@@ -216,23 +275,28 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCallQueue();
     }
 
-    // Simulate New Incoming Emergency Call
+    // Add Incoming Call from Library
     if (btnSimulateIncoming) {
         btnSimulateIncoming.addEventListener("click", async () => {
-            btnSimulateIncoming.textContent = "Connecting...";
+            if (btnSimulateIncoming.classList.contains("btn-disabled")) {
+                if (queueAlert) queueAlert.classList.add("active");
+                return;
+            }
+
+            btnSimulateIncoming.textContent = "Loading...";
             try {
                 const res = await fetch("/api/call-queue/simulate-incoming", { method: "POST" });
                 if (res.ok) {
                     const data = await res.json();
-                    await loadCallQueue();
-                    if (data.call) {
+                    if (data.status === "exhausted") {
+                        updatePreRecordedAvailability(0);
+                    } else if (data.call) {
+                        await loadCallQueue();
                         setActiveCall(data.call);
                     }
                 }
             } catch (err) {
                 console.error("[SIMULATE INCOMING ERROR]", err);
-            } finally {
-                btnSimulateIncoming.textContent = "+ Incoming Call";
             }
         });
     }
@@ -290,8 +354,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // Transcript & Tags
-        if (data.transcript) {
+        // Transcript & Threat Tags
+        if (data.transcript && data.transcript !== "...") {
             liveTranscript.textContent = `"${data.transcript}"`;
         }
         if (data.detected_tags && data.detected_tags.length > 0) {
@@ -310,20 +374,398 @@ document.addEventListener("DOMContentLoaded", () => {
     // Center Panel Preset Simulators
     btnSimulatePanic.addEventListener("click", () => {
         const panicCall = localCallsState.find(c => c.call_id === "CALL-9823");
-        if (panicCall) {
-            setActiveCall(panicCall);
-        }
+        if (panicCall) setActiveCall(panicCall);
     });
 
     btnSimulateCalm.addEventListener("click", () => {
         const calmCall = localCallsState.find(c => c.call_id === "CALL-9819");
-        if (calmCall) {
-            setActiveCall(calmCall);
-        }
+        if (calmCall) setActiveCall(calmCall);
     });
 
     // ==========================================
-    // 3. FORENSIC CASE AUDIO & WIRETAP ANALYSIS
+    // 3. LIVE MICROPHONE INGESTION & FINAL DEBRIEF
+    // ==========================================
+    let isRecording = false;
+    let audioContext = null;
+    let micStream = null;
+    let scriptProcessor = null;
+    let liveSocket = null;
+    let mediaRecorder = null;
+    let recordedAudioChunks = [];
+    let liveTimerInterval = null;
+
+    // In-memory accumulator for live session statistics
+    let liveSessionData = {
+        callId: "",
+        startTime: null,
+        durationSec: 0,
+        timeline: [],
+        transcripts: [],
+        allTags: new Set(),
+        peakScore: 10,
+        scoresList: [],
+        tremorsCount: 0,
+        pitchMax: 0,
+        dominantEmotions: [],
+        lastAdvisory: ""
+    };
+
+    btnLiveMic.addEventListener("click", async () => {
+        if (!isRecording) {
+            try {
+                // Initialize fresh live call session
+                const liveCallId = `CALL-LIVE-${Math.floor(Math.random() * 9000 + 1000)}`;
+                currentSelectedCallId = liveCallId;
+
+                liveSessionData = {
+                    callId: liveCallId,
+                    startTime: Date.now(),
+                    durationSec: 0,
+                    timeline: [],
+                    transcripts: [],
+                    allTags: new Set(["#LIVE_INTERCEPT"]),
+                    peakScore: 10.0,
+                    scoresList: [],
+                    tremorsCount: 0,
+                    pitchMax: 0.0,
+                    dominantEmotions: [],
+                    lastAdvisory: "Live triage analysis active."
+                };
+
+                const initialLiveCard = {
+                    call_id: liveCallId,
+                    caller_number: "Officer Live Microphone",
+                    caller_label: "Active Patrol / Channel Ingestion",
+                    duration: "00:01",
+                    urgency_score: 10.0,
+                    priority_level: "ROUTINE",
+                    tags: ["#LIVE_INTERCEPT"],
+                    dominant_emotion: "NEUTRAL",
+                    pitch_std: 0.0,
+                    voice_tremor: false,
+                    emotions: { neutral: 0.95 },
+                    transcript: "Listening to microphone...",
+                    advisory: "Speak into the microphone to test live speech emotion, acoustic biomarkers, and threat keywords.",
+                    status: "ACTIVE"
+                };
+
+                // Insert into local state & select it
+                localCallsState = localCallsState.filter(c => !c.call_id.startsWith("CALL-LIVE"));
+                localCallsState.unshift(initialLiveCard);
+                setActiveCall(initialLiveCard);
+
+                // 1. Establish WebSocket
+                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+                const wsUrl = `${protocol}//${window.location.host}/ws/live-call/${liveCallId}`;
+                liveSocket = new WebSocket(wsUrl);
+                liveSocket.binaryType = "arraybuffer";
+
+                liveSocket.onopen = () => {
+                    console.log("[WS] Live streaming started:", wsUrl);
+                };
+
+                // 2. Receive Real-Time Telemetry
+                liveSocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    const nowSec = Math.round((Date.now() - liveSessionData.startTime) / 1000);
+                    const timeLabel = `${String(Math.floor(nowSec / 60)).padStart(2, '0')}:${String(nowSec % 60).padStart(2, '0')}`;
+
+                    // Update session tracking
+                    const score = data.urgency_score || 10.0;
+                    liveSessionData.scoresList.push(score);
+                    liveSessionData.peakScore = Math.max(liveSessionData.peakScore, score);
+                    liveSessionData.lastAdvisory = data.investigator_advisory || liveSessionData.lastAdvisory;
+
+                    if (data.dominant_emotion) {
+                        liveSessionData.dominantEmotions.push(data.dominant_emotion);
+                    }
+
+                    if (data.detected_tags && data.detected_tags.length > 0) {
+                        data.detected_tags.forEach(t => liveSessionData.allTags.add(t));
+                    }
+
+                    if (data.acoustic_metrics) {
+                        liveSessionData.pitchMax = Math.max(liveSessionData.pitchMax, data.acoustic_metrics.pitch_std || 0);
+                        if (data.acoustic_metrics.voice_tremor) {
+                            liveSessionData.tremorsCount++;
+                        }
+                    }
+
+                    if (data.transcript && data.transcript !== "..." && !liveSessionData.transcripts.includes(data.transcript)) {
+                        liveSessionData.transcripts.push(data.transcript);
+                    }
+
+                    // Add to timeline
+                    liveSessionData.timeline.push({
+                        timeLabel: timeLabel,
+                        urgency_score: score,
+                        priority_level: data.priority_level,
+                        dominant_emotion: data.dominant_emotion,
+                        pitch_std: data.acoustic_metrics ? data.acoustic_metrics.pitch_std : 0.0,
+                        voice_tremor: data.acoustic_metrics ? data.acoustic_metrics.voice_tremor : false,
+                        transcript: data.transcript || "..."
+                    });
+
+                    // Live update active screen
+                    updateTelemetryDisplay(data);
+
+                    // Live update card in queue
+                    const card = localCallsState.find(c => c.call_id === liveCallId);
+                    if (card) {
+                        card.urgency_score = liveSessionData.peakScore;
+                        card.priority_level = data.priority_level;
+                        card.tags = Array.from(liveSessionData.allTags);
+                        card.dominant_emotion = data.dominant_emotion;
+                        card.duration = timeLabel;
+                        card.transcript = data.transcript;
+                        card.advisory = data.investigator_advisory;
+                        card.pitch_std = data.acoustic_metrics ? data.acoustic_metrics.pitch_std : 0.0;
+                        card.voice_tremor = data.acoustic_metrics ? data.acoustic_metrics.voice_tremor : false;
+                        card.emotions = data.emotion_breakdown || {};
+                        renderCallQueue();
+                    }
+                };
+
+                // 3. Capture Microphone Audio
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true }
+                });
+
+                // Also record audio blob for playback in final analysis
+                recordedAudioChunks = [];
+                try {
+                    mediaRecorder = new MediaRecorder(micStream);
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordedAudioChunks.push(e.data);
+                    };
+                    mediaRecorder.start(250);
+                } catch (e) {
+                    console.warn("MediaRecorder not supported for playback:", e);
+                }
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === "suspended") {
+                    await audioContext.resume();
+                }
+
+                const source = audioContext.createMediaStreamSource(micStream);
+                scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                scriptProcessor.onaudioprocess = (e) => {
+                    if (!liveSocket || liveSocket.readyState !== WebSocket.OPEN) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // Dynamic wave amplitude
+                    let sum = 0;
+                    for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
+                    const rms = Math.sqrt(sum / inputData.length);
+                    waveAmplitude = Math.max(10, Math.min(60, rms * 200));
+
+                    // Resample to 16 kHz
+                    const targetSampleRate = 16000;
+                    const resampleRatio = audioContext.sampleRate / targetSampleRate;
+                    const outputLength = Math.floor(inputData.length / resampleRatio);
+                    const int16Buffer = new Int16Array(outputLength);
+
+                    for (let i = 0; i < outputLength; i++) {
+                        const originalIndex = Math.floor(i * resampleRatio);
+                        const s = Math.max(-1, Math.min(1, inputData[originalIndex]));
+                        int16Buffer[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+
+                    liveSocket.send(int16Buffer.buffer);
+                };
+
+                source.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // Update Button State to pulsing red recording mode with timer
+                btnLiveMic.classList.add("btn-recording");
+                btnLiveMic.textContent = "🔴 Stop Live Call (00:00) & View Final Analysis";
+                isRecording = true;
+
+                // Live timer ticker
+                liveTimerInterval = setInterval(() => {
+                    const elapsed = Math.round((Date.now() - liveSessionData.startTime) / 1000);
+                    const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const ss = String(elapsed % 60).padStart(2, '0');
+                    btnLiveMic.textContent = `🔴 Stop Live Call (${mm}:${ss}) & View Final Analysis`;
+                }, 1000);
+
+            } catch (err) {
+                alert("Microphone permission denied or not detected: " + err.message);
+                console.error(err);
+            }
+        } else {
+            // ==========================================
+            // STOP CALL & GENERATE FINAL ANALYSIS REPORT
+            // ==========================================
+            clearInterval(liveTimerInterval);
+            liveTimerInterval = null;
+
+            if (scriptProcessor) scriptProcessor.disconnect();
+            if (audioContext) audioContext.close();
+            if (micStream) micStream.getTracks().forEach(t => t.stop());
+            if (liveSocket) liveSocket.close();
+
+            btnLiveMic.classList.remove("btn-recording");
+            btnLiveMic.textContent = "Start Live Mic Triage";
+            isRecording = false;
+
+            // Stop MediaRecorder and package audio
+            let recordedAudioUrl = null;
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                const audioBlob = new Blob(recordedAudioChunks, { type: "audio/webm" });
+                recordedAudioUrl = URL.createObjectURL(audioBlob);
+            }
+
+            // Compute Final Debrief Metrics
+            const totalDurationSec = Math.max(1, Math.round((Date.now() - liveSessionData.startTime) / 1000));
+            const mm = String(Math.floor(totalDurationSec / 60)).padStart(2, '0');
+            const ss = String(totalDurationSec % 60).padStart(2, '0');
+            const finalDurationStr = `${mm}:${ss}`;
+
+            const peakScore = Math.round(liveSessionData.peakScore);
+            const avgScore = liveSessionData.scoresList.length > 0 
+                ? Math.round(liveSessionData.scoresList.reduce((a, b) => a + b, 0) / liveSessionData.scoresList.length)
+                : peakScore;
+
+            let finalPriority = "ROUTINE";
+            if (peakScore >= 75) finalPriority = "CRITICAL";
+            else if (peakScore >= 30) finalPriority = "ELEVATED";
+
+            // Dominant emotion count
+            const emoCounts = {};
+            liveSessionData.dominantEmotions.forEach(e => emoCounts[e] = (emoCounts[e] || 0) + 1);
+            let overallDominantEmo = "NEUTRAL";
+            let maxCount = 0;
+            for (const [e, count] of Object.entries(emoCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    overallDominantEmo = e;
+                }
+            }
+
+            const consolidatedTranscript = liveSessionData.transcripts.length > 0
+                ? liveSessionData.transcripts.join(" ")
+                : "(No distinct voice speech recognized during the live session)";
+
+            const wordCount = consolidatedTranscript.split(/\s+/).filter(w => w.length > 0).length;
+
+            // Final Officer Protocol Recommendation
+            let finalDisposition = liveSessionData.lastAdvisory;
+            if (finalPriority === "CRITICAL") {
+                finalDisposition = "CRITICAL COERCION / DISTRESS DETECTED: Immediate officer dispatch and banking freeze advisory warranted. High risk of extortion in progress.";
+            } else if (finalPriority === "ELEVATED") {
+                finalDisposition = "MODERATE THREAT / SUSPICIOUS CONVERSATION: Secondary officer review advised. Log threat keywords and cross-reference with active FIR records.";
+            } else {
+                finalDisposition = "ROUTINE CHANNEL VERIFIED: Stable vocal baseline and no extortion keywords detected. Standard administrative queue closure.";
+            }
+
+            // OPEN FINAL CALL ANALYSIS MODAL
+            openLiveFinalModal({
+                callId: liveSessionData.callId,
+                duration: finalDurationStr,
+                peakScore: peakScore,
+                avgScore: avgScore,
+                priority: finalPriority,
+                dominantEmotion: overallDominantEmo,
+                pitchMax: liveSessionData.pitchMax.toFixed(1),
+                tremorsCount: liveSessionData.tremorsCount,
+                wordCount: wordCount,
+                tags: Array.from(liveSessionData.allTags),
+                transcript: consolidatedTranscript,
+                disposition: finalDisposition,
+                timeline: liveSessionData.timeline,
+                audioSrc: recordedAudioUrl
+            });
+        }
+    });
+
+    function openLiveFinalModal(data) {
+        if (!liveFinalModal) return;
+
+        liveModalCallId.textContent = `#${data.callId}`;
+        liveModalDuration.textContent = data.duration;
+        liveModalPeakScore.textContent = data.peakScore;
+        liveModalAvgScore.textContent = `${data.avgScore}/100`;
+        liveModalPriority.textContent = data.priority;
+
+        if (data.priority === "CRITICAL") {
+            liveModalPriority.className = "badge priority-crit";
+            liveModalPeakScore.style.color = "#ef4444";
+        } else if (data.priority === "ELEVATED") {
+            liveModalPriority.className = "badge priority-elev";
+            liveModalPeakScore.style.color = "#f59e0b";
+        } else {
+            liveModalPriority.className = "badge priority-rout";
+            liveModalPeakScore.style.color = "#10b981";
+        }
+
+        // Tags
+        if (data.tags && data.tags.length > 0) {
+            liveModalTags.innerHTML = data.tags.map(t => `<span class="tag ${data.priority === 'CRITICAL' ? 'red' : 'yellow'}">${t}</span>`).join(" ");
+        } else {
+            liveModalTags.innerHTML = `<span class="tag green">#STABLE_LINE</span>`;
+        }
+
+        liveModalAdvisory.textContent = data.disposition;
+        liveModalDominantEmo.textContent = data.dominantEmotion;
+        liveModalPitchStd.textContent = `${data.pitchMax} Hz`;
+        liveModalTremorCount.textContent = `${data.tremorsCount} SPIKES`;
+        liveModalWordCount.textContent = `${data.wordCount} WORDS`;
+        liveModalFullTranscript.textContent = `"${data.transcript}"`;
+
+        // Audio Playback
+        if (data.audioSrc && liveModalAudioPlayer) {
+            liveModalAudioPlayer.src = data.audioSrc;
+            liveModalAudioPlayer.load();
+        }
+
+        // Populate Timeline Progression Table
+        if (liveModalTimelineBody) {
+            liveModalTimelineBody.innerHTML = "";
+            (data.timeline || []).forEach(row => {
+                const tr = document.createElement("tr");
+
+                let badge = `<span class="badge priority-rout">ROUTINE</span>`;
+                if (row.priority_level === "CRITICAL") badge = `<span class="badge priority-crit">CRITICAL</span>`;
+                else if (row.priority_level === "ELEVATED") badge = `<span class="badge priority-elev">ELEVATED</span>`;
+
+                tr.innerHTML = `
+                    <td style="font-family:'JetBrains Mono',monospace;">${row.timeLabel}</td>
+                    <td style="font-weight:700;">${Math.round(row.urgency_score)}/100</td>
+                    <td>${badge}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;">${row.dominant_emotion || 'NEUTRAL'}</td>
+                    <td>${row.pitch_std} Hz</td>
+                    <td>${row.voice_tremor ? '⚠️ DETECTED' : 'None'}</td>
+                    <td style="font-style:italic; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${row.transcript}"</td>
+                `;
+                liveModalTimelineBody.appendChild(tr);
+            });
+        }
+
+        liveFinalModal.classList.add("open");
+    }
+
+    function closeLiveModal() {
+        if (liveModalAudioPlayer) liveModalAudioPlayer.pause();
+        if (liveFinalModal) liveFinalModal.classList.remove("open");
+    }
+
+    if (btnCloseLiveModal) btnCloseLiveModal.addEventListener("click", closeLiveModal);
+    if (btnCloseLiveModalBottom) btnCloseLiveModalBottom.addEventListener("click", closeLiveModal);
+    if (btnSaveLiveCall) {
+        btnSaveLiveCall.addEventListener("click", () => {
+            closeLiveModal();
+            renderCallQueue();
+        });
+    }
+
+    // ==========================================
+    // 4. FORENSIC CASE AUDIO & WIRETAP ANALYSIS
     // ==========================================
     async function executeForensicAnalysis(endpoint, body, audioSrcUrl) {
         if (forensicLoading) forensicLoading.classList.add("active");
@@ -346,7 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Load pre-packaged sample wiretap
     if (btnLoadSample && sampleSelect) {
         btnLoadSample.addEventListener("click", () => {
             const sampleId = sampleSelect.value;
@@ -359,7 +800,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Upload custom user audio file
     if (btnUpload && audioUpload) {
         btnUpload.addEventListener("click", () => {
             const file = audioUpload.files[0];
@@ -403,13 +843,12 @@ document.addEventListener("DOMContentLoaded", () => {
         modalSummary.textContent = data.summary || "No active threat patterns detected.";
         modalFullTranscript.textContent = `"${data.full_transcript || '(No speech transcript recognized)'}"`;
 
-        // Audio Player
         if (audioSrc && modalAudioPlayer) {
             modalAudioPlayer.src = audioSrc;
             modalAudioPlayer.load();
         }
 
-        // Populate Timeline Table
+        // Timeline Table
         if (modalTimelineBody && data.timeline) {
             modalTimelineBody.innerHTML = "";
             data.timeline.forEach(row => {
@@ -451,9 +890,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!currentForensicData) return;
             const d = currentForensicData;
 
-            // Create or update a call card in the queue for this forensic wiretap
             const wiretapCall = {
-                call_id: `WIRETAP-${Math.floor(Math.random()*9000 + 1000)}`,
+                call_id: `WIRETAP-${Math.floor(Math.random() * 9000 + 1000)}`,
                 caller_number: "Forensic Case Recording",
                 caller_label: d.filename,
                 duration: d.duration_label,
@@ -474,140 +912,6 @@ document.addEventListener("DOMContentLoaded", () => {
             closeModal();
         });
     }
-
-    // ==========================================
-    // 4. REAL-TIME MIC STREAMING & WEBSOCKET
-    // ==========================================
-    let isRecording = false;
-    let audioContext = null;
-    let micStream = null;
-    let scriptProcessor = null;
-    let liveSocket = null;
-
-    btnLiveMic.addEventListener("click", async () => {
-        if (!isRecording) {
-            try {
-                // Dynamically inject live dispatch call to queue
-                const liveCall = {
-                    call_id: "CALL-LIVE",
-                    caller_number: "Officer Live Mic Ingestion",
-                    caller_label: "Active Patrol / Intercept",
-                    duration: "00:01",
-                    urgency_score: 10.0,
-                    priority_level: "ROUTINE",
-                    tags: ["#MONITORING_STREAM"],
-                    dominant_emotion: "NEUTRAL",
-                    pitch_std: 0.0,
-                    voice_tremor: false,
-                    emotions: { neutral: 0.95 },
-                    transcript: "Listening to microphone...",
-                    advisory: "Live microphone streaming active.",
-                    status: "ACTIVE"
-                };
-
-                // Set as active
-                localCallsState = localCallsState.filter(c => c.call_id !== "CALL-LIVE");
-                localCallsState.unshift(liveCall);
-                setActiveCall(liveCall);
-
-                // Establish WebSocket
-                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-                const wsUrl = `${protocol}//${window.location.host}/ws/live-call/CALL-LIVE`;
-                liveSocket = new WebSocket(wsUrl);
-                liveSocket.binaryType = "arraybuffer";
-
-                liveSocket.onopen = () => {
-                    console.log("[WS] Live streaming started:", wsUrl);
-                };
-
-                liveSocket.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-
-                    // Update live monitor display
-                    updateTelemetryDisplay(data);
-
-                    // Update card in queue
-                    const card = localCallsState.find(c => c.call_id === "CALL-LIVE");
-                    if (card) {
-                        card.urgency_score = data.urgency_score;
-                        card.priority_level = data.priority_level;
-                        card.tags = data.detected_tags || [];
-                        card.dominant_emotion = data.dominant_emotion;
-                        card.transcript = data.transcript;
-                        card.advisory = data.investigator_advisory;
-                        card.pitch_std = data.acoustic_metrics ? data.acoustic_metrics.pitch_std : 0.0;
-                        card.voice_tremor = data.acoustic_metrics ? data.acoustic_metrics.voice_tremor : false;
-                        card.emotions = data.emotion_breakdown || {};
-                        renderCallQueue();
-                    }
-                };
-
-                liveSocket.onerror = (err) => {
-                    console.error("[WS ERROR]", err);
-                };
-
-                // Capture Microphone at 16kHz
-                micStream = await navigator.mediaDevices.getUserMedia({
-                    audio: { echoCancellation: true, noiseSuppression: true }
-                });
-
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === "suspended") {
-                    await audioContext.resume();
-                }
-
-                const source = audioContext.createMediaStreamSource(micStream);
-                scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-
-                scriptProcessor.onaudioprocess = (e) => {
-                    if (!liveSocket || liveSocket.readyState !== WebSocket.OPEN) return;
-
-                    const inputData = e.inputBuffer.getChannelData(0);
-
-                    // Dynamic wave amplitude based on mic input volume
-                    let sum = 0;
-                    for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
-                    const rms = Math.sqrt(sum / inputData.length);
-                    waveAmplitude = Math.max(10, Math.min(60, rms * 200));
-
-                    // Resample to 16 kHz
-                    const targetSampleRate = 16000;
-                    const resampleRatio = audioContext.sampleRate / targetSampleRate;
-                    const outputLength = Math.floor(inputData.length / resampleRatio);
-                    const int16Buffer = new Int16Array(outputLength);
-
-                    for (let i = 0; i < outputLength; i++) {
-                        const originalIndex = Math.floor(i * resampleRatio);
-                        const s = Math.max(-1, Math.min(1, inputData[originalIndex]));
-                        int16Buffer[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                    }
-
-                    liveSocket.send(int16Buffer.buffer);
-                };
-
-                source.connect(scriptProcessor);
-                scriptProcessor.connect(audioContext.destination);
-
-                btnLiveMic.textContent = "Stop Live Mic Triage";
-                btnLiveMic.style.background = "#ef4444";
-                isRecording = true;
-
-            } catch (err) {
-                alert("Microphone permission denied or not detected: " + err.message);
-                console.error(err);
-            }
-        } else {
-            // Stop recording & close socket
-            if (scriptProcessor) scriptProcessor.disconnect();
-            if (audioContext) audioContext.close();
-            if (micStream) micStream.getTracks().forEach(t => t.stop());
-            if (liveSocket) liveSocket.close();
-
-            btnLiveMic.textContent = "Start Live Mic Triage";
-            btnLiveMic.style.background = "#3b82f6";
-            isRecording = false;
-        }
-    });
 
     // Initial Load
     loadCallQueue();
