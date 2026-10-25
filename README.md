@@ -1,5 +1,7 @@
 # CyberGuard: Multimodal Speech Emotion & Triage Console for Cybercrime Investigations
 
+> 🌐 **Live Cloud Deployment:** [CyberGuard - Real-Time Speech Emotion & Call Triage Console](https://cyberguard-5jw9.onrender.com/)
+
 An AI-powered decision-support and dispatch prioritization console designed for cybercrime helplines (**1930 / 112**) and forensic investigation units. The system analyzes live incoming distress calls and recorded wiretaps to detect vocal panic biomarkers, assess caller urgency in real time, extract extortion context, and prioritize high-risk incidents for immediate police intervention.
 
 ---
@@ -99,13 +101,13 @@ Rather than a simple arithmetic average, CyberGuard uses a **Three Specialists A
 * **Pillar 1 Emotion ($s_{\text{emo}}$):** Dampened Valence-Arousal Projection:
   $$s_{\text{emo}} = \min\left(1.0, \frac{0.55 \cdot P_{\text{fear}} + 0.30 \cdot P_{\text{sad}} + 0.15 \cdot P_{\text{angry}}}{1.0 + 0.8 \cdot P_{\text{neutral}}}\right)$$
 * **Pillar 2 Acoustics ($s_{\text{acoust}}$):** Richards' Generalized Sigmoid inflection around 32 Hz tremor threshold:
-  $$s_{\text{acoust}} = \frac{1.0}{1.0 + e^{-0.14 \cdot (\sigma_{F_0} - 32.0)}} + \text{whisper\_bonus}$$
+  $$s_{\text{acoust}} = \frac{1.0}{1.0 + e^{-0.14 \cdot (\sigma_{F_0} - 32.0)}} + b_{\text{whisper}}$$
 * **Pillar 3 Threat Severity ($s_{\text{threat}}$):** Normalized semantic threat points:
   $$s_{\text{threat}} = \min\left(1.0, \frac{\text{points}}{25.0}\right)$$
 
 ### Phase 2: Evidence Integration & Geometric Resonance
-Calculates the linear weighted evidence ($w_{\text{emo}}=0.35, w_{\text{acoust}}=0.25, w_{\text{threat}}=0.40$) plus a **Geometric Synergy Bonus** that activates when multiple independent pillars agree:
-$$\text{Synergy} = 0.20 \cdot (s_{\text{emo}} \cdot s_{\text{acoust}} \cdot s_{\text{threat}})^{1/3} + 0.05 \cdot \text{pair\_consensus}$$
+Calculates the linear weighted evidence ($w_{\text{emo}} = 0.35$, $w_{\text{acoust}} = 0.25$, $w_{\text{threat}} = 0.40$) plus a **Geometric Synergy Bonus** that activates when multiple independent pillars agree:
+$$\text{Synergy} = 0.20 \cdot (s_{\text{emo}} \cdot s_{\text{acoust}} \cdot s_{\text{threat}})^{1/3} + 0.05 \cdot c_{\text{pair}}$$
 
 ### Phase 3: Speedometer Logistic S-Curve (0 to 100)
 Maps the fused evidence $u_{\text{fused}}$ to a human-calibrated emergency triage scale:
