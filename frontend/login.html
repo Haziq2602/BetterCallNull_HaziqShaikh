@@ -4,164 +4,1236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGuard - Investigator Access Control</title>
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#050806">
+    <title>Sign in - CyberGuard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=5">
+    <!-- Shared tokens (--accent, --text, --muted ...) come from the console stylesheet.
+         Everything below is namespaced lg-* so it cannot clash with it. -->
+    <link rel="stylesheet" href="css/styles.css?v=7">
+    <style>
+        html {
+            background: #050806;
+        }
+
+        .lg-body {
+            --lg-bg: #050806;
+            --lg-text: var(--text, #e4f2ea);
+            --lg-muted: var(--muted, #8fa89a);
+            --lg-accent: var(--accent, #3dffa0);
+            --lg-accent-hover: var(--accent-hover, #8dffc6);
+            --lg-cyan: var(--accent-cyan, #5df2b8);
+            --lg-red: #ef4444;
+            --lg-line: rgba(110, 255, 190, 0.15);
+            --lg-line-strong: rgba(110, 255, 190, 0.3);
+            --lg-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+            --lg-sans: 'IBM Plex Sans', 'Segoe UI', -apple-system, Roboto, sans-serif;
+
+            position: relative;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 1.5rem 1rem 4rem;
+            background: var(--lg-bg);
+            color: var(--lg-text);
+            font-family: var(--lg-sans);
+            font-size: 16px;
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .lg-body [hidden] {
+            display: none !important;
+        }
+
+        /* ---------- Backdrop: identical to the console (light sources + grid + scanlines) ---------- */
+        .lg-body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(45vw 45vw at 0% 0%, rgba(20, 150, 100, 0.32), transparent 70%),
+                radial-gradient(40vw 40vw at 100% 100%, rgba(10, 90, 80, 0.30), transparent 70%),
+                linear-gradient(rgba(61, 255, 160, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(61, 255, 160, 0.045) 1px, transparent 1px);
+            background-size: auto, auto, 44px 44px, 44px 44px;
+        }
+
+        .lg-body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+            opacity: 0.55;
+        }
+
+        /* Radar sits on top of the grid and is centred on the sign-in card */
+        .lg-radar {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            animation: lgFade 1.4s 0.1s ease forwards;
+        }
+
+        .lg-vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 38%, rgba(2, 5, 3, 0.72) 100%);
+        }
+
+        .lg-stage {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* ---------- Card: same frosted glass as the console panels ---------- */
+        .lg-card {
+            position: relative;
+            width: 100%;
+            max-width: 430px;
+            padding: 2rem 2rem 1.4rem;
+            background:
+                linear-gradient(160deg, rgba(190, 255, 225, 0.12), rgba(190, 255, 225, 0.04) 60%),
+                rgba(7, 14, 10, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.24),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+                inset 0 0 10px 5px rgba(190, 255, 225, 0.04);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            backdrop-filter: blur(16px) saturate(140%);
+            transition: border-color 0.4s, box-shadow 0.4s;
+            animation: lgRise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .lg-card {
+                background: #0a120e;
+            }
+        }
+
+        /* lit edges, like .panel */
+        .lg-card::before,
+        .lg-card::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .lg-card::before {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+
+        .lg-card::after {
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
+        }
+
+        .lg-card.shake {
+            animation: lgShake 0.4s ease;
+        }
+
+        .lg-granted .lg-card {
+            border-color: rgba(61, 255, 160, 0.65);
+            box-shadow:
+                0 0 0 1px rgba(61, 255, 160, 0.3),
+                0 0 70px rgba(61, 255, 160, 0.2),
+                0 8px 32px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.24);
+        }
+
+        /* ---------- Brand ---------- */
+        .lg-head {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .lg-mark {
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            margin-bottom: 0.65rem;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(61, 255, 160, 0.4);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 0 26px rgba(61, 255, 160, 0.16);
+            color: var(--lg-accent);
+        }
+
+        .lg-brand {
+            font-family: var(--lg-mono);
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+
+        .lg-brand::after {
+            content: "_";
+            margin-left: 2px;
+            color: var(--lg-accent);
+            animation: lgBlink 1.1s steps(1) infinite;
+        }
+
+        .lg-sub {
+            font-size: 0.86rem;
+            color: var(--lg-muted);
+        }
+
+        .lg-restricted {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-top: 0.7rem;
+            padding: 0.32rem 0.8rem;
+            border: 1px solid var(--lg-line-strong);
+            border-radius: 999px;
+            background: rgba(61, 255, 160, 0.07);
+            font: 500 0.72rem/1.2 var(--lg-mono);
+            color: var(--lg-cyan);
+        }
+
+        .lg-restricted svg {
+            flex-shrink: 0;
+        }
+
+        /* ---------- Forms ---------- */
+        .lg-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .lg-view-title {
+            font: 600 1rem/1.3 var(--lg-mono);
+        }
+
+        .lg-view-copy {
+            margin-top: -0.55rem;
+            font-size: 0.86rem;
+            line-height: 1.5;
+            color: var(--lg-muted);
+        }
+
+        .lg-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .lg-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.75rem;
+        }
+
+        .lg-label {
+            font: 500 0.78rem/1.2 var(--lg-mono);
+            letter-spacing: 0.02em;
+            color: var(--lg-muted);
+        }
+
+        .lg-wrap {
+            display: flex;
+            align-items: stretch;
+            min-height: 46px;
+            background: rgba(2, 8, 5, 0.55);
+            border: 1px solid var(--lg-line);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .lg-wrap:hover {
+            border-color: var(--lg-line-strong);
+        }
+
+        .lg-wrap:focus-within {
+            border-color: var(--lg-accent);
+            box-shadow: 0 0 0 3px rgba(61, 255, 160, 0.16);
+            background: rgba(2, 8, 5, 0.7);
+        }
+
+        .lg-icon {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 44px;
+            color: var(--lg-muted);
+            transition: color 0.2s;
+        }
+
+        .lg-wrap:focus-within .lg-icon {
+            color: var(--lg-accent);
+        }
+
+        .lg-input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.7rem 0.85rem 0.7rem 0;
+            background: transparent;
+            border: 0;
+            outline: 0;
+            font: 400 0.92rem var(--lg-mono);
+            color: var(--lg-text);
+            color-scheme: dark;
+        }
+
+        .lg-input::placeholder {
+            color: rgba(143, 168, 154, 0.45);
+        }
+
+        /* Browser autofill paints a pale yellow/white box: keep it on-theme */
+        .lg-input:-webkit-autofill,
+        .lg-input:-webkit-autofill:hover,
+        .lg-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--lg-text);
+            caret-color: var(--lg-text);
+            box-shadow: 0 0 0 1000px #0b1711 inset;
+            transition: background-color 9999s ease-out;
+        }
+
+        /* Show / hide passcode */
+        .lg-eye {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 46px;
+            padding: 0;
+            background: transparent;
+            border: 0;
+            border-left: 1px solid var(--lg-line);
+            border-radius: 0;
+            color: var(--lg-muted);
+            cursor: pointer;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .lg-eye:hover {
+            color: var(--lg-accent);
+            background: rgba(61, 255, 160, 0.07);
+        }
+
+        .lg-eye[aria-pressed="true"] {
+            color: var(--lg-accent);
+            background: rgba(61, 255, 160, 0.1);
+        }
+
+        .lg-eye:focus-visible {
+            outline: 2px solid var(--lg-accent);
+            outline-offset: -2px;
+        }
+
+        .lg-eye .lg-eye-off {
+            display: none;
+        }
+
+        .lg-eye[aria-pressed="true"] .lg-eye-on {
+            display: none;
+        }
+
+        .lg-eye[aria-pressed="true"] .lg-eye-off {
+            display: block;
+        }
+
+        .lg-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-height: 1rem;
+            font: 400 0.7rem/1 var(--lg-mono);
+            color: var(--lg-cyan);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .lg-hint.is-on {
+            opacity: 1;
+        }
+
+        .lg-link {
+            padding: 0;
+            background: transparent;
+            border: 0;
+            border-radius: 3px;
+            font: 500 0.74rem var(--lg-mono);
+            color: var(--lg-cyan);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .lg-link:hover {
+            color: var(--lg-accent);
+        }
+
+        .lg-link:focus-visible {
+            outline: 2px solid var(--lg-accent);
+            outline-offset: 3px;
+        }
+
+        .lg-back {
+            align-self: center;
+        }
+
+        /* ---------- Alerts ---------- */
+        .lg-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .lg-alert svg {
+            flex-shrink: 0;
+            margin-top: 0.12rem;
+        }
+
+        .lg-alert.error {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.38);
+            color: #fca5a5;
+        }
+
+        .lg-alert.info {
+            background: rgba(61, 255, 160, 0.07);
+            border-color: var(--lg-line-strong);
+            color: var(--lg-text);
+        }
+
+        .lg-alert.info svg {
+            color: var(--lg-accent);
+        }
+
+        .lg-alert.ok {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #a7f3d0;
+        }
+
+        .lg-alert strong {
+            display: block;
+            margin-bottom: 0.1rem;
+            font-weight: 600;
+        }
+
+        .lg-alert.error {
+            margin-bottom: 0;
+        }
+
+        /* ---------- Primary button ---------- */
+        .lg-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            width: 100%;
+            min-height: 46px;
+            margin-top: 0.15rem;
+            padding: 0.7rem 1rem;
+            background: var(--lg-accent);
+            border: 0;
+            border-radius: 10px;
+            font: 700 0.88rem var(--lg-mono);
+            letter-spacing: 0.03em;
+            color: #031008;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(61, 255, 160, 0.22);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+
+        .lg-btn:hover:not(:disabled) {
+            background: var(--lg-accent-hover);
+            box-shadow: 0 8px 30px rgba(61, 255, 160, 0.4);
+        }
+
+        .lg-btn:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 3px;
+        }
+
+        .lg-btn:disabled {
+            cursor: progress;
+        }
+
+        .lg-btn[data-state="idle"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .lg-btn .lg-arrow {
+            transition: transform 0.2s;
+        }
+
+        .lg-btn:hover:not(:disabled) .lg-arrow {
+            transform: translateX(4px);
+        }
+
+        .lg-btn .lg-spin,
+        .lg-btn .lg-check {
+            display: none;
+        }
+
+        .lg-btn[data-state="busy"] .lg-arrow,
+        .lg-btn[data-state="granted"] .lg-arrow {
+            display: none;
+        }
+
+        .lg-btn[data-state="busy"] .lg-spin {
+            display: block;
+        }
+
+        .lg-btn[data-state="granted"] .lg-check {
+            display: block;
+        }
+
+        .lg-spin {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid rgba(3, 16, 8, 0.25);
+            border-top-color: #031008;
+            animation: lgSpin 0.7s linear infinite;
+        }
+
+        /* ---------- Duty credentials (demo) ---------- */
+        .lg-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: rgba(2, 8, 5, 0.5);
+            border: 1px dashed var(--lg-line-strong);
+            border-radius: 10px;
+            font: 400 0.74rem var(--lg-mono);
+            color: var(--lg-muted);
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .lg-demo:hover {
+            border-color: var(--lg-accent);
+            background: rgba(61, 255, 160, 0.05);
+        }
+
+        .lg-demo:focus-visible {
+            outline: 2px solid var(--lg-accent);
+            outline-offset: 2px;
+        }
+
+        .lg-demo-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .lg-demo-row span:last-child {
+            color: var(--lg-cyan);
+        }
+
+        .lg-demo code {
+            font-family: var(--lg-mono);
+            font-weight: 600;
+            color: var(--lg-accent);
+        }
+
+        /* ---------- Card footer + page HUD ---------- */
+        .lg-foot {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-top: 1.25rem;
+            padding-top: 0.95rem;
+            border-top: 1px solid var(--lg-line);
+            text-align: center;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: rgba(143, 168, 154, 0.75);
+        }
+
+        .lg-hud {
+            position: fixed;
+            left: 1.5rem;
+            right: 1.5rem;
+            bottom: 1rem;
+            z-index: 2;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            font: 500 0.72rem var(--lg-mono);
+            color: var(--lg-muted);
+            pointer-events: none;
+        }
+
+        .lg-hud time {
+            color: var(--lg-cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ---------- Motion ---------- */
+        @keyframes lgRise {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.985);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        @keyframes lgFade {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes lgShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-6px);
+            }
+
+            40% {
+                transform: translateX(6px);
+            }
+
+            60% {
+                transform: translateX(-3px);
+            }
+
+            80% {
+                transform: translateX(3px);
+            }
+        }
+
+        @keyframes lgSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes lgBlink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .lg-card,
+            .lg-card.shake,
+            .lg-brand::after,
+            .lg-spin {
+                animation: none;
+            }
+
+            .lg-radar {
+                opacity: 1;
+                animation: none;
+            }
+
+            .lg-btn .lg-arrow,
+            .lg-card {
+                transition: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lg-card {
+                padding: 1.6rem 1.25rem 1.2rem;
+            }
+
+            .lg-hud span {
+                display: none;
+            }
+
+            .lg-hud {
+                justify-content: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/login-premium.css?v=3">
 </head>
 
-<body class="login-page-body">
-    <div class="auth-gate-overlay is-standalone" id="authGate">
-        <div class="auth-gate-card">
-            <div class="auth-gate-header">
-                <div class="auth-emblem">
-                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"
+<body class="lg-body" id="page">
+    <canvas class="lg-radar" id="radar" aria-hidden="true"></canvas>
+    <div class="lg-vignette" aria-hidden="true"></div>
+
+    <main class="lg-stage">
+        <div class="lg-card" id="card">
+
+            <header class="lg-head">
+                <div class="lg-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
                         <path d="M12 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                         <path d="M12 13.5c-2.8 0-5 1.8-5 3.5v.5h10v-.5c0-1.7-2.2-3.5-5-3.5z" />
                     </svg>
                 </div>
-                <h2>CYBERGUARD PORTAL</h2>
-                <p class="auth-gate-subtitle">Law Enforcement & Cybercrime Triage Unit</p>
-                <div class="auth-security-notice">
-                    <span class="lock-icon">🔒</span> RESTRICTED ACCESS — AUTHORIZED INVESTIGATORS ONLY
-                </div>
+                <h1 class="lg-brand">CyberGuard</h1>
+                <p class="lg-sub">Speech emotion triage console</p>
+                <p class="lg-restricted">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="11" width="14" height="10" rx="2" />
+                        <path d="M8 11V7a4 4 0 018 0v4" />
+                    </svg>
+                    Restricted access for authorized investigators
+                </p>
+            </header>
+
+            <!-- Notice carried over from another page (session expired, signed out) -->
+            <div class="lg-alert info" id="notice" role="status" hidden style="margin-bottom: 1.1rem;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 11v5" />
+                    <path d="M12 8v.01" />
+                </svg>
+                <span id="noticeMsg"></span>
             </div>
 
-            <form class="auth-form" id="loginForm" autocomplete="off">
-                <div class="auth-error-alert" id="loginError" style="display: none;">
-                    <span class="alert-icon">⚠️</span>
-                    <span id="loginErrorMsg">Invalid credentials. Access denied.</span>
-                </div>
-
-                <div class="auth-field">
-                    <label for="loginUsername">Investigator ID / Badge No.</label>
-                    <div class="input-wrap">
-                        <span class="input-prefix">ID</span>
-                        <input type="text" id="loginUsername" name="username" placeholder="e.g. investigator_01" required autofocus />
+            <!-- ============ SIGN IN ============ -->
+            <section id="viewLogin" aria-label="Sign in">
+                <form class="lg-form" id="loginForm">
+                    <div class="lg-alert error" id="loginError" role="alert" hidden>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 4l9 16H3L12 4z" />
+                            <path d="M12 10v4" />
+                            <path d="M12 17.5v.01" />
+                        </svg>
+                        <span id="loginErrorMsg"></span>
                     </div>
-                </div>
 
-                <div class="auth-field">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label for="loginPassword" style="margin: 0;">Access Passcode</label>
-                        <button type="button" class="btn-link" id="btnForgotPass">Forgot passcode?</button>
+                    <div class="lg-field">
+                        <label class="lg-label" for="loginUsername">Investigator ID / Badge No.</label>
+                        <div class="lg-wrap">
+                            <span class="lg-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                                    <circle cx="9" cy="11" r="2" />
+                                    <path d="M6.5 16c.6-1.4 1.5-2 2.5-2s1.9.6 2.5 2" />
+                                    <path d="M14 10h4" />
+                                    <path d="M14 14h3" />
+                                </svg>
+                            </span>
+                            <input class="lg-input" type="text" id="loginUsername" name="username"
+                                placeholder="e.g. investigator_01" autocomplete="username" autocapitalize="off"
+                                autocorrect="off" spellcheck="false" required autofocus />
+                        </div>
                     </div>
-                    <div class="input-wrap">
-                        <span class="input-prefix">🔑</span>
-                        <input type="password" id="loginPassword" name="password" placeholder="Enter secure passcode" required />
+
+                    <div class="lg-field">
+                        <div class="lg-label-row">
+                            <label class="lg-label" for="loginPassword">Access Passcode</label>
+                            <button type="button" class="lg-link" id="btnForgotPass">Forgot passcode?</button>
+                        </div>
+                        <div class="lg-wrap">
+                            <span class="lg-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="8" cy="15" r="4" />
+                                    <path d="M10.8 12.2L20 3" />
+                                    <path d="M16 7l3 3" />
+                                    <path d="M14 9l2 2" />
+                                </svg>
+                            </span>
+                            <input class="lg-input" type="password" id="loginPassword" name="password"
+                                placeholder="Enter your passcode" autocomplete="current-password" autocapitalize="off"
+                                autocorrect="off" spellcheck="false" aria-describedby="capsHint" required />
+                            <button type="button" class="lg-eye" id="btnTogglePass" aria-label="Show passcode"
+                                aria-pressed="false" aria-controls="loginPassword" title="Show passcode">
+                                <svg class="lg-eye-on" viewBox="0 0 24 24" width="19" height="19" fill="none"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg class="lg-eye-off" viewBox="0 0 24 24" width="19" height="19" fill="none"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round" aria-hidden="true">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <path d="M1 1l22 22" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="lg-hint" id="capsHint" role="status">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 19V5" />
+                                <path d="M5 12l7-7 7 7" />
+                            </svg>
+                            <span id="capsHintText"></span>
+                        </div>
                     </div>
-                </div>
 
-                <button type="submit" class="btn-auth-submit" id="btnLoginSubmit">
-                    <span>Authorize Terminal Session</span>
-                    <span class="btn-arrow">→</span>
-                </button>
+                    <button type="submit" class="lg-btn" id="btnLogin" data-state="idle">
+                        <span class="lg-spin" aria-hidden="true"></span>
+                        <svg class="lg-check" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                            stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M5 12.5l4.5 4.5L19 7.5" />
+                        </svg>
+                        <span class="lg-btn-label">Sign in</span>
+                        <svg class="lg-arrow" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M5 12h14" />
+                            <path d="M13 6l6 6-6 6" />
+                        </svg>
+                    </button>
 
-                <div class="auth-demo-hint">
-                    <span class="hint-label">Pre-Provisioned Duty Credentials:</span>
-                    <div><code>investigator_01</code> / <code>cyberguard2026</code></div>
-                </div>
+                    <!-- DEV / DEMO ONLY: set SHOW_DEMO_CREDENTIALS to false in the script (or delete this
+                         button) before real deployment -->
+                    <button type="button" class="lg-demo" id="btnDemoFill">
+                        <span class="lg-demo-row"><span>Duty credentials</span><span>Tap to fill</span></span>
+                        <span><code>investigator_01</code> / <code>cyberguard2026</code></span>
+                    </button>
+                </form>
+            </section>
 
-                <div class="auth-compliance-footer">
-                    <span>Sec. 43/66 IT Act & Evidence Integrity Protocol</span>
-                    <span>All sessions logged with SHA-256 telemetry</span>
-                </div>
-            </form>
+            <!-- ============ ONE-TIME SIGN-IN LINK ============ -->
+            <section id="viewForgot" aria-label="Request a one-time sign-in link" hidden>
+                <form class="lg-form" id="forgotForm">
+                    <h2 class="lg-view-title">Get a one-time sign-in link</h2>
+                    <p class="lg-view-copy" id="forgotCopy">Enter your investigator ID. If it is registered, the link is
+                        sent to the official email and phone number on file.</p>
 
-            <!-- One-Time Magic Login Link Request Form -->
-            <form class="auth-form" id="forgotForm" style="display: none;" autocomplete="off">
-                <div class="auth-security-notice" style="margin-bottom: 0.5rem; width: 100%; justify-content: center;">
-                    <span class="lock-icon">✉️</span> DISPATCH ONE-TIME LOGIN LINK
-                </div>
-                <div class="auth-error-alert" id="forgotError" style="display: none;">
-                    <span class="alert-icon">⚠️</span>
-                    <span id="forgotErrorMsg">Error requesting login link.</span>
-                </div>
-                <div class="auth-success-alert" id="forgotSuccess" style="display: none; flex-direction: column; gap: 0.4rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="alert-icon">📨</span>
-                        <strong style="color: #86efac;">Login Link Dispatched!</strong>
+                    <div class="lg-alert error" id="forgotError" role="alert" hidden>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 4l9 16H3L12 4z" />
+                            <path d="M12 10v4" />
+                            <path d="M12 17.5v.01" />
+                        </svg>
+                        <span id="forgotErrorMsg"></span>
                     </div>
-                    <span id="forgotSuccessMsg" style="line-height: 1.4; color: var(--text);">
-                        A secure one-time login link has been dispatched to the authorized email and registered phone number associated with this Investigator ID.
-                    </span>
-                    <small style="color: var(--muted); margin-top: 0.2rem;">
-                        (For OPSEC compliance, registered contact destinations are kept confidential. Passwords can only be altered at the database level.)
-                    </small>
-                </div>
 
-                <div class="auth-field" id="forgotUsernameField">
-                    <label for="forgotUsername">Investigator Unique ID</label>
-                    <div class="input-wrap">
-                        <span class="input-prefix">ID</span>
-                        <input type="text" id="forgotUsername" value="investigator_01" required />
+                    <div class="lg-alert ok" id="forgotSuccess" role="status" hidden>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M8 12.5l2.7 2.7L16 9.8" />
+                        </svg>
+                        <span>
+                            <strong>Request received</strong>
+                            If this ID is registered, a one-time sign-in link is on its way to the official email and
+                            phone number on file. Contact details stay confidential.
+                        </span>
                     </div>
-                </div>
 
-                <button type="submit" class="btn-auth-submit" id="btnForgotSubmit">
-                    <span>Dispatch One-Time Login Link</span>
-                    <span class="btn-arrow">→</span>
-                </button>
+                    <div class="lg-field" id="forgotField">
+                        <label class="lg-label" for="forgotUsername">Investigator ID</label>
+                        <div class="lg-wrap">
+                            <span class="lg-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                                    <circle cx="9" cy="11" r="2" />
+                                    <path d="M6.5 16c.6-1.4 1.5-2 2.5-2s1.9.6 2.5 2" />
+                                    <path d="M14 10h4" />
+                                    <path d="M14 14h3" />
+                                </svg>
+                            </span>
+                            <input class="lg-input" type="text" id="forgotUsername" placeholder="e.g. investigator_01"
+                                autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
+                                required />
+                        </div>
+                    </div>
 
-                <div style="text-align: center; margin-top: 0.4rem;">
-                    <button type="button" class="btn-link" id="btnBackToLogin">← Return to Investigator Login</button>
-                </div>
-            </form>
+                    <button type="submit" class="lg-btn" id="btnForgot" data-state="idle">
+                        <span class="lg-spin" aria-hidden="true"></span>
+                        <svg class="lg-check" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                            stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M5 12.5l4.5 4.5L19 7.5" />
+                        </svg>
+                        <span class="lg-btn-label">Send sign-in link</span>
+                        <svg class="lg-arrow" viewBox="0 0 24 24" width="17" height="17" fill="none"
+                            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M5 12h14" />
+                            <path d="M13 6l6 6-6 6" />
+                        </svg>
+                    </button>
+
+                    <button type="button" class="lg-link lg-back" id="btnBackToLogin">Back to sign in</button>
+                </form>
+            </section>
+
+            <footer class="lg-foot">
+                <span>Sec. 43/66 IT Act and Evidence Integrity Protocol</span>
+                <span>Every sign-in is logged with SHA-256 telemetry</span>
+            </footer>
         </div>
+    </main>
+
+    <div class="lg-hud" aria-hidden="true">
+        <span>CyberGuard secure sign-in</span>
+        <time id="clock"></time>
     </div>
 
     <script>
-        // Standalone login page script
-        document.addEventListener("DOMContentLoaded", () => {
-            const loginForm = document.getElementById("loginForm");
-            const loginUsername = document.getElementById("loginUsername");
-            const loginPassword = document.getElementById("loginPassword");
-            const loginError = document.getElementById("loginError");
-            const loginErrorMsg = document.getElementById("loginErrorMsg");
-            const btnSubmit = document.getElementById("btnLoginSubmit");
+        (() => {
+            "use strict";
 
-            // Check if arriving via secure one-time magic login link
-            const urlParams = new URLSearchParams(window.location.search);
-            const magicToken = urlParams.get("magic_token");
-            if (magicToken) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `<span>Verifying Secure Magic Login Link...</span>`;
-                fetch(`/api/auth/verify-magic-token?token=${encodeURIComponent(magicToken)}`)
-                    .then(res => {
-                        if (!res.ok) throw new Error("Magic login link is invalid, expired, or has already been used.");
-                        return res.json();
-                    })
-                    .then(data => {
-                        sessionStorage.setItem("cyberguard_token", data.access_token);
-                        sessionStorage.setItem("cyberguard_investigator", JSON.stringify(data.investigator));
-                        window.location.href = "index.html";
-                    })
-                    .catch(err => {
-                        loginError.style.display = "flex";
-                        loginErrorMsg.textContent = err.message;
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = `<span>Authorize Terminal Session</span> <span class="btn-arrow">→</span>`;
-                    });
-                return;
+            // Set to false (or delete the #btnDemoFill button) before real deployment.
+            const SHOW_DEMO_CREDENTIALS = true;
+            const DEMO = { username: "investigator_01", password: "cyberguard2026" };
+
+            const TOKEN_KEY = "cyberguard_token";
+            const PROFILE_KEY = "cyberguard_investigator";
+            const HOME_URL = "index.html";
+
+            const $ = (id) => document.getElementById(id);
+            const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            // ======================================================
+            // Radar backdrop: rings, sweep and blips centred on the card.
+            // Blips light up as the sweep passes. On sign-in the sweep
+            // speeds up and a ring expands from the centre.
+            // ======================================================
+            const radar = (() => {
+                const canvas = $("radar");
+                const g = canvas.getContext("2d");
+                const TAU = Math.PI * 2;
+                const GREEN = "61, 255, 160";
+
+                // fixed positions (angle, share of radius) so the picture is the same every visit
+                const blips = [
+                    [0.40, 0.34], [1.15, 0.70], [1.90, 0.45], [2.60, 0.86], [3.30, 0.28],
+                    [4.00, 0.62], [4.70, 0.90], [5.40, 0.50], [5.90, 0.76]
+                ].map(([a, r]) => ({ a, r }));
+
+                let W = 0, H = 0, cx = 0, cy = 0, R = 0, dpr = 1, unit = 200;
+                let angle = -Math.PI / 2;
+                let speed = 0.6, targetSpeed = 0.6;
+                let last = 0, pulseAt = -1;
+
+                function resize() {
+                    dpr = Math.min(window.devicePixelRatio || 1, 2);
+                    W = window.innerWidth;
+                    H = window.innerHeight;
+                    canvas.width = Math.round(W * dpr);
+                    canvas.height = Math.round(H * dpr);
+                    cx = W / 2;
+                    cy = H / 2;
+                    R = Math.hypot(W, H) * 0.5;
+                    unit = Math.min(W, H) * 0.22;      // ring spacing
+                    if (reduceMotion) draw(performance.now());
+                }
+
+                function draw(now) {
+                    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    g.clearRect(0, 0, W, H);
+
+                    // rings
+                    g.lineWidth = 1;
+                    for (let i = 1; unit * i < R; i++) {
+                        g.strokeStyle = `rgba(${GREEN}, ${Math.max(0.04, 0.13 - i * 0.017)})`;
+                        g.beginPath();
+                        g.arc(cx, cy, unit * i, 0, TAU);
+                        g.stroke();
+                    }
+
+                    // crosshair
+                    g.strokeStyle = `rgba(${GREEN}, 0.06)`;
+                    g.beginPath();
+                    g.moveTo(cx - R, cy); g.lineTo(cx + R, cy);
+                    g.moveTo(cx, cy - R); g.lineTo(cx, cy + R);
+                    g.stroke();
+
+                    // bearing ticks on the second ring
+                    const tickR = unit * 2;
+                    g.strokeStyle = `rgba(${GREEN}, 0.22)`;
+                    g.beginPath();
+                    for (let d = 0; d < 360; d += 10) {
+                        const a = (d * Math.PI) / 180;
+                        const len = d % 30 === 0 ? 12 : 6;
+                        g.moveTo(cx + Math.cos(a) * (tickR - len / 2), cy + Math.sin(a) * (tickR - len / 2));
+                        g.lineTo(cx + Math.cos(a) * (tickR + len / 2), cy + Math.sin(a) * (tickR + len / 2));
+                    }
+                    g.stroke();
+
+                    // sweep: a fading wedge behind a bright leading edge
+                    const slices = 28, span = Math.PI * 0.55;
+                    for (let i = 0; i < slices; i++) {
+                        const a1 = angle - (span * i) / slices;
+                        const a0 = angle - (span * (i + 1)) / slices;
+                        const alpha = 0.16 * Math.pow(1 - i / slices, 2);
+                        g.fillStyle = `rgba(${GREEN}, ${alpha})`;
+                        g.beginPath();
+                        g.moveTo(cx, cy);
+                        g.arc(cx, cy, R, a0, a1);
+                        g.closePath();
+                        g.fill();
+                    }
+                    g.strokeStyle = `rgba(${GREEN}, 0.5)`;
+                    g.lineWidth = 1.2;
+                    g.beginPath();
+                    g.moveTo(cx, cy);
+                    g.lineTo(cx + Math.cos(angle) * R, cy + Math.sin(angle) * R);
+                    g.stroke();
+
+                    // blips
+                    for (const b of blips) {
+                        const behind = (((angle - b.a) % TAU) + TAU) % TAU;     // how far the sweep has moved past it
+                        const lit = Math.max(0, 1 - behind / (TAU * 0.7));
+                        if (lit < 0.03) continue;
+                        const x = cx + Math.cos(b.a) * b.r * R * 0.9;
+                        const y = cy + Math.sin(b.a) * b.r * R * 0.9;
+                        g.fillStyle = `rgba(${GREEN}, ${0.9 * lit})`;
+                        g.beginPath();
+                        g.arc(x, y, 2.6, 0, TAU);
+                        g.fill();
+                        g.strokeStyle = `rgba(${GREEN}, ${0.35 * lit})`;
+                        g.lineWidth = 1;
+                        g.beginPath();
+                        g.arc(x, y, 6 + (1 - lit) * 8, 0, TAU);
+                        g.stroke();
+                    }
+
+                    // access-granted pulse
+                    if (pulseAt >= 0) {
+                        const p = (now - pulseAt) / 900;
+                        if (p <= 1) {
+                            const ease = 1 - Math.pow(1 - p, 3);
+                            g.strokeStyle = `rgba(${GREEN}, ${0.6 * (1 - p)})`;
+                            g.lineWidth = 2;
+                            g.beginPath();
+                            g.arc(cx, cy, R * ease, 0, TAU);
+                            g.stroke();
+                        } else {
+                            pulseAt = -1;
+                        }
+                    }
+                }
+
+                function frame(ts) {
+                    requestAnimationFrame(frame);
+                    const dt = Math.min(0.05, (ts - last) / 1000 || 0);
+                    last = ts;
+                    speed += (targetSpeed - speed) * Math.min(1, dt * 4);
+                    angle = (angle + speed * dt) % TAU;
+                    draw(ts);
+                }
+
+                window.addEventListener("resize", resize);
+                resize();
+                if (reduceMotion) {
+                    angle = 0.8;            // one static frame with a few blips lit
+                    draw(performance.now());
+                } else {
+                    requestAnimationFrame(frame);
+                }
+
+                return {
+                    boost() {
+                        targetSpeed = 3.4;
+                        pulseAt = performance.now();
+                        if (reduceMotion) draw(pulseAt);
+                    }
+                };
+            })();
+
+            // ======================================================
+            // Helpers
+            // ======================================================
+            const card = $("card");
+            const loginForm = $("loginForm");
+            const loginUsername = $("loginUsername");
+            const loginPassword = $("loginPassword");
+            const loginError = $("loginError");
+            const loginErrorMsg = $("loginErrorMsg");
+            const btnLogin = $("btnLogin");
+            const btnTogglePass = $("btnTogglePass");
+            const capsHint = $("capsHint");
+            const capsHintText = $("capsHintText");
+            const notice = $("notice");
+
+            const viewLogin = $("viewLogin");
+            const viewForgot = $("viewForgot");
+            const forgotForm = $("forgotForm");
+            const forgotUsername = $("forgotUsername");
+            const forgotError = $("forgotError");
+            const forgotErrorMsg = $("forgotErrorMsg");
+            const forgotSuccess = $("forgotSuccess");
+            const forgotField = $("forgotField");
+            const forgotCopy = $("forgotCopy");
+            const btnForgot = $("btnForgot");
+
+            // remember each button's idle label so busy state can restore it
+            [btnLogin, btnForgot].forEach((b) => { b.dataset.idleLabel = b.querySelector(".lg-btn-label").textContent; });
+
+            function setState(btn, state, label) {
+                btn.dataset.state = state;
+                btn.disabled = state !== "idle";
+                btn.querySelector(".lg-btn-label").textContent = label || btn.dataset.idleLabel;
             }
 
-            // Check if already authenticated
-            const existingToken = sessionStorage.getItem("cyberguard_token");
-            if (existingToken) {
-                window.location.href = "index.html";
-                return;
+            function showAlert(box, msgEl, text) {
+                msgEl.textContent = text;          // textContent: server text is never parsed as HTML
+                box.hidden = false;
+            }
+
+            function shake() {
+                card.classList.remove("shake");
+                void card.offsetWidth;             // restart the animation
+                card.classList.add("shake");
+            }
+
+            function errorText(data, fallback) {
+                return data && typeof data.detail === "string" && data.detail ? data.detail : fallback;
+            }
+
+            function networkOrApiMessage(err, fallback) {
+                if (err instanceof TypeError) return "Cannot reach the server. Check the connection and try again.";
+                return err && err.message ? err.message : fallback;
+            }
+
+            async function readJson(res) {
+                try { return await res.json(); } catch { return {}; }
+            }
+
+            // ======================================================
+            // Show / hide passcode
+            // ======================================================
+            let hideTimer = null;
+
+            function setPasswordVisible(show) {
+                loginPassword.type = show ? "text" : "password";
+                btnTogglePass.setAttribute("aria-pressed", String(show));
+                btnTogglePass.title = show ? "Hide passcode" : "Show passcode";
+                clearTimeout(hideTimer);
+                // shared terminals: re-hide automatically after 10 seconds
+                if (show) hideTimer = setTimeout(() => setPasswordVisible(false), 10000);
+            }
+
+            // keep focus (and caret) in the field instead of stealing it on click
+            btnTogglePass.addEventListener("mousedown", (e) => e.preventDefault());
+            btnTogglePass.addEventListener("click", () => {
+                setPasswordVisible(loginPassword.type === "password");
+                loginPassword.focus();
+                const end = loginPassword.value.length;
+                loginPassword.setSelectionRange(end, end);
+            });
+            document.addEventListener("visibilitychange", () => { if (document.hidden) setPasswordVisible(false); });
+
+            // Caps Lock hint
+            function updateCaps(e) {
+                if (!e.getModifierState) return;
+                const on = e.getModifierState("CapsLock");
+                if (on) capsHintText.textContent = "Caps Lock is on";
+                capsHint.classList.toggle("is-on", on);
+                if (!on) capsHintText.textContent = "";
+            }
+            loginPassword.addEventListener("keydown", updateCaps);
+            loginPassword.addEventListener("keyup", updateCaps);
+            loginPassword.addEventListener("blur", () => { capsHint.classList.remove("is-on"); capsHintText.textContent = ""; });
+
+            // ======================================================
+            // Views: sign in <-> one-time link
+            // ======================================================
+            function showView(name) {
+                const forgot = name === "forgot";
+                viewLogin.hidden = forgot;
+                viewForgot.hidden = !forgot;
+                notice.hidden = true;
+                setPasswordVisible(false);
+                if (forgot) {
+                    forgotError.hidden = true;
+                    forgotSuccess.hidden = true;
+                    forgotField.hidden = false;
+                    forgotCopy.hidden = false;
+                    btnForgot.hidden = false;
+                    setState(btnForgot, "idle");
+                    if (!forgotUsername.value && loginUsername.value.trim()) forgotUsername.value = loginUsername.value.trim();
+                    forgotUsername.focus();
+                } else {
+                    loginUsername.focus();
+                }
+            }
+
+            $("btnForgotPass").addEventListener("click", () => showView("forgot"));
+            $("btnBackToLogin").addEventListener("click", () => showView("login"));
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !viewForgot.hidden) showView("login");
+            });
+
+            // ======================================================
+            // Sign-in success: store session, play the radar pulse, go to the console
+            // ======================================================
+            function grantAccess(data) {
+                if (!data || !data.access_token || !data.investigator) {
+                    throw new Error("The server response was incomplete. Try again.");
+                }
+                sessionStorage.setItem(TOKEN_KEY, data.access_token);
+                sessionStorage.setItem(PROFILE_KEY, JSON.stringify(data.investigator));
+                document.body.classList.add("lg-granted");
+                setState(btnLogin, "granted", "Access granted");
+                radar.boost();
+                setTimeout(() => window.location.replace(HOME_URL), reduceMotion ? 150 : 800);
             }
 
             loginForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
-                loginError.style.display = "none";
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `<span>Authenticating...</span>`;
+                loginError.hidden = true;
+                setPasswordVisible(false);
+                setState(btnLogin, "busy", "Verifying credentials…");
+                let granted = false;
 
                 try {
                     const res = await fetch("/api/auth/login", {
@@ -172,96 +1244,114 @@
                             password: loginPassword.value
                         })
                     });
-
-                    const data = await res.json();
+                    const data = await readJson(res);
                     if (!res.ok) {
-                        throw new Error(data.detail || "Authentication failed. Check your badge ID and passcode.");
+                        throw new Error(errorText(data, "Sign-in failed. Check your badge ID and passcode."));
                     }
-
-                    // Save session data
-                    sessionStorage.setItem("cyberguard_token", data.access_token);
-                    sessionStorage.setItem("cyberguard_investigator", JSON.stringify(data.investigator));
-
-                    // Redirect to main console
-                    window.location.href = "index.html";
+                    grantAccess(data);
+                    granted = true;
                 } catch (err) {
-                    loginError.style.display = "flex";
-                    loginErrorMsg.textContent = err.message;
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = `<span>Authorize Terminal Session</span> <span class="btn-arrow">→</span>`;
+                    showAlert(loginError, loginErrorMsg, networkOrApiMessage(err, "Sign-in failed. Try again."));
+                    shake();
+                    loginPassword.focus();
+                    loginPassword.select();
+                } finally {
+                    if (!granted) setState(btnLogin, "idle");
                 }
             });
 
-            // Magic Login Link Toggle & Handlers (Confidential Dispatch)
-            const btnForgotPass = document.getElementById("btnForgotPass");
-            const btnBackToLogin = document.getElementById("btnBackToLogin");
-            const forgotForm = document.getElementById("forgotForm");
-            const forgotUsername = document.getElementById("forgotUsername");
-            const forgotError = document.getElementById("forgotError");
-            const forgotErrorMsg = document.getElementById("forgotErrorMsg");
-            const forgotSuccess = document.getElementById("forgotSuccess");
-            const btnForgotSubmit = document.getElementById("btnForgotSubmit");
+            // ======================================================
+            // One-time sign-in link request
+            // ======================================================
+            forgotForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                forgotError.hidden = true;
+                forgotSuccess.hidden = true;
+                setState(btnForgot, "busy", "Sending link…");
+                let sent = false;
 
-            if (btnForgotPass && forgotForm && loginForm) {
-                btnForgotPass.addEventListener("click", () => {
-                    loginForm.style.display = "none";
-                    forgotForm.style.display = "flex";
-                    if (forgotError) forgotError.style.display = "none";
-                    if (forgotSuccess) forgotSuccess.style.display = "none";
+                try {
+                    const res = await fetch("/api/auth/forgot-password", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: forgotUsername.value.trim() })
+                    });
+                    const data = await readJson(res);
+                    if (!res.ok) throw new Error(errorText(data, "Could not send the sign-in link. Try again."));
+
+                    sent = true;
+                    forgotSuccess.hidden = false;
+                    forgotField.hidden = true;
+                    forgotCopy.hidden = true;
+                    btnForgot.hidden = true;
+                } catch (err) {
+                    showAlert(forgotError, forgotErrorMsg, networkOrApiMessage(err, "Could not send the sign-in link. Try again."));
+                    shake();
+                } finally {
+                    if (!sent) setState(btnForgot, "idle");
+                }
+            });
+
+            // ======================================================
+            // Demo credentials chip
+            // ======================================================
+            const btnDemoFill = $("btnDemoFill");
+            if (!SHOW_DEMO_CREDENTIALS) {
+                btnDemoFill.remove();
+            } else {
+                btnDemoFill.addEventListener("click", () => {
+                    loginUsername.value = DEMO.username;
+                    loginPassword.value = DEMO.password;
+                    btnLogin.focus();
                 });
             }
 
-            if (btnBackToLogin && forgotForm && loginForm) {
-                btnBackToLogin.addEventListener("click", () => {
-                    forgotForm.style.display = "none";
-                    loginForm.style.display = "flex";
-                });
+            // ======================================================
+            // Clock
+            // ======================================================
+            const clock = $("clock");
+            const tick = () => { clock.textContent = new Date().toLocaleTimeString("en-GB"); };
+            tick();
+            setInterval(tick, 1000);
+
+            // ======================================================
+            // Arrival: reason notices, magic link, existing session
+            // ======================================================
+            const params = new URLSearchParams(window.location.search);
+            const magicToken = params.get("magic_token");
+            const reason = params.get("reason");
+            // never leave a token or reason in the address bar / history
+            if (window.location.search) window.history.replaceState(null, "", window.location.pathname);
+
+            const REASONS = {
+                expired: "Your session expired. Sign in again to continue.",
+                signed_out: "You have been signed out."
+            };
+            if (reason && REASONS[reason]) {
+                $("noticeMsg").textContent = REASONS[reason];
+                notice.hidden = false;
             }
 
-            if (forgotForm) {
-                forgotForm.addEventListener("submit", async (e) => {
-                    e.preventDefault();
-                    if (forgotError) forgotError.style.display = "none";
-                    if (forgotSuccess) forgotSuccess.style.display = "none";
-                    if (btnForgotSubmit) {
-                        btnForgotSubmit.disabled = true;
-                        btnForgotSubmit.innerHTML = `<span>Dispatching secure link...</span>`;
-                    }
-
-                    try {
-                        const res = await fetch("/api/auth/forgot-password", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                username: forgotUsername.value.trim()
-                            })
-                        });
-
-                        const data = await res.json();
-                        if (!res.ok) {
-                            throw new Error(data.detail || "Dispatch request failed.");
-                        }
-
-                        if (forgotSuccess) forgotSuccess.style.display = "flex";
-                        const usernameField = document.getElementById("forgotUsernameField");
-                        if (usernameField) usernameField.style.display = "none";
-                        if (btnForgotSubmit) btnForgotSubmit.style.display = "none";
-                    } catch (err) {
-                        if (forgotError && forgotErrorMsg) {
-                            forgotError.style.display = "flex";
-                            forgotErrorMsg.textContent = err.message;
-                        }
-                    } finally {
-                        if (btnForgotSubmit && btnForgotSubmit.style.display !== "none") {
-                            btnForgotSubmit.disabled = false;
-                            btnForgotSubmit.innerHTML = `<span>Dispatch One-Time Login Link</span> <span class="btn-arrow">→</span>`;
-                        }
-                    }
-                });
+            if (magicToken) {
+                loginUsername.blur();
+                setState(btnLogin, "busy", "Verifying sign-in link…");
+                fetch(`/api/auth/verify-magic-token?token=${encodeURIComponent(magicToken)}`)
+                    .then(async (res) => {
+                        if (!res.ok) throw new Error("This sign-in link is invalid, expired or already used.");
+                        return res.json();
+                    })
+                    .then(grantAccess)
+                    .catch((err) => {
+                        showAlert(loginError, loginErrorMsg, networkOrApiMessage(err, "This sign-in link is invalid, expired or already used."));
+                        setState(btnLogin, "idle");
+                        loginUsername.focus();
+                    });
+            } else if (sessionStorage.getItem(TOKEN_KEY)) {
+                window.location.replace(HOME_URL);
             }
-        });
+        })();
     </script>
+    <script src="js/login-bg.js"></script>
 </body>
 
 </html>
-

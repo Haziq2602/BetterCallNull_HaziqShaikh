@@ -1,0 +1,409 @@
+/* ==========================================================
+   CyberGuard — Optimized Premium Authentication Card & HUD
+   - Zero-wasted space / compact high-density layout
+   - High-contrast typography & visual hierarchy
+   - Precision frosted glassmorphism & subtle neon glow
+   - Seamless interactive eye-toggle for passcode
+   ========================================================== */
+
+/* Page & Viewport */
+.lg-body {
+    background: #020503 !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    padding: 1.25rem 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    overflow-x: hidden !important;
+}
+
+/* Hide legacy radar */
+.lg-radar {
+    display: none !important;
+}
+
+/* Atmospheric depth glow */
+.lg-body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 45%, rgba(16, 44, 32, 0.4) 0%, rgba(2, 6, 4, 0.85) 65%, #020503 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.lg-vignette {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(1, 3, 2, 0.85) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#plexus {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Stage container: eliminate excess padding */
+.lg-stage {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: auto;
+}
+
+/* ==========================================================
+   OPTIMIZED COMPACT PREMIUM CARD
+   ========================================================== */
+.lg-body .lg-card {
+    position: relative;
+    width: 100%;
+    max-width: 396px;
+    padding: 1.85rem 1.85rem 1.35rem !important;
+    border-radius: 18px !important;
+    background: rgba(7, 16, 12, 0.82) !important;
+    border: 1px solid rgba(61, 255, 160, 0.22) !important;
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.85),
+        0 0 45px rgba(61, 255, 160, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.lg-body .lg-card:hover {
+    border-color: rgba(61, 255, 160, 0.34) !important;
+    box-shadow: 
+        0 24px 65px rgba(0, 0, 0, 0.9),
+        0 0 55px rgba(61, 255, 160, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Eliminate unused background pseudo layers */
+.lg-body .lg-card::before,
+.lg-body .lg-card::after {
+    display: none !important;
+}
+
+/* ==========================================================
+   TIGHTENED BRAND HEADER
+   ========================================================== */
+.lg-head {
+    text-align: center;
+    margin-bottom: 1.25rem !important;
+}
+
+.lg-body .lg-mark {
+    width: 46px !important;
+    height: 46px !important;
+    margin: 0 auto 0.65rem !important;
+    border-radius: 13px !important;
+    display: inline-grid;
+    place-items: center;
+    background: linear-gradient(135deg, rgba(61, 255, 160, 0.18), rgba(93, 242, 184, 0.05));
+    border: 1px solid rgba(61, 255, 160, 0.32);
+    color: var(--accent, #3dffa0);
+    box-shadow: 
+        0 0 24px rgba(61, 255, 160, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: transform 0.25s ease;
+}
+
+.lg-body .lg-card:hover .lg-mark {
+    transform: scale(1.05);
+}
+
+.lg-body .lg-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.38rem !important;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #f0faf4 !important;
+    margin: 0 0 0.2rem !important;
+    line-height: 1.2;
+}
+
+.lg-body .lg-sub {
+    font-size: 0.78rem !important;
+    color: var(--muted, #8fa89a) !important;
+    margin: 0 0 0.45rem !important;
+    letter-spacing: 0.01em;
+}
+
+.lg-body .lg-restricted {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #5df2b8;
+    background: rgba(61, 255, 160, 0.08);
+    border: 1px solid rgba(61, 255, 160, 0.2);
+}
+
+/* ==========================================================
+   FORM CONTROLS & COMPACT SPACING
+   ========================================================== */
+.lg-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+}
+
+.lg-field {
+    margin-bottom: 0 !important; /* Managed by form gap to avoid double spacing */
+}
+
+.lg-label {
+    display: block;
+    font-size: 0.73rem !important;
+    font-weight: 600 !important;
+    font-family: 'JetBrains Mono', monospace;
+    color: #8fa89a !important;
+    margin-bottom: 0.35rem !important;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.lg-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem !important;
+}
+
+.lg-link {
+    font-size: 0.73rem !important;
+    color: var(--accent, #3dffa0) !important;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.lg-link:hover {
+    color: #8dffc6 !important;
+    text-decoration: underline;
+}
+
+/* Input Wrapper */
+.lg-body .lg-wrap {
+    display: flex;
+    align-items: center;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    background: rgba(3, 9, 6, 0.68) !important;
+    border: 1px solid rgba(110, 255, 190, 0.16) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    padding: 0 0.35rem 0 0.75rem !important;
+}
+
+.lg-body .lg-wrap:hover {
+    border-color: rgba(61, 255, 160, 0.32) !important;
+    background: rgba(4, 11, 7, 0.78) !important;
+}
+
+.lg-body .lg-wrap:focus-within {
+    border-color: var(--accent, #3dffa0) !important;
+    background: rgba(4, 13, 8, 0.9) !important;
+    box-shadow: 
+        0 0 0 2px rgba(61, 255, 160, 0.16),
+        0 0 20px rgba(61, 255, 160, 0.12),
+        inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.lg-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #728d80 !important;
+    margin-right: 0.6rem !important;
+    transition: color 0.2s ease;
+}
+
+.lg-wrap:focus-within .lg-icon {
+    color: var(--accent, #3dffa0) !important;
+}
+
+.lg-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e4f2ea !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.88rem !important;
+    padding: 0.65rem 0 !important;
+}
+
+.lg-input::placeholder {
+    color: #51675c !important;
+}
+
+/* ==========================================================
+   PASSWORD EYE TOGGLE BUTTON
+   ========================================================== */
+.lg-eye {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 6px !important;
+    color: #728d80 !important;
+    cursor: pointer !important;
+    transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease !important;
+}
+
+.lg-eye:hover {
+    color: var(--accent, #3dffa0) !important;
+    background: rgba(61, 255, 160, 0.1) !important;
+    transform: scale(1.08) !important;
+}
+
+.lg-eye:active {
+    transform: scale(0.94) !important;
+}
+
+.lg-eye[aria-pressed="true"] {
+    color: var(--accent, #3dffa0) !important;
+    background: rgba(61, 255, 160, 0.14) !important;
+}
+
+.lg-eye:focus-visible {
+    outline: 2px solid var(--accent, #3dffa0);
+    outline-offset: -2px;
+}
+
+.lg-eye .lg-eye-off {
+    display: none;
+}
+
+.lg-eye[aria-pressed="true"] .lg-eye-on {
+    display: none;
+}
+
+.lg-eye[aria-pressed="true"] .lg-eye-off {
+    display: block !important;
+}
+
+/* Caps lock hint */
+.lg-hint {
+    margin-top: 0.25rem !important;
+    font-size: 0.72rem !important;
+}
+
+/* ==========================================================
+   PRIMARY ACTION BUTTON
+   ========================================================== */
+.lg-body .lg-btn {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: 44px !important;
+    margin-top: 0.4rem !important;
+    padding: 0.65rem 1rem !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #3dffa0 0%, #15c575 100%) !important;
+    border: none !important;
+    color: #021207 !important;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    box-shadow: 
+        0 8px 24px rgba(61, 255, 160, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.lg-body .lg-btn:hover:not(:disabled) {
+    transform: translateY(-1.5px);
+    background: linear-gradient(135deg, #64ffb5 0%, #20d582 100%) !important;
+    box-shadow: 
+        0 12px 30px rgba(61, 255, 160, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+}
+
+.lg-body .lg-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ==========================================================
+   DEMO PILL & FOOTER
+   ========================================================== */
+.lg-demo {
+    display: block;
+    width: 100%;
+    margin-top: 0.55rem !important;
+    padding: 0.45rem 0.65rem !important;
+    background: rgba(3, 10, 6, 0.5) !important;
+    border: 1px dashed rgba(61, 255, 160, 0.22) !important;
+    border-radius: 8px !important;
+    color: #8fa89a !important;
+    font-size: 0.72rem !important;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.lg-demo:hover {
+    background: rgba(61, 255, 160, 0.08) !important;
+    border-color: rgba(61, 255, 160, 0.45) !important;
+    color: #e4f2ea !important;
+}
+
+.lg-demo code {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent, #3dffa0);
+    padding: 0.08rem 0.3rem;
+    background: rgba(61, 255, 160, 0.1);
+    border-radius: 4px;
+}
+
+.lg-foot {
+    margin-top: 0.85rem !important;
+    padding-top: 0.75rem !important;
+    border-top: 1px solid rgba(110, 255, 190, 0.12) !important;
+    gap: 0.2rem !important;
+    font-size: 0.66rem !important;
+    color: rgba(143, 168, 154, 0.65) !important;
+    line-height: 1.35 !important;
+}
+
+/* Compact alerts */
+.lg-alert {
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.4rem !important;
+}

@@ -140,16 +140,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else {
-            if (authGate) authGate.style.display = "flex";
-            if (investigatorPill) investigatorPill.style.display = "none";
-            if (btnAdminNav) btnAdminNav.style.display = "none";
+            window.location.replace("login.html");
         }
     }
 
     function logoutInvestigator() {
         sessionStorage.removeItem("cyberguard_token");
         sessionStorage.removeItem("cyberguard_investigator");
-        renderAuthenticatedUI();
+        window.location.replace("login.html?reason=signed_out");
     }
 
     if (btnLogout) {
