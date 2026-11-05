@@ -14,7 +14,111 @@
 </head>
 
 <body class="dark-theme">
-    <div class="app-shell">
+    <!-- ========================================== -->
+    <!-- LAW ENFORCEMENT INVESTIGATOR AUTHENTICATION GATE -->
+    <!-- ========================================== -->
+    <div class="auth-gate-overlay" id="authGate">
+        <div class="auth-gate-card">
+            <div class="auth-gate-header">
+                <div class="auth-emblem">
+                    <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
+                        <path d="M12 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                        <path d="M12 13.5c-2.8 0-5 1.8-5 3.5v.5h10v-.5c0-1.7-2.2-3.5-5-3.5z" />
+                    </svg>
+                </div>
+                <h2>CYBERGUARD PORTAL</h2>
+                <p class="auth-gate-subtitle">Law Enforcement & Cybercrime Triage Unit</p>
+                <div class="auth-security-notice">
+                    <span class="lock-icon">🔒</span> RESTRICTED ACCESS — AUTHORIZED INVESTIGATORS ONLY
+                </div>
+            </div>
+
+            <form class="auth-form" id="loginForm" autocomplete="off">
+                <div class="auth-error-alert" id="loginError" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span id="loginErrorMsg">Invalid credentials. Access denied.</span>
+                </div>
+
+                <div class="auth-field">
+                    <label for="loginUsername">Investigator ID / Badge No.</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">ID</span>
+                        <input type="text" id="loginUsername" name="username" placeholder="e.g. investigator_01" required autofocus />
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="loginPassword" style="margin: 0;">Access Passcode</label>
+                        <button type="button" class="btn-link" id="btnForgotPass">Forgot passcode?</button>
+                    </div>
+                    <div class="input-wrap">
+                        <span class="input-prefix">🔑</span>
+                        <input type="password" id="loginPassword" name="password" placeholder="Enter secure passcode" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth-submit" id="btnLoginSubmit">
+                    <span>Authorize Terminal Session</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+
+                <div class="auth-demo-hint">
+                    <span class="hint-label">Pre-Provisioned Duty Credentials:</span>
+                    <div><code>investigator_01</code> / <code>cyberguard2026</code></div>
+                </div>
+
+                <div class="auth-compliance-footer">
+                    <span>Sec. 43/66 IT Act & Evidence Integrity Protocol</span>
+                    <span>All sessions logged with SHA-256 telemetry</span>
+                </div>
+            </form>
+
+            <!-- One-Time Magic Login Link Request Form -->
+            <form class="auth-form" id="forgotForm" style="display: none;" autocomplete="off">
+                <div class="auth-security-notice" style="margin-bottom: 0.5rem; width: 100%; justify-content: center;">
+                    <span class="lock-icon">✉️</span> DISPATCH ONE-TIME LOGIN LINK
+                </div>
+                <div class="auth-error-alert" id="forgotError" style="display: none;">
+                    <span class="alert-icon">⚠️</span>
+                    <span id="forgotErrorMsg">Error requesting login link.</span>
+                </div>
+                <div class="auth-success-alert" id="forgotSuccess" style="display: none; flex-direction: column; gap: 0.4rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="alert-icon">📨</span>
+                        <strong style="color: #86efac;">Login Link Dispatched!</strong>
+                    </div>
+                    <span id="forgotSuccessMsg" style="line-height: 1.4; color: var(--text);">
+                        A secure one-time login link has been dispatched to the authorized email and registered phone number associated with this Investigator ID.
+                    </span>
+                    <small style="color: var(--muted); margin-top: 0.2rem;">
+                        (For OPSEC compliance, registered contact destinations are kept confidential. Passwords can only be altered at the database level.)
+                    </small>
+                </div>
+
+                <div class="auth-field" id="forgotUsernameField">
+                    <label for="forgotUsername">Investigator Unique ID</label>
+                    <div class="input-wrap">
+                        <span class="input-prefix">ID</span>
+                        <input type="text" id="forgotUsername" value="investigator_01" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth-submit" id="btnForgotSubmit">
+                    <span>Dispatch One-Time Login Link</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+
+                <div style="text-align: center; margin-top: 0.4rem;">
+                    <button type="button" class="btn-link" id="btnBackToLogin">← Return to Investigator Sign In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-shell" id="appShell">
 
         <!-- Top bar -->
         <header class="app-header">
@@ -32,6 +136,12 @@
                 </div>
             </div>
             <div class="header-status">
+                <div class="investigator-pill" id="investigatorPill" style="display: none;">
+                    <span class="badge-role" id="headerOfficerRole">OFFICER</span>
+                    <span class="officer-id" id="headerOfficerId">INV-7842</span>
+                    <span class="officer-name" id="headerOfficerName">Insp. Haziq Shaikh</span>
+                    <button type="button" class="btn-logout" id="btnLogout" title="Sign out of active duty session">Sign Out</button>
+                </div>
                 <span class="badge-live">● Live dispatch</span>
                 <div class="system-status">
                     <span class="status-indicator online"></span>

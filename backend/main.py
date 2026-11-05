@@ -2,10 +2,11 @@
 FastAPI Server: Real-Time WebSockets for Audio Streaming & REST APIs for Case File Investigation.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import numpy as np
 import os
 import io
@@ -13,6 +14,7 @@ import json
 import time
 import hashlib
 import logging
+from typing import Optional, List, Dict, Any
 
 from backend.models.emotion_model import SpeechEmotionModel
 from backend.models.acoustic_dsp import AcousticAnalyzer
@@ -21,10 +23,28 @@ from backend.models.situation_analyzer import HybridSituationAnalyzer
 from backend.core.urgency_engine import calculate_multimodal_urgency
 from backend.core.audio_buffer import AudioStreamBuffer, CallSession
 from backend.core.forensic_analyzer import analyze_forensic_recording
+from backend.auth import (
+    INVESTIGATOR_STORE,
+    get_investigator_record,
+    generate_magic_login_link,
+    verify_magic_login_token,
+    verify_password,
+    create_access_token,
+    get_current_investigator,
+    verify_ws_token
+)
+from backend.core.supabase_client import supabase_gateway
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-app = FastAPI(title="Cybercrime Speech Emotion & Triage API", version="2.1.0")
+app = FastAPI(title="Cybercrime Speech Emotion & Triage API", version="2.2.0")
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class ForgotPasswordRequest(BaseModel):
+    username: str
 
 # Security: Restricted CORS Origins with environment support
 _DEFAULT_ORIGINS = [
@@ -56,20 +76,95 @@ def health_check():
     return {
         "status": "online",
         "service": "Cybercrime Speech Emotion Triage Engine",
-        "compliance": "Hybrid Cloud / Edge DSP (Air-Gapped Local Mode Configurable)"
+        "compliance": "Hybrid Cloud / Edge DSP (Air-Gapped Local Mode Configurable)",
+        "auth_security": "Enforced (Pre-Provisioned Investigator Access Only)",
+        "supabase_cloud_db": "connected" if supabase_gateway.is_connected else "standby (local fallback)"
     }
+
+@app.post("/api/auth/login")
+def login_investigator(req: LoginRequest):
+    """
+    Law enforcement portal authentication: validates investigator credentials against the
+    pre-provisioned duty roster and issues an HMAC-SHA256 signed shift session JWT.
+    """
+    username = req.username.strip()
+    user = get_investigator_record(username)
+    if not user or not verify_password(req.password, user):
+        logging.warning(f"[SECURITY AUDIT] Failed unauthorized login attempt for badge/ID: '{username}'")
+        supabase_gateway.log_audit_event("LOGIN_FAILED", username)
+        raise HTTPException(status_code=401, detail="Invalid investigator ID or passcode")
+
+    token = create_access_token({
+        "sub": user["username"],
+        "badge_id": user["badge_id"],
+        "role": user["role"]
+    })
+    logging.info(f"[SECURITY AUDIT] Shift session authorized: {user['badge_id']} ({user['name']}, {user['role']})")
+    supabase_gateway.update_last_login(username)
+    supabase_gateway.log_audit_event("LOGIN_SUCCESS", user["badge_id"], user["name"])
+
+    return {
+        "status": "success",
+        "access_token": token,
+        "token_type": "bearer",
+        "investigator": {
+            "username": user["username"],
+            "badge_id": user["badge_id"],
+            "name": user["name"],
+            "role": user["role"],
+            "station": user["station"]
+        }
+    }
+
+@app.post("/api/auth/forgot-password")
+def forgot_password_endpoint(req: ForgotPasswordRequest, request: Request = None):
+    """
+    One-Time Magic Login Link Request:
+    Generates a secure, single-use login link dispatched to the confidential email/phone
+    registered on the database level for this investigator ID.
+    The response strictly does not disclose the recipient's phone number or email address.
+    Passwords are set at the database/admin level and cannot be reset via the public web UI.
+    """
+    base_url = str(request.base_url).rstrip("/") if request is not None else "http://localhost:8000"
+    result = generate_magic_login_link(req.username.strip(), base_url=base_url)
+    return result
+
+@app.get("/api/auth/verify-magic-token")
+def verify_magic_token_endpoint(token: str):
+    """
+    Validates a one-time magic login link and yields a full active session JWT.
+    """
+    auth_data = verify_magic_login_token(token)
+    if not auth_data:
+        raise HTTPException(
+            status_code=400,
+            detail="One-time login link is invalid, expired, or has already been used. Please request a new link."
+        )
+    return auth_data
+
+@app.get("/api/auth/me")
+def get_current_investigator_profile(investigator: dict = Depends(get_current_investigator)):
+    """Returns profile for currently authorized investigator."""
+    return {"status": "authenticated", "investigator": investigator}
 
 import asyncio
 
 @app.websocket("/ws/live-call/{call_id}")
-async def websocket_call_stream(websocket: WebSocket, call_id: str):
+async def websocket_call_stream(websocket: WebSocket, call_id: str, token: Optional[str] = Query(None)):
     """
     Receives raw PCM / audio chunks from officer's console in real time and yields triage analytics.
+    Enforces investigator authentication on WebSocket connection.
     Uses per-session CallSession object to guarantee strict concurrency isolation across callers.
     Monotonic sequence counters eliminate race conditions and out-of-order STT overwrites.
     """
+    investigator = verify_ws_token(token)
+    if not investigator:
+        logging.warning(f"[WS REJECTED] Unauthorized streaming attempt on Call ID '{call_id}'. Policy violation 1008.")
+        await websocket.close(code=1008)
+        return
+
     await websocket.accept()
-    logging.info(f"[WS] Active connection established for Session Call ID: {call_id}")
+    logging.info(f"[WS] Active connection established for Session Call ID: {call_id} by Investigator {investigator['badge_id']} ({investigator['name']})")
 
     # Isolated per-call session state container
     session = CallSession(call_id=call_id)
@@ -342,10 +437,11 @@ def get_remaining_pre_recorded_count() -> int:
     return sum(1 for s in PRE_RECORDED_SCENARIOS if s["scenario_id"] not in active_ids)
 
 @app.get("/api/call-queue")
-def get_call_queue():
+def get_call_queue(investigator: dict = Depends(get_current_investigator)):
     """
     Returns active calls in dispatch queue sorted by Urgency Score descending,
     along with the remaining available count of pre-recorded library calls.
+    Protected: Requires authenticated investigator session.
     """
     sorted_queue = sorted(ACTIVE_CALL_QUEUE, key=lambda c: c.get("urgency_score", 0), reverse=True)
     remaining = get_remaining_pre_recorded_count()
@@ -361,9 +457,10 @@ class CallActionPayload(BaseModel):
     action: str  # "escalate", "resolve", "monitor"
 
 @app.post("/api/call-queue/action")
-def update_call_action(payload: CallActionPayload):
+def update_call_action(payload: CallActionPayload, investigator: dict = Depends(get_current_investigator)):
     """
     Handles dispatcher actions on call cards (Escalate to Cyber Cell, Mark Resolved).
+    Protected: Requires authenticated investigator session.
     """
     for call in ACTIVE_CALL_QUEUE:
         if call["call_id"] == payload.call_id:
@@ -382,10 +479,11 @@ def update_call_action(payload: CallActionPayload):
     return {"status": "error", "message": "Call ID not found"}
 
 @app.post("/api/call-queue/simulate-incoming")
-def simulate_incoming_call():
+def simulate_incoming_call(investigator: dict = Depends(get_current_investigator)):
     """
     Adds the next unadded pre-recorded emergency call from the library into the active queue.
     If all pre-recorded scenarios have already been loaded, returns an exhausted notification.
+    Protected: Requires authenticated investigator session.
     """
     active_ids = {c.get("scenario_id") for c in ACTIVE_CALL_QUEUE if c.get("status") != "RESOLVED"}
     available_scenarios = [s for s in PRE_RECORDED_SCENARIOS if s["scenario_id"] not in active_ids]
@@ -436,7 +534,8 @@ ALLOWED_AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
 @app.post("/api/investigate-recording")
 async def investigate_recording(
     file: Optional[UploadFile] = None,
-    sample_id: Optional[str] = None
+    sample_id: Optional[str] = None,
+    investigator: dict = Depends(get_current_investigator)
 ):
     """
     Offline forensic mode: Runs 3-pillar chronological timeline analysis on uploaded audio
@@ -494,19 +593,38 @@ async def investigate_recording(
         situation_analyzer=situation_analyzer
     )
 
-    # 5. Attach tamper-evident audit metadata
+    # 5. Attach tamper-evident audit metadata with investigator badge accountability
     results["sha256_hash"] = sha256_hash
     results["evidence_metadata"] = {
         "sha256_hash": sha256_hash,
         "file_size_bytes": file_size_bytes,
         "file_size_kb": round(file_size_bytes / 1024, 1),
         "analyzed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "analysis_version": "2.1.0-forensic",
+        "analysis_version": "2.2.0-forensic",
         "hash_algorithm": "SHA-256",
-        "integrity_verified": True
+        "integrity_verified": True,
+        "investigator": {
+            "badge_id": investigator.get("badge_id", "INV-UNKNOWN"),
+            "name": investigator.get("name", "Unknown Investigator"),
+            "role": investigator.get("role", "DUTY_OFFICER")
+        }
     }
 
-    logging.info(f"[FORENSIC AUDIT] Analysis complete for '{filename}' | SHA-256: {sha256_hash[:16]}... | Urgency: {results['overall_urgency_score']} | Priority: {results['priority_level']}")
+    logging.info(f"[FORENSIC AUDIT] Analysis complete for '{filename}' by {investigator['badge_id']} ({investigator['name']}) | SHA-256: {sha256_hash[:16]}... | Urgency: {results['overall_urgency_score']} | Priority: {results['priority_level']}")
+
+    # 6. Persist to Supabase cloud database & record chain-of-custody audit log
+    supabase_gateway.save_forensic_case(results)
+    supabase_gateway.log_audit_event(
+        event_type="FORENSIC_UPLOAD",
+        investigator_badge_id=investigator.get("badge_id", "INV-UNKNOWN"),
+        investigator_name=investigator.get("name", "Duty Officer"),
+        details={
+            "filename": filename,
+            "sha256_hash": sha256_hash,
+            "urgency_score": results.get("overall_urgency_score"),
+            "priority_level": results.get("priority_level")
+        }
+    )
 
     return results
 

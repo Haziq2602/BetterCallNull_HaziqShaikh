@@ -21,3 +21,7 @@ soundfile>=0.12.1
 faster-whisper>=1.0.0
 python-dotenv>=1.0.0
 pytest>=8.0.0
+
+# Cloud Database & Storage (Supabase PostgreSQL & PostgREST Client)
+supabase>=2.0.0
+httpx>=0.27.0

@@ -83,6 +83,228 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseLiveModalBottom = document.getElementById("btnCloseLiveModalBottom");
     const btnSaveLiveCall = document.getElementById("btnSaveLiveCall");
 
+    // ==========================================
+    // INVESTIGATOR AUTHENTICATION GATE & STATE
+    // ==========================================
+    const authGate = document.getElementById("authGate");
+    const loginForm = document.getElementById("loginForm");
+    const loginUsername = document.getElementById("loginUsername");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginError = document.getElementById("loginError");
+    const loginErrorMsg = document.getElementById("loginErrorMsg");
+    const btnLoginSubmit = document.getElementById("btnLoginSubmit");
+    const investigatorPill = document.getElementById("investigatorPill");
+    const headerOfficerRole = document.getElementById("headerOfficerRole");
+    const headerOfficerId = document.getElementById("headerOfficerId");
+    const headerOfficerName = document.getElementById("headerOfficerName");
+    const btnLogout = document.getElementById("btnLogout");
+
+    function getAuthToken() {
+        return sessionStorage.getItem("cyberguard_token");
+    }
+
+    function getInvestigatorProfile() {
+        try {
+            const raw = sessionStorage.getItem("cyberguard_investigator");
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function setAuthenticatedUser(token, profile) {
+        sessionStorage.setItem("cyberguard_token", token);
+        sessionStorage.setItem("cyberguard_investigator", JSON.stringify(profile));
+        renderAuthenticatedUI();
+    }
+
+    function renderAuthenticatedUI() {
+        const token = getAuthToken();
+        const profile = getInvestigatorProfile();
+
+        if (token && profile) {
+            if (authGate) authGate.style.display = "none";
+            if (investigatorPill) {
+                investigatorPill.style.display = "inline-flex";
+                if (headerOfficerRole) headerOfficerRole.textContent = profile.role || "INVESTIGATOR";
+                if (headerOfficerId) headerOfficerId.textContent = profile.badge_id || "INV";
+                if (headerOfficerName) headerOfficerName.textContent = profile.name || profile.username || "Officer";
+            }
+        } else {
+            if (authGate) authGate.style.display = "flex";
+            if (investigatorPill) investigatorPill.style.display = "none";
+        }
+    }
+
+    function logoutInvestigator() {
+        sessionStorage.removeItem("cyberguard_token");
+        sessionStorage.removeItem("cyberguard_investigator");
+        renderAuthenticatedUI();
+    }
+
+    if (btnLogout) {
+        btnLogout.addEventListener("click", () => {
+            logoutInvestigator();
+        });
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (loginError) loginError.style.display = "none";
+            if (btnLoginSubmit) {
+                btnLoginSubmit.disabled = true;
+                btnLoginSubmit.innerHTML = `<span>Verifying credentials...</span>`;
+            }
+
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: loginUsername.value.trim(),
+                        password: loginPassword.value
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.detail || "Invalid badge credentials or passcode.");
+                }
+
+                setAuthenticatedUser(data.access_token, data.investigator);
+            } catch (err) {
+                if (loginError && loginErrorMsg) {
+                    loginError.style.display = "flex";
+                    loginErrorMsg.textContent = err.message;
+                }
+            } finally {
+                if (btnLoginSubmit) {
+                    btnLoginSubmit.disabled = false;
+                    btnLoginSubmit.innerHTML = `<span>Authorize Terminal Session</span> <span class="btn-arrow">→</span>`;
+                }
+            }
+        });
+    }
+
+    // Magic Login Link Toggle & Handlers (Confidential Dispatch)
+    const btnForgotPass = document.getElementById("btnForgotPass");
+    const btnBackToLogin = document.getElementById("btnBackToLogin");
+    const forgotForm = document.getElementById("forgotForm");
+    const forgotUsername = document.getElementById("forgotUsername");
+    const forgotError = document.getElementById("forgotError");
+    const forgotErrorMsg = document.getElementById("forgotErrorMsg");
+    const forgotSuccess = document.getElementById("forgotSuccess");
+    const btnForgotSubmit = document.getElementById("btnForgotSubmit");
+
+    if (btnForgotPass && forgotForm && loginForm) {
+        btnForgotPass.addEventListener("click", () => {
+            loginForm.style.display = "none";
+            forgotForm.style.display = "flex";
+            if (forgotError) forgotError.style.display = "none";
+            if (forgotSuccess) forgotSuccess.style.display = "none";
+        });
+    }
+
+    if (btnBackToLogin && forgotForm && loginForm) {
+        btnBackToLogin.addEventListener("click", () => {
+            forgotForm.style.display = "none";
+            loginForm.style.display = "flex";
+        });
+    }
+
+    if (forgotForm) {
+        forgotForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (forgotError) forgotError.style.display = "none";
+            if (forgotSuccess) forgotSuccess.style.display = "none";
+            if (btnForgotSubmit) {
+                btnForgotSubmit.disabled = true;
+                btnForgotSubmit.innerHTML = `<span>Dispatching secure link...</span>`;
+            }
+
+            try {
+                const res = await fetch("/api/auth/forgot-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: forgotUsername.value.trim()
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.detail || "Dispatch request failed.");
+                }
+
+                if (forgotSuccess) forgotSuccess.style.display = "flex";
+                const usernameField = document.getElementById("forgotUsernameField");
+                if (usernameField) usernameField.style.display = "none";
+                if (btnForgotSubmit) btnForgotSubmit.style.display = "none";
+            } catch (err) {
+                if (forgotError && forgotErrorMsg) {
+                    forgotError.style.display = "flex";
+                    forgotErrorMsg.textContent = err.message;
+                }
+            } finally {
+                if (btnForgotSubmit && btnForgotSubmit.style.display !== "none") {
+                    btnForgotSubmit.disabled = false;
+                    btnForgotSubmit.innerHTML = `<span>Dispatch One-Time Login Link</span> <span class="btn-arrow">→</span>`;
+                }
+            }
+        });
+    }
+
+    // Authenticated fetch wrapper that attaches Authorization header
+    async function authFetch(url, options = {}) {
+        const token = getAuthToken();
+        const headers = options.headers ? { ...options.headers } : {};
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+        const resp = await fetch(url, { ...options, headers });
+        if (resp.status === 401) {
+            // Token expired or invalid
+            logoutInvestigator();
+        }
+        return resp;
+    }
+
+    // Check if arrived with a one-time magic login link
+    const urlParams = new URLSearchParams(window.location.search);
+    const magicToken = urlParams.get("magic_token");
+    if (magicToken) {
+        if (btnLoginSubmit) {
+            btnLoginSubmit.disabled = true;
+            btnLoginSubmit.innerHTML = `<span>Verifying Secure Magic Login Link...</span>`;
+        }
+        fetch(`/api/auth/verify-magic-token?token=${encodeURIComponent(magicToken)}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Magic login link is invalid, expired, or has already been used.");
+                return res.json();
+            })
+            .then(data => {
+                // Clean URL query params without reloading
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: cleanUrl }, "", cleanUrl);
+                setAuthenticatedUser(data.access_token, data.investigator);
+            })
+            .catch(err => {
+                if (loginError && loginErrorMsg) {
+                    loginError.style.display = "flex";
+                    loginErrorMsg.textContent = err.message;
+                }
+                if (btnLoginSubmit) {
+                    btnLoginSubmit.disabled = false;
+                    btnLoginSubmit.innerHTML = `<span>Authorize Terminal Session</span> <span class="btn-arrow">→</span>`;
+                }
+                renderAuthenticatedUI();
+            });
+    } else {
+        // Check auth on startup
+        renderAuthenticatedUI();
+    }
+
     let currentForensicData = null;
     let localCallsState = [];
     let currentSelectedCallId = "CALL-9823";
@@ -364,7 +586,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
     async function loadCallQueue() {
         try {
-            const res = await fetch("/api/call-queue");
+            const res = await authFetch("/api/call-queue");
             if (!res.ok) throw new Error("Failed to fetch queue");
             const data = await res.json();
             localCallsState = data.calls || [];
@@ -480,7 +702,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function handleCallAction(callId, action) {
         try {
-            const res = await fetch("/api/call-queue/action", {
+            const res = await authFetch("/api/call-queue/action", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ call_id: callId, action: action })
@@ -540,7 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             btnSimulateIncoming.textContent = "Loading...";
             try {
-                const res = await fetch("/api/call-queue/simulate-incoming", { method: "POST" });
+                const res = await authFetch("/api/call-queue/simulate-incoming", { method: "POST" });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.status === "exhausted") {
@@ -711,7 +933,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // 1. Establish WebSocket
                 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-                const wsUrl = `${protocol}//${window.location.host}/ws/live-call/${liveCallId}`;
+                const token = getAuthToken();
+                const wsUrl = `${protocol}//${window.location.host}/ws/live-call/${liveCallId}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
                 liveSocket = new WebSocket(wsUrl);
                 liveSocket.binaryType = "arraybuffer";
 
@@ -1036,7 +1259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function executeForensicAnalysis(endpoint, body, audioSrcUrl) {
         if (forensicLoading) forensicLoading.classList.add("active");
         try {
-            const res = await fetch(endpoint, {
+            const res = await authFetch(endpoint, {
                 method: "POST",
                 body: body
             });
