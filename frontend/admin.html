@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard - Station Commander & Duty Roster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=6">
+    <style>
+        .admin-page-body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: 'Inter', -apple-system, sans-serif;
+            position: relative;
+        }
+
+        .admin-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 4rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.75rem;
+            background: rgba(10, 18, 14, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 2rem;
+        }
+
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-emblem {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(61, 255, 160, 0.12);
+            border: 1px solid rgba(61, 255, 160, 0.35);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-title-group h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #fff;
+            margin-bottom: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .admin-badge-chip {
+            font-size: 0.68rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(61, 255, 160, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(61, 255, 160, 0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .admin-title-group p {
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .admin-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .btn-nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            padding: 0.55rem 1rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav-back:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        /* Stats Cards */
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: rgba(10, 18, 14, 0.65);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+        }
+
+        .admin-stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.4;
+        }
+
+        .stat-card-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-card-val {
+            font-size: 1.85rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card-sub {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 0.35rem;
+        }
+
+        /* Content Split: Left Table, Right Audit Trail */
+        .admin-content-grid {
+            display: grid;
+            grid-template-columns: 2.1fr 1fr;
+            gap: 1.75rem;
+        }
+
+        .panel-box {
+            background: rgba(10, 18, 14, 0.7);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-box-header {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(5, 12, 8, 0.45);
+        }
+
+        .panel-box-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: var(--accent);
+            color: #031409;
+            border: none;
+            padding: 0.55rem 1.15rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary-action:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(61, 255, 160, 0.35);
+        }
+
+        /* Roster Table */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+            text-align: left;
+        }
+
+        .roster-table th {
+            background: rgba(3, 9, 6, 0.6);
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.85rem 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .roster-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .roster-table tr:hover td {
+            background: rgba(61, 255, 160, 0.03);
+        }
+
+        .officer-name-cell {
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .officer-badge-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--accent);
+        }
+
+        .role-pill {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text);
+        }
+
+        .role-pill.lead {
+            background: rgba(61, 255, 160, 0.12);
+            border-color: rgba(61, 255, 160, 0.35);
+            color: var(--accent);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #86efac;
+        }
+
+        .status-badge.suspended {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .table-action-btns {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-table-action {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            padding: 0.35rem 0.7rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-table-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .btn-table-action.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .btn-table-action.success:hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+            color: #86efac;
+        }
+
+        /* Audit Trail List */
+        .audit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .audit-item {
+            padding: 0.9rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+
+        .audit-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .audit-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.75rem;
+        }
+
+        .audit-desc {
+            font-size: 0.8rem;
+            color: var(--text);
+            line-height: 1.35;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-card {
+            background: #08120c;
+            border: 1px solid var(--glass-border-strong);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+            overflow: hidden;
+            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 22, 16, 0.5);
+        }
+
+        .modal-header h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .form-group input,
+        .form-group select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            padding: 0.65rem 0.85rem;
+            color: #fff;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(61, 255, 160, 0.15);
+        }
+
+        .form-group select option {
+            background: #08120c;
+            color: #fff;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: rgba(5, 12, 8, 0.3);
+        }
+
+        .btn-modal-cancel {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.84rem;
+            cursor: pointer;
+        }
+
+        .toast-notify {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #0a1f14;
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 0.85rem 1.4rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.86rem;
+            animation: toastSlide 0.25s ease;
+        }
+
+        @keyframes toastSlide {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="admin-page-body">
+    <div class="admin-container">
+
+        <!-- Top Header Navigation -->
+        <header class="admin-header">
+            <div class="admin-brand">
+                <div class="admin-emblem">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
+                        <path d="M12 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                        <path d="M12 13.5c-2.8 0-5 1.8-5 3.5v.5h10v-.5c0-1.7-2.2-3.5-5-3.5z" />
+                    </svg>
+                </div>
+                <div class="admin-title-group">
+                    <h1>
+                        STATION COMMANDER CONSOLE
+                        <span class="admin-badge-chip">RBAC RESTRICTED</span>
+                    </h1>
+                    <p>Personnel Provisioning, Duty Roster & Security Audit Log Management</p>
+                </div>
+            </div>
+
+            <div class="admin-actions">
+                <div class="investigator-pill" id="commanderPill">
+                    <span class="badge-role" id="commRole">COMMANDER</span>
+                    <span class="officer-id" id="commBadge">INV-7842</span>
+                    <span class="officer-name" id="commName">Insp. Haziq Shaikh</span>
+                </div>
+                <a href="index.html" class="btn-nav-back">
+                    <span>← Return to Live Console</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats Overview Cards -->
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <div class="stat-card-label">
+                    <span>Active On Duty</span>
+                    <span>👮</span>
+                </div>
+                <div class="stat-card-val" id="statActiveCount">1</div>
+                <div class="stat-card-sub">Authorized live triage officers</div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="stat-card-label">
+                    <span>Total Provisioned</span>
+                    <span>📋</span>
+                </div>
+                <div class="stat-card-val" id="statTotalCount">1</div>
+                <div class="stat-card-sub">In database investigator roster</div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="stat-card-label">
+                    <span>Suspended Badges</span>
+                    <span>🔒</span>
+                </div>
+                <div class="stat-card-val" id="statSuspendedCount">0</div>
+                <div class="stat-card-sub">Revoked / Inactive terminals</div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="stat-card-label">
+                    <span>Cloud State</span>
+                    <span>☁️</span>
+                </div>
+                <div class="stat-card-val" style="font-size: 1.25rem; color: #86efac; padding-top: 0.35rem;" id="statCloudDb">
+                    CONNECTED
+                </div>
+                <div class="stat-card-sub">Supabase PostgreSQL live sync</div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="admin-content-grid">
+
+            <!-- Left: Investigator Roster -->
+            <div class="panel-box">
+                <div class="panel-box-header">
+                    <h2>
+                        <span>👮 Duty Investigator Roster</span>
+                    </h2>
+                    <div style="display: flex; gap: 0.6rem;">
+                        <button class="btn-primary-action" id="btnOpenProvisionModal">
+                            <span>+ Provision New Officer</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="roster-table">
+                        <thead>
+                            <tr>
+                                <th>Officer & Badge</th>
+                                <th>Login ID</th>
+                                <th>Role</th>
+                                <th>Confidential Contact</th>
+                                <th>Duty Status</th>
+                                <th style="text-align: right;">Administrative Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rosterTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
+                                    Loading duty roster...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Real-Time Security Audit Trail -->
+            <div class="panel-box">
+                <div class="panel-box-header">
+                    <h2>
+                        <span>📜 Security Audit Trail</span>
+                    </h2>
+                    <span style="font-size: 0.72rem; color: var(--muted); font-family: monospace;">SHA-256 LOGGED</span>
+                </div>
+
+                <ul class="audit-list" id="auditList">
+                    <li style="padding: 1.5rem; text-align: center; color: var(--muted);">
+                        Loading audit logs...
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Provisioning Modal -->
+    <div class="modal-overlay" id="provisionModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><span>🛡️ Provision New Investigator</span></h3>
+                <button type="button" class="btn-modal-close" id="btnCloseModal">×</button>
+            </div>
+            <form id="provisionForm" autocomplete="off">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="provUsername">Unique Login ID *</label>
+                            <input type="text" id="provUsername" placeholder="e.g. investigator_02" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="provBadge">Official Badge No. *</label>
+                            <input type="text" id="provBadge" placeholder="e.g. INV-8910" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="provName">Full Name *</label>
+                            <input type="text" id="provName" placeholder="e.g. Sub-Insp. Priya Sharma" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="provRole">Duty Role *</label>
+                            <select id="provRole" required>
+                                <option value="INVESTIGATOR">INVESTIGATOR</option>
+                                <option value="CYBER_FORENSIC_EXPERT">CYBER_FORENSIC_EXPERT</option>
+                                <option value="DUTY_SERGEANT">DUTY_SERGEANT</option>
+                                <option value="LEAD_INVESTIGATOR">LEAD_INVESTIGATOR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="provStation">Station / Division</label>
+                        <input type="text" id="provStation" value="Cyber Crime Police Station, BKC Mumbai" required />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="provEmail">Confidential Official Email</label>
+                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@police.gov.in" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="provPhone">Confidential Phone No.</label>
+                            <input type="text" id="provPhone" placeholder="e.g. +91 98765 43210" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                            <label for="provPassword" style="margin: 0;">Initial Passcode *</label>
+                            <button type="button" class="btn-link" id="btnGenPass" style="font-size: 0.72rem; color: var(--accent);">Generate Passcode</button>
+                        </div>
+                        <input type="text" id="provPassword" placeholder="Minimum 6 characters" required />
+                        <small style="color: var(--muted); font-size: 0.72rem; margin-top: 0.2rem;">
+                            Password is set at database level (PBKDF2-HMAC-SHA256). User cannot change it via public web UI.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" id="btnCancelModal">Cancel</button>
+                    <button type="submit" class="btn-primary-action" id="btnSubmitProvision">
+                        <span>Authorize & Provision Badge</span>
+                        <span>✓</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notify" id="toastNotify">
+        <span id="toastIcon">✅</span>
+        <span id="toastMsg">Operation successful</span>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = sessionStorage.getItem("cyberguard_token");
+            const rawProfile = sessionStorage.getItem("cyberguard_investigator");
+
+            // Enforce Commander / Lead Investigator session
+            if (!token || !rawProfile) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            let profile = null;
+            try {
+                profile = JSON.parse(rawProfile);
+            } catch {
+                window.location.href = "login.html";
+                return;
+            }
+
+            const COMMANDER_ROLES = ["LEAD_INVESTIGATOR", "SUPERINTENDENT", "STATION_COMMANDER", "ADMIN"];
+            if (!COMMANDER_ROLES.includes(profile.role)) {
+                alert(`Access Denied: Officer rank '${profile.role}' does not possess Station Commander privileges.`);
+                window.location.href = "index.html";
+                return;
+            }
+
+            // Populate header
+            document.getElementById("commRole").textContent = profile.role || "COMMANDER";
+            document.getElementById("commBadge").textContent = profile.badge_id || "INV-7842";
+            document.getElementById("commName").textContent = profile.name || "Station Commander";
+
+            // UI Elements
+            const rosterTableBody = document.getElementById("rosterTableBody");
+            const auditList = document.getElementById("auditList");
+            const statActiveCount = document.getElementById("statActiveCount");
+            const statTotalCount = document.getElementById("statTotalCount");
+            const statSuspendedCount = document.getElementById("statSuspendedCount");
+            const toastNotify = document.getElementById("toastNotify");
+            const toastMsg = document.getElementById("toastMsg");
+            const toastIcon = document.getElementById("toastIcon");
+
+            function showToast(message, isSuccess = true) {
+                toastMsg.textContent = message;
+                toastIcon.textContent = isSuccess ? "✅" : "⚠️";
+                toastNotify.style.display = "flex";
+                setTimeout(() => {
+                    toastNotify.style.display = "none";
+                }, 3500);
+            }
+
+            async function authFetch(url, options = {}) {
+                const headers = options.headers ? { ...options.headers } : {};
+                headers["Authorization"] = `Bearer ${token}`;
+                return fetch(url, { ...options, headers });
+            }
+
+            // Fetch and render roster
+            async function loadRoster() {
+                try {
+                    const res = await authFetch("/api/admin/investigators");
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || "Failed to load investigator roster.");
+                    }
+                    const data = await res.json();
+                    renderRoster(data.investigators || []);
+                } catch (err) {
+                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">${err.message}</td></tr>`;
+                }
+            }
+
+            function renderRoster(investigators) {
+                let active = 0;
+                let suspended = 0;
+
+                if (investigators.length === 0) {
+                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">No provisioned officers found.</td></tr>`;
+                    return;
+                }
+
+                rosterTableBody.innerHTML = investigators.map(inv => {
+                    if (inv.is_active) active++;
+                    else suspended++;
+
+                    const isSelf = inv.username === profile.username;
+                    const isLead = inv.role === "LEAD_INVESTIGATOR" || inv.role === "SUPERINTENDENT";
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="officer-name-cell">
+                                    <span>${inv.name}</span>
+                                    <span class="officer-badge-tag">${inv.badge_id}</span>
+                                </div>
+                            </td>
+                            <td><code>${inv.username}</code></td>
+                            <td>
+                                <span class="role-pill ${isLead ? 'lead' : ''}">${inv.role}</span>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.76rem; display: flex; flex-direction: column; gap: 0.15rem;">
+                                    <span style="color: var(--text);">✉️ ${inv.email_masked || 'Confidential'}</span>
+                                    <span style="color: var(--muted);">📞 ${inv.phone_masked || 'Confidential'}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge ${inv.is_active ? 'active' : 'suspended'}">
+                                    <span class="status-dot"></span>
+                                    ${inv.is_active ? 'ACTIVE' : 'SUSPENDED'}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="table-action-btns" style="justify-content: flex-end;">
+                                    <button type="button" class="btn-table-action" 
+                                        onclick="dispatchMagicLink('${inv.username}', '${inv.name.replace(/'/g, "\\'")}')"
+                                        title="Dispatch one-time magic login link to confidential contact">
+                                        ✉️ Dispatch Link
+                                    </button>
+                                    ${!isSelf ? `
+                                        <button type="button" class="btn-table-action ${inv.is_active ? 'danger' : 'success'}" 
+                                            onclick="toggleOfficerStatus('${inv.username}', ${!inv.is_active})"
+                                            title="${inv.is_active ? 'Instantly suspend badge credentials' : 'Reactivate officer badge'}">
+                                            ${inv.is_active ? '🔒 Suspend' : '✓ Activate'}
+                                        </button>
+                                    ` : `<span style="font-size: 0.72rem; color: var(--muted);">(Your Account)</span>`}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join("");
+
+                statTotalCount.textContent = investigators.length;
+                statActiveCount.textContent = active;
+                statSuspendedCount.textContent = suspended;
+            }
+
+            // Fetch and render audit trail
+            async function loadAuditLogs() {
+                try {
+                    const res = await authFetch("/api/admin/audit-logs?limit=20");
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    renderAuditLogs(data.logs || []);
+                } catch {
+                    // Soft fail for logs
+                }
+            }
+
+            function renderAuditLogs(logs) {
+                if (logs.length === 0) {
+                    auditList.innerHTML = `<li style="padding: 1.5rem; text-align: center; color: var(--muted);">No audit events recorded yet.</li>`;
+                    return;
+                }
+
+                auditList.innerHTML = logs.map(l => {
+                    const timeStr = l.created_at ? new Date(l.created_at).toLocaleTimeString() : "Just now";
+                    let desc = "";
+                    if (l.event_type === "INVESTIGATOR_PROVISIONED") {
+                        desc = `New officer provisioned: ${l.details?.target_name || l.details?.target_username || ''} (${l.details?.target_badge || ''})`;
+                    } else if (l.event_type === "INVESTIGATOR_SUSPENDED") {
+                        desc = `Officer '${l.details?.target_username}' badge suspended by Commander.`;
+                    } else if (l.event_type === "INVESTIGATOR_ACTIVATED") {
+                        desc = `Officer '${l.details?.target_username}' badge reactivated.`;
+                    } else if (l.event_type === "MAGIC_LOGIN_LINK_DISPATCHED" || l.event_type === "COMMANDER_DISPATCHED_MAGIC_LINK") {
+                        desc = `One-time login link generated & dispatched to confidential contact.`;
+                    } else {
+                        desc = `${l.event_type} - Investigator: ${l.investigator_badge_id || 'System'}`;
+                    }
+
+                    return `
+                        <li class="audit-item">
+                            <div class="audit-meta">
+                                <span class="audit-type">${l.event_type}</span>
+                                <span>${timeStr}</span>
+                            </div>
+                            <div class="audit-desc">${desc}</div>
+                        </li>
+                    `;
+                }).join("");
+            }
+
+            // Global Actions attached to window
+            window.dispatchMagicLink = async function(username, name) {
+                try {
+                    const res = await authFetch(`/api/admin/investigators/${encodeURIComponent(username)}/dispatch-link`, {
+                        method: "POST"
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || "Dispatch failed.");
+                    showToast(`One-time magic login link dispatched to confidential contact for ${name}.`);
+                    loadAuditLogs();
+                } catch (err) {
+                    showToast(err.message, false);
+                }
+            };
+
+            window.toggleOfficerStatus = async function(username, newStatus) {
+                const actionLabel = newStatus ? "activate" : "suspend";
+                if (!confirm(`Are you sure you want to ${actionLabel} investigator '${username}'?`)) return;
+
+                try {
+                    const res = await authFetch(`/api/admin/investigators/${encodeURIComponent(username)}/status`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ is_active: newStatus })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || "Status update failed.");
+                    showToast(`Investigator '${username}' ${newStatus ? 'activated' : 'suspended'}.`);
+                    loadRoster();
+                    loadAuditLogs();
+                } catch (err) {
+                    showToast(err.message, false);
+                }
+            };
+
+            // Modal Handlers
+            const provisionModal = document.getElementById("provisionModal");
+            const btnOpenProvisionModal = document.getElementById("btnOpenProvisionModal");
+            const btnCloseModal = document.getElementById("btnCloseModal");
+            const btnCancelModal = document.getElementById("btnCancelModal");
+            const provisionForm = document.getElementById("provisionForm");
+            const btnGenPass = document.getElementById("btnGenPass");
+            const provPassword = document.getElementById("provPassword");
+
+            btnOpenProvisionModal.addEventListener("click", () => {
+                provisionForm.reset();
+                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+                provisionModal.style.display = "flex";
+            });
+
+            btnCloseModal.addEventListener("click", () => provisionModal.style.display = "none");
+            btnCancelModal.addEventListener("click", () => provisionModal.style.display = "none");
+
+            btnGenPass.addEventListener("click", () => {
+                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+            });
+
+            provisionForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const btnSubmit = document.getElementById("btnSubmitProvision");
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = `<span>Authorizing & provisioning...</span>`;
+
+                try {
+                    const payload = {
+                        username: document.getElementById("provUsername").value.trim(),
+                        badge_id: document.getElementById("provBadge").value.trim(),
+                        name: document.getElementById("provName").value.trim(),
+                        role: document.getElementById("provRole").value,
+                        station: document.getElementById("provStation").value.trim(),
+                        email: document.getElementById("provEmail").value.trim(),
+                        phone: document.getElementById("provPhone").value.trim(),
+                        password: provPassword.value
+                    };
+
+                    const res = await authFetch("/api/admin/investigators", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || "Provisioning failed.");
+
+                    showToast(`Officer ${payload.name} (${payload.badge_id}) provisioned successfully!`);
+                    provisionModal.style.display = "none";
+                    loadRoster();
+                    loadAuditLogs();
+                } catch (err) {
+                    showToast(err.message, false);
+                } finally {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = `<span>Authorize & Provision Badge</span> <span>✓</span>`;
+                }
+            });
+
+            // Initial Load
+            loadRoster();
+            loadAuditLogs();
+        });
+    </script>
+</body>
+
+</html>
+

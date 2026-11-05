@@ -31,7 +31,11 @@ from backend.auth import (
     verify_password,
     create_access_token,
     get_current_investigator,
-    verify_ws_token
+    verify_ws_token,
+    require_commander_role,
+    hash_password,
+    mask_email,
+    mask_phone
 )
 from backend.core.supabase_client import supabase_gateway
 
@@ -45,6 +49,19 @@ class LoginRequest(BaseModel):
 
 class ForgotPasswordRequest(BaseModel):
     username: str
+
+class ProvisionInvestigatorRequest(BaseModel):
+    username: str
+    badge_id: str
+    name: str
+    role: str = "INVESTIGATOR"
+    station: Optional[str] = "Cyber Crime Police Station, Mumbai"
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    password: str
+
+class UpdateInvestigatorStatusRequest(BaseModel):
+    is_active: bool
 
 # Security: Restricted CORS Origins with environment support
 _DEFAULT_ORIGINS = [
@@ -93,6 +110,14 @@ def login_investigator(req: LoginRequest):
         logging.warning(f"[SECURITY AUDIT] Failed unauthorized login attempt for badge/ID: '{username}'")
         supabase_gateway.log_audit_event("LOGIN_FAILED", username)
         raise HTTPException(status_code=401, detail="Invalid investigator ID or passcode")
+
+    if user.get("is_active") is False:
+        logging.warning(f"[SECURITY AUDIT] Login rejected for suspended investigator badge: '{user['badge_id']}'")
+        supabase_gateway.log_audit_event("LOGIN_REJECTED_SUSPENDED", user["badge_id"], user["name"])
+        raise HTTPException(
+            status_code=403,
+            detail="Duty credentials suspended. Access denied by Station Commander."
+        )
 
     token = create_access_token({
         "sub": user["username"],
@@ -146,6 +171,232 @@ def verify_magic_token_endpoint(token: str):
 def get_current_investigator_profile(investigator: dict = Depends(get_current_investigator)):
     """Returns profile for currently authorized investigator."""
     return {"status": "authenticated", "investigator": investigator}
+
+# =========================================================================
+# STATION COMMANDER / ADMIN ROSTER & PERSONNEL MANAGEMENT
+# Restricted to: LEAD_INVESTIGATOR, SUPERINTENDENT, STATION_COMMANDER, ADMIN
+# =========================================================================
+
+@app.get("/api/admin/investigators")
+def list_investigators_endpoint(commander: dict = Depends(require_commander_role)):
+    """
+    Station Commander Roster API:
+    Retrieves all provisioned investigators with masked contact details and active duty statuses.
+    """
+    roster_map = {}
+    
+    # 1. Local seed / fallback records
+    for uname, rec in INVESTIGATOR_STORE.items():
+        roster_map[uname] = {
+            "username": rec["username"],
+            "badge_id": rec["badge_id"],
+            "name": rec["name"],
+            "role": rec["role"],
+            "station": rec.get("station", "Cyber Crime Police Station"),
+            "email_masked": mask_email(rec.get("email")),
+            "phone_masked": mask_phone(rec.get("phone")),
+            "is_active": rec.get("is_active", True),
+            "created_at": rec.get("created_at", "2026-01-01T08:00:00Z"),
+            "last_login_at": rec.get("last_login_at")
+        }
+
+    # 2. Supabase Cloud live records
+    cloud_list = supabase_gateway.list_investigators()
+    for row in cloud_list:
+        uname = row["username"]
+        roster_map[uname] = {
+            "username": row["username"],
+            "badge_id": row["badge_id"],
+            "name": row["name"],
+            "role": row["role"],
+            "station": row.get("station", "Cyber Crime Police Station"),
+            "email_masked": mask_email(row.get("email")),
+            "phone_masked": mask_phone(row.get("phone")),
+            "is_active": row.get("is_active", True),
+            "created_at": row.get("created_at", "2026-01-01T08:00:00Z"),
+            "last_login_at": row.get("last_login_at")
+        }
+
+    roster = list(roster_map.values())
+    return {
+        "status": "success",
+        "count": len(roster),
+        "commander": commander,
+        "investigators": roster
+    }
+
+@app.post("/api/admin/investigators")
+def provision_investigator_endpoint(
+    req: ProvisionInvestigatorRequest,
+    commander: dict = Depends(require_commander_role)
+):
+    """
+    Provisions a new investigator into the database.
+    Salts & hashes the passcode with PBKDF2-HMAC-SHA256 (600,000 iterations).
+    Records administrative audit trail with commander's badge ID.
+    """
+    username = req.username.strip().lower()
+    if not username or len(username) < 3:
+        raise HTTPException(status_code=400, detail="Investigator username must be at least 3 characters.")
+    
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Initial passcode must be at least 6 characters.")
+
+    # Check if already exists in store or database
+    existing = get_investigator_record(username)
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Investigator ID '{username}' already exists.")
+
+    salt, hash_hex = hash_password(req.password)
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    new_record = {
+        "username": username,
+        "badge_id": req.badge_id.strip(),
+        "name": req.name.strip(),
+        "role": req.role.strip() or "INVESTIGATOR",
+        "station": req.station.strip() if req.station else "Cyber Crime Police Station",
+        "email": req.email.strip() if req.email else None,
+        "phone": req.phone.strip() if req.phone else None,
+        "is_active": True,
+        "created_at": now_iso,
+        "last_login_at": None,
+        "salt": salt,
+        "hash_hex": hash_hex
+    }
+
+    # Save to local in-memory store
+    INVESTIGATOR_STORE[username] = new_record
+
+    # Save to Supabase Cloud Database
+    supabase_gateway.create_investigator(
+        username=username,
+        badge_id=new_record["badge_id"],
+        name=new_record["name"],
+        role=new_record["role"],
+        station=new_record["station"],
+        email=new_record["email"],
+        phone=new_record["phone"],
+        salt=salt,
+        hash_hex=hash_hex
+    )
+
+    supabase_gateway.log_audit_event(
+        event_type="INVESTIGATOR_PROVISIONED",
+        investigator_badge_id=commander["badge_id"],
+        investigator_name=commander.get("name"),
+        details={
+            "target_username": username,
+            "target_badge": new_record["badge_id"],
+            "target_role": new_record["role"]
+        }
+    )
+
+    logging.info(f"[ADMIN AUDIT] Commander {commander['badge_id']} provisioned new officer: {username} ({new_record['badge_id']})")
+
+    return {
+        "status": "success",
+        "message": f"Investigator '{new_record['name']}' ({new_record['badge_id']}) provisioned successfully.",
+        "investigator": {
+            "username": username,
+            "badge_id": new_record["badge_id"],
+            "name": new_record["name"],
+            "role": new_record["role"],
+            "station": new_record["station"],
+            "email_masked": mask_email(new_record["email"]),
+            "phone_masked": mask_phone(new_record["phone"]),
+            "is_active": True
+        }
+    }
+
+@app.patch("/api/admin/investigators/{username}/status")
+def toggle_investigator_status_endpoint(
+    username: str,
+    req: UpdateInvestigatorStatusRequest,
+    commander: dict = Depends(require_commander_role)
+):
+    """
+    Toggles an investigator's active/suspended duty status.
+    If suspended, active terminal sessions and new logins are immediately rejected.
+    """
+    target = username.strip().lower()
+    if target == commander.get("username"):
+        raise HTTPException(status_code=400, detail="Commanders cannot suspend their own duty credentials.")
+
+    user = get_investigator_record(target)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Investigator '{target}' not found in roster.")
+
+    # Update local store
+    if target in INVESTIGATOR_STORE:
+        INVESTIGATOR_STORE[target]["is_active"] = req.is_active
+
+    # Update Supabase
+    supabase_gateway.update_investigator_status(target, req.is_active)
+
+    action_label = "ACTIVATED" if req.is_active else "SUSPENDED"
+    supabase_gateway.log_audit_event(
+        event_type=f"INVESTIGATOR_{action_label}",
+        investigator_badge_id=commander["badge_id"],
+        investigator_name=commander.get("name"),
+        details={"target_username": target, "new_status": req.is_active}
+    )
+
+    logging.info(f"[ADMIN AUDIT] Commander {commander['badge_id']} set duty status of '{target}' to {action_label}")
+
+    return {
+        "status": "success",
+        "username": target,
+        "is_active": req.is_active,
+        "message": f"Investigator '{target}' status updated to {action_label}."
+    }
+
+@app.post("/api/admin/investigators/{username}/dispatch-link")
+def admin_dispatch_magic_link_endpoint(
+    username: str,
+    request: Request = None,
+    commander: dict = Depends(require_commander_role)
+):
+    """
+    Dispatches a one-time magic login link to the investigator's confidential email/phone.
+    Called directly by the Station Commander to resolve forgotten passwords or issue shifts.
+    """
+    target = username.strip().lower()
+    user = get_investigator_record(target)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Investigator '{target}' not found.")
+
+    base_url = str(request.base_url).rstrip("/") if request is not None else "http://localhost:8000"
+    result = generate_magic_login_link(target, base_url=base_url)
+
+    supabase_gateway.log_audit_event(
+        event_type="COMMANDER_DISPATCHED_MAGIC_LINK",
+        investigator_badge_id=commander["badge_id"],
+        investigator_name=commander.get("name"),
+        details={"target_username": target, "target_badge": user.get("badge_id")}
+    )
+
+    return {
+        "status": "success",
+        "username": target,
+        "message": f"Secure one-time login link dispatched to confidential contact channels for '{user.get('name', target)}'.",
+        "_dev_link": result.get("_dev_link")
+    }
+
+@app.get("/api/admin/audit-logs")
+def list_admin_audit_logs_endpoint(
+    limit: int = Query(25, ge=1, le=100),
+    commander: dict = Depends(require_commander_role)
+):
+    """
+    Retrieves recent administrative and security audit trail logs.
+    """
+    logs = supabase_gateway.list_audit_logs(limit=limit)
+    return {
+        "status": "success",
+        "count": len(logs),
+        "logs": logs
+    }
 
 import asyncio
 

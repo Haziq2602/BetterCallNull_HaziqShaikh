@@ -2544,3 +2544,26 @@ kbd {
     color: #ffffff;
 }
 
+.btn-admin-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(61, 255, 160, 0.4);
+    background: rgba(61, 255, 160, 0.12);
+    color: var(--accent);
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-admin-nav:hover {
+    background: rgba(61, 255, 160, 0.25);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+

@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const headerOfficerId = document.getElementById("headerOfficerId");
     const headerOfficerName = document.getElementById("headerOfficerName");
     const btnLogout = document.getElementById("btnLogout");
+    const btnAdminNav = document.getElementById("btnAdminNav");
 
     function getAuthToken() {
         return sessionStorage.getItem("cyberguard_token");
@@ -130,9 +131,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (headerOfficerId) headerOfficerId.textContent = profile.badge_id || "INV";
                 if (headerOfficerName) headerOfficerName.textContent = profile.name || profile.username || "Officer";
             }
+            if (btnAdminNav) {
+                const COMMANDER_ROLES = ["LEAD_INVESTIGATOR", "SUPERINTENDENT", "STATION_COMMANDER", "ADMIN"];
+                if (COMMANDER_ROLES.includes(profile.role)) {
+                    btnAdminNav.style.display = "inline-flex";
+                } else {
+                    btnAdminNav.style.display = "none";
+                }
+            }
         } else {
             if (authGate) authGate.style.display = "flex";
             if (investigatorPill) investigatorPill.style.display = "none";
+            if (btnAdminNav) btnAdminNav.style.display = "none";
         }
     }
 

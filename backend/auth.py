@@ -37,10 +37,42 @@ INVESTIGATOR_STORE: Dict[str, Dict[str, Any]] = {
         "station": "Cyber Crime Police Station",
         "email": os.getenv("OFFICER_EMAIL", "insp.haziq@cyberpolice.gov.in"),
         "phone": os.getenv("OFFICER_PHONE", "+91 98200 12345"),
+        "is_active": True,
+        "created_at": "2026-01-01T08:00:00Z",
+        "last_login_at": None,
         "salt": "df9df02b9e6444af0ac34056eb4abc64",
         "hash_hex": "fbc8442811e1e5ef653afc0543c8b7e0d8590db1a377e63338e7d3b45532b483"
     }
 }
+
+COMMANDER_ROLES = {"LEAD_INVESTIGATOR", "SUPERINTENDENT", "STATION_COMMANDER", "ADMIN"}
+
+def hash_password(password: str) -> tuple[str, str]:
+    """Generates a secure salt and PBKDF2-HMAC-SHA256 (600,000 rounds) hash."""
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        600000
+    )
+    return salt, dk.hex()
+
+def mask_email(email: Optional[str]) -> str:
+    """Masks an email for OPSEC in public/roster views (e.g. i***q@cyberpolice.gov.in)."""
+    if not email or "@" not in email:
+        return "Confidential"
+    parts = email.split("@")
+    name, domain = parts[0], parts[1]
+    masked = name[0] + "***" + (name[-1] if len(name) > 1 else "")
+    return f"{masked}@{domain}"
+
+def mask_phone(phone: Optional[str]) -> str:
+    """Masks phone number for OPSEC in public/roster views (e.g. +91  **** 2345)."""
+    if not phone or len(phone) < 6:
+        return "Confidential"
+    clean = phone.strip()
+    return clean[:4] + " **** " + clean[-4:]
 
 def get_investigator_record(username: str) -> Optional[Dict[str, Any]]:
     """
@@ -252,12 +284,20 @@ def get_current_investigator(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
+    if investigator.get("is_active") is False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Investigator credentials have been suspended by Station Commander.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     return {
         "username": investigator["username"],
         "badge_id": investigator["badge_id"],
         "name": investigator["name"],
         "role": investigator["role"],
-        "station": investigator["station"]
+        "station": investigator["station"],
+        "is_active": investigator.get("is_active", True)
     }
 
 def verify_ws_token(token: Optional[str]) -> Optional[Dict[str, Any]]:
@@ -272,12 +312,28 @@ def verify_ws_token(token: Optional[str]) -> Optional[Dict[str, Any]]:
         return None
     username = payload.get("sub")
     investigator = get_investigator_record(username)
-    if not investigator:
+    if not investigator or investigator.get("is_active") is False:
         return None
     return {
         "username": investigator["username"],
         "badge_id": investigator["badge_id"],
         "name": investigator["name"],
         "role": investigator["role"],
-        "station": investigator["station"]
+        "station": investigator["station"],
+        "is_active": investigator.get("is_active", True)
     }
+
+def require_commander_role(
+    current_user: Dict[str, Any] = Depends(get_current_investigator)
+) -> Dict[str, Any]:
+    """
+    FastAPI dependency that enforces Station Commander or Lead Investigator privileges.
+    Raises HTTP 403 Forbidden if user rank is insufficient.
+    """
+    role = current_user.get("role", "")
+    if role not in COMMANDER_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Station administrative privilege required. Current role '{role}' is unauthorized."
+        )
+    return current_user

@@ -68,7 +68,7 @@ class SupabaseGateway:
 
         try:
             if self.client:
-                res = self.client.table("investigators").select("*").eq("username", username).eq("is_active", True).execute()
+                res = self.client.table("investigators").select("*").eq("username", username).execute()
                 if res.data and len(res.data) > 0:
                     row = res.data[0]
                     return {
@@ -79,13 +79,14 @@ class SupabaseGateway:
                         "station": row.get("station", "Cyber Crime Police Station"),
                         "email": row.get("email"),
                         "phone": row.get("phone"),
+                        "is_active": row.get("is_active", True),
                         "salt": row["password_salt"],
                         "hash_hex": row["password_hash"]
                     }
             else:
                 # Direct HTTP fetch via PostgREST
                 import urllib.request
-                req_url = f"{self.url}/rest/v1/investigators?username=eq.{username}&is_active=eq.true&select=*"
+                req_url = f"{self.url}/rest/v1/investigators?username=eq.{username}&select=*"
                 req = urllib.request.Request(req_url, headers=self._postgrest_headers())
                 with urllib.request.urlopen(req, timeout=5) as response:
                     data = json.loads(response.read().decode())
@@ -99,6 +100,7 @@ class SupabaseGateway:
                             "station": row.get("station", "Cyber Crime Police Station"),
                             "email": row.get("email"),
                             "phone": row.get("phone"),
+                            "is_active": row.get("is_active", True),
                             "salt": row["password_salt"],
                             "hash_hex": row["password_hash"]
                         }
@@ -139,8 +141,98 @@ class SupabaseGateway:
             payload = {"last_login_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
             if self.client:
                 self.client.table("investigators").update(payload).eq("username", username).execute()
+            else:
+                import urllib.request
+                req_url = f"{self.url}/rest/v1/investigators?username=eq.{username}"
+                headers = self._postgrest_headers()
+                req = urllib.request.Request(req_url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="PATCH")
+                with urllib.request.urlopen(req, timeout=5):
+                    pass
         except Exception:
             pass
+
+    def list_investigators(self) -> List[Dict[str, Any]]:
+        """Retrieves all registered investigators from Supabase."""
+        if not self.is_connected:
+            return []
+        try:
+            if self.client:
+                res = self.client.table("investigators").select("id, username, badge_id, name, role, station, email, phone, is_active, created_at, last_login_at").order("created_at", desc=False).execute()
+                return res.data or []
+            else:
+                import urllib.request
+                req_url = f"{self.url}/rest/v1/investigators?select=id,username,badge_id,name,role,station,email,phone,is_active,created_at,last_login_at&order=created_at.asc"
+                req = urllib.request.Request(req_url, headers=self._postgrest_headers())
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    return json.loads(resp.read().decode()) or []
+        except Exception as ex:
+            logger.warning(f"[SUPABASE ERROR] list_investigators failed: {ex}")
+            return []
+
+    def create_investigator(
+        self,
+        username: str,
+        badge_id: str,
+        name: str,
+        role: str,
+        station: str,
+        email: str,
+        phone: str,
+        salt: str,
+        hash_hex: str
+    ) -> bool:
+        """Inserts a new investigator into Supabase."""
+        if not self.is_connected:
+            return False
+        payload = {
+            "username": username,
+            "badge_id": badge_id,
+            "name": name,
+            "role": role,
+            "station": station,
+            "email": email,
+            "phone": phone,
+            "password_salt": salt,
+            "password_hash": hash_hex,
+            "is_active": True,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        try:
+            if self.client:
+                self.client.table("investigators").insert(payload).execute()
+                return True
+            else:
+                import urllib.request
+                req_url = f"{self.url}/rest/v1/investigators"
+                req = urllib.request.Request(req_url, data=json.dumps(payload).encode("utf-8"), headers=self._postgrest_headers(), method="POST")
+                with urllib.request.urlopen(req, timeout=5):
+                    return True
+        except Exception as ex:
+            logger.error(f"[SUPABASE ERROR] create_investigator failed: {ex}")
+            return False
+
+    def update_investigator_status(self, username: str, is_active: bool) -> bool:
+        """Updates active/suspended status for an investigator."""
+        if not self.is_connected:
+            return False
+        payload = {
+            "is_active": is_active,
+            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        try:
+            if self.client:
+                self.client.table("investigators").update(payload).eq("username", username).execute()
+                return True
+            else:
+                import urllib.request
+                req_url = f"{self.url}/rest/v1/investigators?username=eq.{username}"
+                req = urllib.request.Request(req_url, data=json.dumps(payload).encode("utf-8"), headers=self._postgrest_headers(), method="PATCH")
+                with urllib.request.urlopen(req, timeout=5):
+                    return True
+        except Exception as ex:
+            logger.error(f"[SUPABASE ERROR] update_investigator_status failed: {ex}")
+            return False
 
     # -------------------------------------------------------------------------
     # 2. FORENSIC CASES & EVIDENCE STORAGE
@@ -242,6 +334,24 @@ class SupabaseGateway:
                     pass
         except Exception as ex:
             logger.warning(f"[SUPABASE AUDIT] Failed to record audit log: {ex}")
+
+    def list_audit_logs(self, limit: int = 25) -> List[Dict[str, Any]]:
+        """Retrieves recent security & chain-of-custody audit logs."""
+        if not self.is_connected:
+            return []
+        try:
+            if self.client:
+                res = self.client.table("audit_logs").select("*").order("created_at", desc=True).limit(limit).execute()
+                return res.data or []
+            else:
+                import urllib.request
+                req_url = f"{self.url}/rest/v1/audit_logs?select=*&order=created_at.desc&limit={limit}"
+                req = urllib.request.Request(req_url, headers=self._postgrest_headers())
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    return json.loads(resp.read().decode()) or []
+        except Exception as ex:
+            logger.warning(f"[SUPABASE ERROR] list_audit_logs failed: {ex}")
+            return []
 
 # Global Gateway Instance
 supabase_gateway = SupabaseGateway()
