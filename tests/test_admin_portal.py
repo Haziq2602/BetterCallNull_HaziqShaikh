@@ -102,15 +102,16 @@ def test_provision_new_investigator(commander):
         assert ex.status_code == 409
         print(f"  [PASS] Duplicate username correctly rejected with 409.")
 
-def test_new_investigator_login():
+def test_new_investigator_login(officer_token):
     print("\n--- TEST 4: Login Verification for Newly Provisioned Officer ---")
+    # officer_token fixture already provisioned + logged-in investigator_test_99
+    # Just verify login works independently
     login_req = LoginRequest(username="investigator_test_99", password="testpassword2026")
     res = login_investigator(login_req)
     assert res["status"] == "success"
     assert res["investigator"]["badge_id"] == "INV-9901"
     assert "access_token" in res
     print(f"  [PASS] New officer logged in successfully: {res['investigator']['name']}")
-    return res["access_token"]
 
 def test_suspend_investigator(commander, officer_token):
     print("\n--- TEST 5: Kill Switch: Suspending Investigator Badge ---")

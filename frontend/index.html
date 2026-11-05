@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CyberGuard - Real-Time Speech Emotion & Call Triage Console</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=10">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -65,11 +65,6 @@
                     <span class="btn-arrow">→</span>
                 </button>
 
-                <div class="auth-demo-hint">
-                    <span class="hint-label">Pre-Provisioned Duty Credentials:</span>
-                    <div><code>investigator_01</code> / <code>cyberguard2026</code></div>
-                </div>
-
                 <div class="auth-compliance-footer">
                     <span>Sec. 43/66 IT Act & Evidence Integrity Protocol</span>
                     <span>All sessions logged with SHA-256 telemetry</span>
@@ -102,7 +97,7 @@
                     <label for="forgotUsername">Investigator Unique ID</label>
                     <div class="input-wrap">
                         <span class="input-prefix">ID</span>
-                        <input type="text" id="forgotUsername" value="investigator_01" required />
+                        <input type="text" id="forgotUsername" placeholder="e.g. investigator_01" required />
                     </div>
                 </div>
 
@@ -136,6 +131,9 @@
                 </div>
             </div>
             <div class="header-status">
+                <button type="button" class="btn-guide-nav" id="btnOpenGuide" title="Open Quick Demo Guide for Evaluators">
+                    <span>💡 Quick Guide</span>
+                </button>
                 <div class="investigator-pill" id="investigatorPill" style="display: none;">
                     <span class="badge-role" id="headerOfficerRole">OFFICER</span>
                     <span class="officer-id" id="headerOfficerId">INV-7842</span>
@@ -152,6 +150,46 @@
                 </div>
             </div>
         </header>
+
+        <!-- ============ 2-PILLAR FALLBACK BANNER ============ -->
+        <!-- Shown dynamically when emotion2vec+ HF Space is sleeping/warming up -->
+        <div class="fallback-banner" id="fallbackBanner" role="status" aria-live="polite" hidden>
+            <div class="fallback-banner-inner">
+                <div class="fallback-icon-wrap">
+                    <span class="fallback-pulse"></span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="fallback-text">
+                    <div class="fallback-title-row">
+                        <strong>Speech Emotion AI Warming Up (HuggingFace ZeroGPU Standby)</strong>
+                        <span class="fallback-mode-tag">2-PILLAR FAILSAFE ACTIVE</span>
+                    </div>
+                    <p class="fallback-desc">
+                        Pillar 1 (emotion2vec+) is waking up. Triage is currently running on <strong>Pillar 2 (Acoustic DSP Tremors)</strong> + <strong>Pillar 3 (Keyword & Threat Taxonomy)</strong> with calibrated multi-modal re-weighting. Zero triage interruption.
+                    </p>
+                </div>
+                <div class="fallback-pillars">
+                    <span class="f-pillar standby" title="Pillar 1: Speech Emotion Recognition (Connecting / Standby)">
+                        <span class="f-pillar-dot standby-dot"></span>
+                        P1: Emotion (Standby)
+                    </span>
+                    <span class="f-pillar active" title="Pillar 2: Acoustic Biomarkers & Pitch Volatility (Active)">
+                        <span class="f-pillar-dot active-dot"></span>
+                        P2: Acoustic DSP (Active)
+                    </span>
+                    <span class="f-pillar active" title="Pillar 3: Keyword Threat Analysis & Groq LLM (Active)">
+                        <span class="f-pillar-dot active-dot"></span>
+                        P3: Keywords (Active)
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- ===================================================== -->
 
         <div class="console-grid">
 
@@ -245,7 +283,22 @@
                     <div class="detail-main">
                         <!-- Waveform & Audio Meter -->
                         <section class="block">
-                            <h3 class="block-title">Voice signal</h3>
+                            <div class="block-header-flex">
+                                <h3 class="block-title">Voice signal</h3>
+                                <!-- Tactical Audio Playback Controls for Pre-Recorded Files -->
+                                <div class="audio-playback-bar" id="audioPlaybackBar" style="display: none;">
+                                    <button type="button" class="btn-playback-toggle" id="btnPlaybackToggle" title="Play / Pause Audio Wiretap">
+                                        <svg class="icon-play" id="playbackIconPlay" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                                        <svg class="icon-pause" id="playbackIconPause" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                        <span id="playbackToggleLabel">Play</span>
+                                    </button>
+                                    <span class="playback-timer" id="playbackTimer">00:00 / 00:00</span>
+                                    <div class="playback-progress" id="playbackProgress" title="Click to seek">
+                                        <div class="playback-progress-fill" id="playbackProgressFill"></div>
+                                    </div>
+                                    <audio id="preRecordedAudio" preload="auto" style="display:none;"></audio>
+                                </div>
+                            </div>
                             <div class="visualizer-container">
                                 <div class="signal-scroll" id="signalScroll" tabindex="0"
                                     aria-label="Voice signal timeline. Scroll sideways to review earlier audio.">
@@ -338,6 +391,7 @@
                         <span class="demo-label">Demo scenarios</span>
                         <button class="btn-warning" id="btnSimulatePanic">Simulate Scam Distress Call</button>
                         <button class="btn-secondary" id="btnSimulateCalm">Simulate Calm Inquiry</button>
+                        <button class="btn-amber" id="btnSimulateFallback" title="Demonstrate automatic 2-Pillar failsafe when HF ZeroGPU is warming up">⚠️ Simulate 2-Pillar Failsafe</button>
                     </div>
                 </div>
 
@@ -525,7 +579,101 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=4"></script>
+    <!-- ============ QUICK EVALUATOR GUIDE MODAL ============ -->
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal-window guide-modal-window" role="dialog" aria-modal="true" aria-labelledby="guideModalTitle">
+            <div class="modal-header">
+                <div class="guide-header-title">
+                    <span class="guide-radar-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 3a9 9 0 0 1 9 9"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 id="guideModalTitle">CyberGuard Quick Evaluation Protocol</h3>
+                        <p class="guide-subtitle">FAST-TRACK DEMO WALKTHROUGH FOR JURY & COMMANDERS</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="btnCloseGuide" aria-label="Close guide">&times;</button>
+            </div>
+            
+            <div class="modal-body guide-modal-body">
+                <div class="guide-grid">
+                    <!-- Step 1 -->
+                    <div class="guide-card">
+                        <div class="guide-card-head">
+                            <span class="guide-card-num">01</span>
+                            <h4>Live Call Queue & Triage</h4>
+                        </div>
+                        <p>Incoming emergency calls are auto-ranked by Multi-Modal Urgency (0–100). Severe distress calls surface dynamically to the queue top.</p>
+                        <div class="guide-card-actions">
+                            <button type="button" class="btn-guide-action" id="guideActionPanic">
+                                <span>Load Digital Arrest (#CALL-9823)</span>
+                                <span class="action-arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="guide-card">
+                        <div class="guide-card-head">
+                            <span class="guide-card-num">02</span>
+                            <h4>3-Pillar Multimodal Telemetry</h4>
+                        </div>
+                        <p>Simultaneous evaluation of Voice Emotion (P1), SciPy Vocal Tremors &lt;15ms (P2), and Indic Threat Keywords (P3).</p>
+                        <div class="guide-pillar-tags">
+                            <span class="tag-chip p1">P1 Emotion (SER)</span>
+                            <span class="tag-chip p2">P2 Acoustic DSP</span>
+                            <span class="tag-chip p3">P3 Groq Whisper</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="guide-card">
+                        <div class="guide-card-head">
+                            <span class="guide-card-num">03</span>
+                            <h4>2-Pillar Resilience Failsafe</h4>
+                        </div>
+                        <p>When the Hugging Face GPU model is warming up, system dynamically re-weights to 2-Pillar mode with zero triage downtime.</p>
+                        <div class="guide-card-actions">
+                            <button type="button" class="btn-guide-action amber" id="guideActionFallback">
+                                <span>Test 2-Pillar Failsafe</span>
+                                <span class="action-arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="guide-card">
+                        <div class="guide-card-head">
+                            <span class="guide-card-num">04</span>
+                            <h4>Wiretap Forensics & Chain-of-Custody</h4>
+                        </div>
+                        <p>Analyze recorded wiretaps or upload audio. Produces a second-by-second timeline with cryptographic SHA-256 evidence hashing.</p>
+                        <div class="guide-card-actions">
+                            <button type="button" class="btn-guide-action cyan" id="guideActionForensic">
+                                <span>Inspect Case Wiretaps</span>
+                                <span class="action-arrow">→</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions guide-modal-actions">
+                <label class="guide-checkbox-wrap">
+                    <input type="checkbox" id="guideDoNotShow">
+                    <span>Don't auto-launch on startup</span>
+                </label>
+                <button type="button" class="btn-primary" id="btnDismissGuide">Begin Evaluation →</button>
+            </div>
+        </div>
+    </div>
+    <!-- ===================================================== -->
+
+    <script src="js/app.js?v=10"></script>
 </body>
 
 </html>

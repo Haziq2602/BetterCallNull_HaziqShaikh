@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const pitchStd = document.getElementById("pitchStd");
     const voiceTremor = document.getElementById("voiceTremor");
     const voiceEnergy = document.getElementById("voiceEnergy");
+    const fallbackBanner = document.getElementById("fallbackBanner");
+    const systemStatusText = document.querySelector(".system-status .status-text");
+    const systemStatusIndicator = document.querySelector(".system-status .status-indicator");
 
     // Emotion Bars
     const valFear = document.getElementById("valFear");
@@ -39,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSimulateIncoming = document.getElementById("btnSimulateIncoming");
     const btnSimulatePanic = document.getElementById("btnSimulatePanic");
     const btnSimulateCalm = document.getElementById("btnSimulateCalm");
+    const btnSimulateFallback = document.getElementById("btnSimulateFallback");
     const btnLiveMic = document.getElementById("btnLiveMic");
 
     // Forensic Wiretap Elements
@@ -47,6 +51,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const audioUpload = document.getElementById("audioUpload");
     const btnUpload = document.getElementById("btnUpload");
     const forensicLoading = document.getElementById("forensicLoading");
+
+    // Pre-Recorded Audio Player Elements (Tactical Playback in Monitor)
+    const audioPlaybackBar = document.getElementById("audioPlaybackBar");
+    const btnPlaybackToggle = document.getElementById("btnPlaybackToggle");
+    const playbackIconPlay = document.getElementById("playbackIconPlay");
+    const playbackIconPause = document.getElementById("playbackIconPause");
+    const playbackToggleLabel = document.getElementById("playbackToggleLabel");
+    const playbackTimer = document.getElementById("playbackTimer");
+    const playbackProgress = document.getElementById("playbackProgress");
+    const playbackProgressFill = document.getElementById("playbackProgressFill");
+    const preRecordedAudio = document.getElementById("preRecordedAudio");
+    let activePreRecordedCall = null;
 
     // Forensic Modal Elements (Recorded Wiretaps)
     const forensicModal = document.getElementById("forensicModal");
@@ -426,8 +442,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function pushSample(t) {
         let target = 0;
-        if (signalMode === "live") target = liveLevel;
-        else if (signalMode === "demo") target = demoSpeechLevel(t);
+        if (signalMode === "live") {
+            target = liveLevel;
+        } else if (signalMode === "prerecorded") {
+            if (preRecordedAudio && !preRecordedAudio.paused && !preRecordedAudio.ended) {
+                target = demoSpeechLevel(t);
+            } else {
+                target = 0;
+            }
+        } else if (signalMode === "demo") {
+            target = demoSpeechLevel(t);
+        }
 
         // fast attack, quick release so pauses drop to a flat line promptly
         smoothLevel = target > smoothLevel ? target : smoothLevel * 0.5 + target * 0.5;
@@ -491,9 +516,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // ---- status badge ----
-        const sim = signalMode === "demo" ? " · SIMULATED" : "";
-        if (signalMode === "idle") {
-            setSignalLabel("STOPPED", "idle");
+        const sim = signalMode === "demo" ? " · SIMULATED" : (signalMode === "prerecorded" ? " · PLAYBACK" : "");
+        if (signalMode === "idle" || (signalMode === "prerecorded" && preRecordedAudio && preRecordedAudio.paused)) {
+            setSignalLabel((signalMode === "prerecorded" ? "PAUSED" : "STOPPED") + sim, "idle");
         } else if (isSpeaking) {
             setSignalLabel("SPEAKING" + sim, "speaking");
         } else if (lastSpeechAt > 0 && now - lastSpeechAt < PAUSE_WINDOW_MS) {
@@ -730,6 +755,228 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // ==========================================
+    // PRE-RECORDED WIRETAP PLAYBACK & SYNC CONTROLLER
+    // Controls Play/Pause, Waveform Pulsing & Dynamic Transcript
+    // (Live microphone transcription is completely separate and untouched)
+    // ==========================================
+    const PRE_RECORDED_AUDIO_MAP = {
+        "CALL-9823": "/api/sample-recordings/sample_digital_arrest.wav",
+        "CALL-9821": "/api/sample-recordings/sample_kidnap_threat.wav",
+        "CALL-9819": "/api/sample-recordings/sample_routine_bank.wav",
+        "CALL-9815": "/api/sample-recordings/sample_digital_arrest.wav",
+        "CALL-9812": "/api/sample-recordings/sample_routine_bank.wav",
+        "CALL-FAILSAFE-88": "/api/sample-recordings/sample_digital_arrest.wav",
+        "sc_digital_arrest": "/api/sample-recordings/sample_digital_arrest.wav",
+        "sc_kidnap_threat": "/api/sample-recordings/sample_kidnap_threat.wav",
+        "sc_routine_bank": "/api/sample-recordings/sample_routine_bank.wav",
+        "sc_sextortion": "/api/sample-recordings/sample_digital_arrest.wav",
+        "sc_upi_phishing": "/api/sample-recordings/sample_routine_bank.wav",
+        "sample_digital_arrest": "/api/sample-recordings/sample_digital_arrest.wav",
+        "sample_kidnap_threat": "/api/sample-recordings/sample_kidnap_threat.wav",
+        "sample_routine_bank": "/api/sample-recordings/sample_routine_bank.wav"
+    };
+
+    const PRE_RECORDED_TIMELINES = {
+        "CALL-9823": [
+            {
+                start: 0, end: 7.5,
+                transcript: "They told me they are from CBI Mumbai and my bank account is linked to money laundering...",
+                tags: ["#DIGITAL_ARREST_SCAM", "#CBI_IMPERSONATION"],
+                urgency: 78.0, priority: "CRITICAL",
+                dominant_emotion: "FEARFUL",
+                emotions: { fearful: 0.75, sad: 0.40, angry: 0.05, neutral: 0.10 },
+                acoustics: { pitch_std: 44.2, voice_tremor: true, energy_level: "NORMAL_CONVERSATION" }
+            },
+            {
+                start: 7.5, end: 15.0,
+                transcript: "They said I cannot disconnect this Skype video call or local police will reach my home and arrest me right now!",
+                tags: ["#DIGITAL_ARREST_SCAM", "#ACUTE_PANIC", "#VOCAL_TREMORS"],
+                urgency: 89.0, priority: "CRITICAL",
+                dominant_emotion: "FEARFUL",
+                emotions: { fearful: 0.88, sad: 0.65, angry: 0.08, neutral: 0.02 },
+                acoustics: { pitch_std: 51.6, voice_tremor: true, energy_level: "ELEVATED_SHOUT" }
+            },
+            {
+                start: 15.0, end: 26.0,
+                transcript: "Please don't freeze my account! I will transfer the clearance fee right now, just please don't send police to arrest me...",
+                tags: ["#DIGITAL_ARREST_SCAM", "#EXTORTION_RANSOM", "#ACUTE_PANIC", "#FINANCIAL_DURESS"],
+                urgency: 93.0, priority: "CRITICAL",
+                dominant_emotion: "FEARFUL",
+                emotions: { fearful: 0.88, sad: 0.72, angry: 0.05, neutral: 0.02 },
+                acoustics: { pitch_std: 52.4, voice_tremor: true, energy_level: "SUPPRESSED_WHISPER" }
+            }
+        ],
+        "CALL-9821": [
+            {
+                start: 0, end: 7.0,
+                transcript: "Listen to me very carefully! We have your child. Do not call the police or tell anyone or we will hurt him with a weapon!",
+                tags: ["#KIDNAPPING_THREAT", "#WEAPON_THREAT"],
+                urgency: 78.0, priority: "CRITICAL",
+                dominant_emotion: "ANGRY",
+                emotions: { fearful: 0.30, sad: 0.10, angry: 0.72, neutral: 0.05 },
+                acoustics: { pitch_std: 42.0, voice_tremor: true, energy_level: "ELEVATED_SHOUT" }
+            },
+            {
+                start: 7.0, end: 16.0,
+                transcript: "You have thirty minutes to pay five lakh rupees ransom or you will never see him again!",
+                tags: ["#KIDNAPPING_THREAT", "#EXTORTION_RANSOM", "#ACUTE_DURESS"],
+                urgency: 82.0, priority: "CRITICAL",
+                dominant_emotion: "ANGRY",
+                emotions: { fearful: 0.35, sad: 0.12, angry: 0.78, neutral: 0.04 },
+                acoustics: { pitch_std: 44.8, voice_tremor: true, energy_level: "ELEVATED_SHOUT" }
+            }
+        ],
+        "CALL-9819": [
+            {
+                start: 0, end: 8.5,
+                transcript: "Hello officer, good afternoon. I am following up on my previous complaint status regarding an unauthorized SMS notification from my bank...",
+                tags: ["#STATUS_INQUIRY", "#STABLE_BASELINE"],
+                urgency: 18.0, priority: "ROUTINE",
+                dominant_emotion: "NEUTRAL",
+                emotions: { fearful: 0.04, sad: 0.06, angry: 0.03, neutral: 0.87 },
+                acoustics: { pitch_std: 12.1, voice_tremor: false, energy_level: "NORMAL_CONVERSATION" }
+            },
+            {
+                start: 8.5, end: 20.0,
+                transcript: "Can you please verify if the FIR was recorded? I just want to make sure my account details are secure.",
+                tags: ["#STATUS_INQUIRY", "#ROUTINE_FOLLOWUP"],
+                urgency: 22.0, priority: "ROUTINE",
+                dominant_emotion: "NEUTRAL",
+                emotions: { fearful: 0.04, sad: 0.06, angry: 0.03, neutral: 0.87 },
+                acoustics: { pitch_std: 12.8, voice_tremor: false, energy_level: "NORMAL_CONVERSATION" }
+            }
+        ]
+    };
+
+    function formatTimeMMSS(sec) {
+        if (!sec || isNaN(sec)) return "00:00";
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function setPlaybackState(isPlaying) {
+        if (!playbackIconPlay || !playbackIconPause || !playbackToggleLabel) return;
+        if (isPlaying) {
+            playbackIconPlay.style.display = "none";
+            playbackIconPause.style.display = "inline-block";
+            playbackToggleLabel.textContent = "Pause";
+        } else {
+            playbackIconPlay.style.display = "inline-block";
+            playbackIconPause.style.display = "none";
+            playbackToggleLabel.textContent = "Play";
+        }
+    }
+
+    function syncPreRecordedPlaybackUI(currentTime) {
+        if (!activePreRecordedCall) return;
+
+        let segments = activePreRecordedCall.timeline || PRE_RECORDED_TIMELINES[activePreRecordedCall.call_id];
+        if (!segments && activePreRecordedCall.scenario_id) {
+            segments = PRE_RECORDED_TIMELINES[activePreRecordedCall.scenario_id];
+        }
+
+        if (segments && segments.length > 0) {
+            const seg = segments.find(s => {
+                const sStart = s.time_start_sec !== undefined ? s.time_start_sec : s.start;
+                const sEnd = s.time_end_sec !== undefined ? s.time_end_sec : s.end;
+                return currentTime >= sStart && currentTime <= sEnd;
+            }) || segments[segments.length - 1];
+
+            if (seg) {
+                if (seg.transcript) liveTranscript.textContent = `"${seg.transcript}"`;
+                const tags = seg.detected_tags || seg.tags || [];
+                if (tags.length > 0) {
+                    liveTags.innerHTML = tags.map(t => {
+                        const color = (seg.priority_level === 'CRITICAL' || seg.priority === 'CRITICAL') ? 'red' : 'yellow';
+                        return `<span class="tag ${color}">${t}</span>`;
+                    }).join(" ");
+                }
+                if (seg.pitch_std !== undefined || (seg.acoustics && seg.acoustics.pitch_std !== undefined)) {
+                    const pVal = seg.pitch_std !== undefined ? seg.pitch_std : seg.acoustics.pitch_std;
+                    pitchStd.textContent = `${pVal} Hz ${pVal > 30 ? '(ERRATIC)' : '(STABLE)'}`;
+                }
+                if (seg.voice_tremor !== undefined || (seg.acoustics && seg.acoustics.voice_tremor !== undefined)) {
+                    const tVal = seg.voice_tremor !== undefined ? seg.voice_tremor : seg.acoustics.voice_tremor;
+                    voiceTremor.textContent = tVal ? "DETECTED" : "NONE";
+                }
+                if (seg.energy_level || (seg.acoustics && seg.acoustics.energy_level)) {
+                    const eVal = seg.energy_level || seg.acoustics.energy_level;
+                    if (voiceEnergy) voiceEnergy.textContent = eVal.replace(/_/g, " ");
+                }
+                if (seg.urgency_score !== undefined || seg.urgency !== undefined) {
+                    const uScore = Math.round(seg.urgency_score !== undefined ? seg.urgency_score : seg.urgency);
+                    urgencyValue.textContent = uScore;
+                }
+                const emoBreakdown = seg.emotions || seg.emotion_breakdown;
+                if (emoBreakdown && Object.keys(emoBreakdown).length > 0) {
+                    const fear = Math.round((emoBreakdown.fearful || 0) * 100);
+                    const sad = Math.round((emoBreakdown.sad || 0) * 100);
+                    const angry = Math.round((emoBreakdown.angry || 0) * 100);
+                    const neutral = Math.round((emoBreakdown.neutral || 0) * 100);
+                    valFear.textContent = `${fear}%`;
+                    fillFear.style.width = `${fear}%`;
+                    valSad.textContent = `${sad}%`;
+                    fillSad.style.width = `${sad}%`;
+                    valAngry.textContent = `${angry}%`;
+                    fillAngry.style.width = `${angry}%`;
+                    valNeutral.textContent = `${neutral}%`;
+                    fillNeutral.style.width = `${neutral}%`;
+                }
+            }
+        }
+    }
+
+    if (btnPlaybackToggle) {
+        btnPlaybackToggle.addEventListener("click", () => {
+            if (!preRecordedAudio || !preRecordedAudio.src) return;
+            if (preRecordedAudio.paused) {
+                preRecordedAudio.play().then(() => {
+                    setPlaybackState(true);
+                }).catch(err => {
+                    console.warn("[AUDIO PLAYBACK FAILED]", err);
+                });
+            } else {
+                preRecordedAudio.pause();
+                setPlaybackState(false);
+            }
+        });
+    }
+
+    if (playbackProgress) {
+        playbackProgress.addEventListener("click", (e) => {
+            if (!preRecordedAudio || !preRecordedAudio.duration) return;
+            const rect = playbackProgress.getBoundingClientRect();
+            const clickPos = (e.clientX - rect.left) / rect.width;
+            const newTime = clickPos * preRecordedAudio.duration;
+            preRecordedAudio.currentTime = Math.max(0, Math.min(preRecordedAudio.duration, newTime));
+            syncPreRecordedPlaybackUI(preRecordedAudio.currentTime);
+        });
+    }
+
+    if (preRecordedAudio) {
+        preRecordedAudio.ontimeupdate = () => {
+            const cur = preRecordedAudio.currentTime;
+            const dur = preRecordedAudio.duration || 1;
+            if (playbackProgressFill) {
+                playbackProgressFill.style.width = `${Math.min(100, (cur / dur) * 100)}%`;
+            }
+            if (playbackTimer) {
+                playbackTimer.textContent = `${formatTimeMMSS(cur)} / ${formatTimeMMSS(dur)}`;
+            }
+            syncPreRecordedPlaybackUI(cur);
+        };
+
+        preRecordedAudio.onended = () => {
+            setPlaybackState(false);
+            if (playbackProgressFill) playbackProgressFill.style.width = "0%";
+            if (playbackTimer && preRecordedAudio.duration) {
+                playbackTimer.textContent = `00:00 / ${formatTimeMMSS(preRecordedAudio.duration)}`;
+            }
+        };
+    }
+
     function setActiveCall(call) {
         currentSelectedCallId = call.call_id;
         if (activeCallId) activeCallId.textContent = `#${call.call_id}`;
@@ -741,13 +988,39 @@ document.addEventListener("DOMContentLoaded", () => {
             else resetSignal();
             signalCallId = call.call_id;
         }
-        // a finished live recording stays frozen for review; other calls use the demo signal
-        signalMode = call.call_id.startsWith("CALL-LIVE") ? "idle" : "demo";
+
+        // Configure pre-recorded audio wiretap playback if not a live mic session
+        const isLiveCall = call.call_id.startsWith("CALL-LIVE");
+        const audioSrc = !isLiveCall ? (call.sample_audio || call.audio_url || PRE_RECORDED_AUDIO_MAP[call.call_id] || (call.scenario_id && PRE_RECORDED_AUDIO_MAP[call.scenario_id])) : null;
+
+        if (audioSrc && audioPlaybackBar && preRecordedAudio) {
+            audioPlaybackBar.style.display = "inline-flex";
+            activePreRecordedCall = call;
+            signalMode = "prerecorded";
+            const fullAudioUrl = audioSrc.startsWith("http") || audioSrc.startsWith("blob:") ? audioSrc : (window.location.origin + audioSrc);
+            if (preRecordedAudio.src !== fullAudioUrl) {
+                preRecordedAudio.pause();
+                preRecordedAudio.src = audioSrc;
+                preRecordedAudio.load();
+                setPlaybackState(false);
+                if (playbackProgressFill) playbackProgressFill.style.width = "0%";
+                if (playbackTimer) playbackTimer.textContent = `00:00 / ${call.duration || "00:00"}`;
+            }
+        } else if (audioPlaybackBar) {
+            if (preRecordedAudio && !preRecordedAudio.paused) {
+                preRecordedAudio.pause();
+                setPlaybackState(false);
+            }
+            audioPlaybackBar.style.display = "none";
+            activePreRecordedCall = null;
+            signalMode = isLiveCall ? "idle" : "demo";
+        }
 
         updateTelemetryDisplay({
             urgency_score: call.urgency_score,
             priority_level: call.priority_level,
             dominant_emotion: call.dominant_emotion || "NEUTRAL",
+            emotion_status: call.emotion_status || (call.dominant_emotion === "UNAVAILABLE" ? "MODEL_UNAVAILABLE" : "SUCCESS"),
             emotion_breakdown: call.emotions || {},
             acoustic_metrics: {
                 pitch_std: call.pitch_std || 15.0,
@@ -816,21 +1089,54 @@ document.addEventListener("DOMContentLoaded", () => {
             waveFrequency = 0.03;
         }
 
+        // ==========================================
+        // 2-PILLAR FALLBACK BANNER LOGIC
+        // Triggers when Hugging Face SER Space is asleep or warming up
+        // ==========================================
+        const isFallback = (data.emotion_status === "MODEL_UNAVAILABLE") || 
+                           (data.dominant_emotion === "UNAVAILABLE") ||
+                           (data.components && data.components.ser_status === "MODEL_UNAVAILABLE");
+
+        if (fallbackBanner) {
+            fallbackBanner.hidden = !isFallback;
+        }
+
+        if (systemStatusText && systemStatusIndicator) {
+            if (isFallback) {
+                systemStatusText.textContent = "Hybrid AI Triage Engine: 2-PILLAR FAILSAFE (Edge DSP + Groq)";
+                systemStatusIndicator.className = "status-indicator standby";
+            } else {
+                systemStatusText.textContent = "Hybrid AI Triage Engine: ACTIVE (LPU Cloud + Edge DSP)";
+                systemStatusIndicator.className = "status-indicator online";
+            }
+        }
+
         // Emotion Bars
         const emo = data.emotion_breakdown || {};
-        const fear = Math.round((emo.fearful || 0) * 100);
-        const sad = Math.round((emo.sad || 0) * 100);
-        const angry = Math.round((emo.angry || 0) * 100);
-        const neutral = Math.round((emo.neutral || 0) * 100);
+        if (isFallback && (!data.emotion_breakdown || Object.keys(data.emotion_breakdown).length === 0)) {
+            valFear.textContent = "Standby";
+            fillFear.style.width = "0%";
+            valSad.textContent = "Standby";
+            fillSad.style.width = "0%";
+            valAngry.textContent = "Standby";
+            fillAngry.style.width = "0%";
+            valNeutral.textContent = "Standby";
+            fillNeutral.style.width = "0%";
+        } else {
+            const fear = Math.round((emo.fearful || 0) * 100);
+            const sad = Math.round((emo.sad || 0) * 100);
+            const angry = Math.round((emo.angry || 0) * 100);
+            const neutral = Math.round((emo.neutral || 0) * 100);
 
-        valFear.textContent = `${fear}%`;
-        fillFear.style.width = `${fear}%`;
-        valSad.textContent = `${sad}%`;
-        fillSad.style.width = `${sad}%`;
-        valAngry.textContent = `${angry}%`;
-        fillAngry.style.width = `${angry}%`;
-        valNeutral.textContent = `${neutral}%`;
-        fillNeutral.style.width = `${neutral}%`;
+            valFear.textContent = `${fear}%`;
+            fillFear.style.width = `${fear}%`;
+            valSad.textContent = `${sad}%`;
+            fillSad.style.width = `${sad}%`;
+            valAngry.textContent = `${angry}%`;
+            fillAngry.style.width = `${angry}%`;
+            valNeutral.textContent = `${neutral}%`;
+            fillNeutral.style.width = `${neutral}%`;
+        }
 
         // Acoustics
         if (data.acoustic_metrics) {
@@ -869,6 +1175,29 @@ document.addEventListener("DOMContentLoaded", () => {
         if (calmCall) setActiveCall(calmCall);
     });
 
+    if (btnSimulateFallback) {
+        btnSimulateFallback.addEventListener("click", () => {
+            const fallbackCall = {
+                call_id: "CALL-FAILSAFE-88",
+                caller_number: "+91 98200 44102",
+                caller_label: "Suspect: Extortion Burner (VoIP Spoof)",
+                duration: "00:19",
+                urgency_score: 84.0,
+                priority_level: "CRITICAL",
+                tags: ["#DIGITAL_ARREST_SCAM", "#EXTORTION_RANSOM", "#VOCAL_TREMORS"],
+                dominant_emotion: "UNAVAILABLE",
+                emotion_status: "MODEL_UNAVAILABLE",
+                pitch_std: 49.5,
+                voice_tremor: true,
+                emotions: {},
+                transcript: "CBI Mumbai Narcotics seizure! Transfer 2 lakh rupees clearance fee immediately or local police warrant will be issued to your address...",
+                advisory: "2-Pillar failsafe active: Severe vocal fold tremors (49.5 Hz) and acute extortion coercion verified without emotion model.",
+                status: "ACTIVE"
+            };
+            setActiveCall(fallbackCall);
+        });
+    }
+
     // ==========================================
     // 3. LIVE MICROPHONE INGESTION & FINAL DEBRIEF
     // ==========================================
@@ -900,6 +1229,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLiveMic.addEventListener("click", async () => {
         if (!isRecording) {
             try {
+                // Pause pre-recorded playback when officer starts live mic triage
+                if (preRecordedAudio && !preRecordedAudio.paused) {
+                    preRecordedAudio.pause();
+                    setPlaybackState(false);
+                }
+                if (audioPlaybackBar) audioPlaybackBar.style.display = "none";
+
                 // Initialize fresh live call session
                 const liveCallId = `CALL-LIVE-${Math.floor(Math.random() * 9000 + 1000)}`;
                 currentSelectedCallId = liveCallId;
@@ -1429,6 +1765,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 emotions: effectiveEmotions,
                 transcript: d.full_transcript,
                 advisory: d.summary,
+                audio_url: (modalAudioPlayer ? modalAudioPlayer.src : null) || d.audio_url || d.storage_audio_url,
+                timeline: d.timeline,
                 status: "ACTIVE"
             };
 
@@ -1436,6 +1774,84 @@ document.addEventListener("DOMContentLoaded", () => {
             setActiveCall(wiretapCall);
             closeModal();
         });
+    }
+
+    // ==========================================
+    // 5. QUICK EVALUATOR GUIDE MODAL CONTROLLER
+    // ==========================================
+    const guideModal = document.getElementById("guideModal");
+    const btnOpenGuide = document.getElementById("btnOpenGuide");
+    const btnCloseGuide = document.getElementById("btnCloseGuide");
+    const btnDismissGuide = document.getElementById("btnDismissGuide");
+    const guideDoNotShow = document.getElementById("guideDoNotShow");
+    const guideActionPanic = document.getElementById("guideActionPanic");
+    const guideActionFallback = document.getElementById("guideActionFallback");
+    const guideActionForensic = document.getElementById("guideActionForensic");
+
+    function openGuideModal() {
+        if (guideModal) guideModal.classList.add("open");
+    }
+
+    function closeGuideModal() {
+        if (guideModal) guideModal.classList.remove("open");
+        if (guideDoNotShow && guideDoNotShow.checked) {
+            localStorage.setItem("cyberguard_guide_seen", "1");
+        }
+    }
+
+    if (btnOpenGuide) btnOpenGuide.addEventListener("click", openGuideModal);
+    if (btnCloseGuide) btnCloseGuide.addEventListener("click", closeGuideModal);
+    if (btnDismissGuide) btnDismissGuide.addEventListener("click", closeGuideModal);
+
+    // Close on backdrop click
+    if (guideModal) {
+        guideModal.addEventListener("click", (e) => {
+            if (e.target === guideModal) closeGuideModal();
+        });
+    }
+
+    // Close on Escape key
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && guideModal && guideModal.classList.contains("open")) {
+            closeGuideModal();
+        }
+    });
+
+    // Embedded Action Triggers
+    if (guideActionPanic) {
+        guideActionPanic.addEventListener("click", () => {
+            closeGuideModal();
+            if (btnSimulatePanic) btnSimulatePanic.click();
+        });
+    }
+
+    if (guideActionFallback) {
+        guideActionFallback.addEventListener("click", () => {
+            closeGuideModal();
+            if (btnSimulateFallback) btnSimulateFallback.click();
+        });
+    }
+
+    if (guideActionForensic) {
+        guideActionForensic.addEventListener("click", () => {
+            closeGuideModal();
+            const uploadBox = document.querySelector(".upload-box");
+            if (uploadBox) {
+                uploadBox.open = true;
+                uploadBox.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+    }
+
+    // Auto-launch guide ONLY after user successfully transitions from login to index
+    const justLoggedIn = sessionStorage.getItem("cyberguard_just_logged_in") === "true";
+    if (justLoggedIn) {
+        sessionStorage.removeItem("cyberguard_just_logged_in");
+        if (!localStorage.getItem("cyberguard_guide_seen")) {
+            setTimeout(() => {
+                openGuideModal();
+            }, 800);
+        }
     }
 
     // Initial Load
