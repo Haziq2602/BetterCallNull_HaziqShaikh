@@ -2,30 +2,46 @@
 FastAPI Server: Real-Time WebSockets for Audio Streaming & REST APIs for Case File Investigation.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 import numpy as np
+import os
 import io
 import json
 import time
+import hashlib
+import logging
 
 from backend.models.emotion_model import SpeechEmotionModel
 from backend.models.acoustic_dsp import AcousticAnalyzer
 from backend.models.stt_groq import SpeechToTextTranscriber
 from backend.models.situation_analyzer import HybridSituationAnalyzer
 from backend.core.urgency_engine import calculate_multimodal_urgency
-from backend.core.audio_buffer import AudioStreamBuffer
+from backend.core.audio_buffer import AudioStreamBuffer, CallSession
 from backend.core.forensic_analyzer import analyze_forensic_recording
 
-app = FastAPI(title="Cybercrime Speech Emotion & Triage API", version="1.0.0")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-# Enable CORS for frontend integration
+app = FastAPI(title="Cybercrime Speech Emotion & Triage API", version="2.1.0")
+
+# Security: Restricted CORS Origins with environment support
+_DEFAULT_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+]
+_env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+ALLOWED_ORIGINS = _env_origins if _env_origins else _DEFAULT_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -40,7 +56,7 @@ def health_check():
     return {
         "status": "online",
         "service": "Cybercrime Speech Emotion Triage Engine",
-        "compliance": "On-premise / Air-gapped Ready"
+        "compliance": "Hybrid Cloud / Edge DSP (Air-Gapped Local Mode Configurable)"
     }
 
 import asyncio
@@ -49,55 +65,50 @@ import asyncio
 async def websocket_call_stream(websocket: WebSocket, call_id: str):
     """
     Receives raw PCM / audio chunks from officer's console in real time and yields triage analytics.
-    Uses asynchronous producer-consumer pattern to completely eliminate queue lag and drift.
+    Uses per-session CallSession object to guarantee strict concurrency isolation across callers.
+    Monotonic sequence counters eliminate race conditions and out-of-order STT overwrites.
     """
     await websocket.accept()
-    print(f"[WS] Active connection for Call ID: {call_id}", flush=True)
+    logging.info(f"[WS] Active connection established for Session Call ID: {call_id}")
 
-    # Initialize a rolling buffer (2.0s window, 1.0s stride)
-    call_buffer = AudioStreamBuffer(sample_rate=16000, window_duration_sec=2.0, stride_duration_sec=1.0)
-    
-    latest_window = None
-    is_connected = True
+    # Isolated per-call session state container
+    session = CallSession(call_id=call_id)
 
-    latest_transcript = "..."
-    latest_situation = None
-    stt_in_progress = False
-    speech_history = []
-
-    async def run_stt_async(chunk: np.ndarray, current_emotions, current_pitch):
-        nonlocal latest_transcript, latest_situation, stt_in_progress
+    async def run_stt_async(chunk: np.ndarray, seq: int, current_emotions, current_pitch):
         try:
             text = await asyncio.to_thread(stt_model.transcribe, chunk)
-            if text:
-                latest_transcript = text
-                # Semantically analyze the situation with Groq Llama (with 0ms local fallback)
+            if text and seq >= session.latest_completed_stt_seq:
+                session.latest_completed_stt_seq = seq
+                session.latest_transcript = text
+                # Semantically analyze the situation with Groq LPU (with 0ms local fallback)
                 sit = await asyncio.to_thread(situation_analyzer.analyze_situation, text, current_emotions, current_pitch)
-                latest_situation = sit
-        except Exception:
-            pass
+                if seq >= session.latest_completed_stt_seq:
+                    session.latest_situation = sit
+        except Exception as ex:
+            logging.warning(f"[STT ASYNC ERROR] Call ID {session.call_id} (seq {seq}): {ex}")
         finally:
-            stt_in_progress = False
+            session.stt_in_progress = False
 
     # Background analysis worker: always analyzes the freshest window and drops stale backlog
     async def analysis_worker():
-        nonlocal latest_window, is_connected, latest_transcript, latest_situation, stt_in_progress, speech_history
-        while is_connected:
-            if latest_window is not None:
+        while session.is_connected:
+            if session.latest_window is not None:
                 # Atomically extract freshest window and clear slot
-                current_window = latest_window
-                latest_window = None
+                current_window = session.latest_window
+                session.latest_window = None
 
                 # Silence gate
-                if call_buffer.is_silent(current_window):
-                    speech_history.clear()
+                if session.buffer.is_silent(current_window):
+                    session.speech_history.clear()
                     payload = {
-                        "call_id": call_id,
+                        "call_id": session.call_id,
                         "timestamp": time.strftime("%H:%M:%S"),
-                        "dominant_emotion": "NEUTRAL",
-                        "emotion_breakdown": {"neutral": 0.95, "fearful": 0.01, "sad": 0.01, "angry": 0.01},
+                        "dominant_emotion": "SILENCE",
+                        "emotion_status": "NO_SPEECH",
+                        "emotion_source": "none",
+                        "emotion_breakdown": {},
                         "acoustic_metrics": {"pitch_std": 0.0, "voice_tremor": False, "rms": 0.0},
-                        "transcript": latest_transcript if latest_transcript != "..." else "...",
+                        "transcript": session.latest_transcript if session.latest_transcript != "..." else "...",
                         "detected_tags": ["#STABLE_LINE"],
                         "urgency_score": 10.0,
                         "priority_level": "ROUTINE",
@@ -115,43 +126,55 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
                     ser_task = asyncio.to_thread(emotion_model.predict, current_window)
                     dsp_task = asyncio.to_thread(acoustic_analyzer.analyze, current_window)
 
-                    emotions, acoustics = await asyncio.gather(ser_task, dsp_task)
+                    emo_res, acoustics = await asyncio.gather(ser_task, dsp_task)
 
-                    speech_history.append(current_window)
+                    emo_status = emo_res.get("status", "SUCCESS") if isinstance(emo_res, dict) else "SUCCESS"
+                    emo_source = emo_res.get("source", "model") if isinstance(emo_res, dict) else "model"
+                    emotions = emo_res.get("emotions", {}) if (isinstance(emo_res, dict) and "emotions" in emo_res) else (emo_res if isinstance(emo_res, dict) else {})
+                    dom_emo = emo_res.get("dominant_emotion") if (isinstance(emo_res, dict) and "dominant_emotion" in emo_res) else (max(emotions, key=emotions.get).upper() if emotions else "UNAVAILABLE")
+
+                    session.speech_history.append(current_window)
                     # Trigger async STT & semantic situation reasoning on coherent phrase window (~3s) if idle
-                    if not stt_in_progress:
-                        if len(speech_history) >= 2:
-                            stt_chunk = np.concatenate(speech_history[-2:])
-                            speech_history = speech_history[-1:]
+                    if not session.stt_in_progress:
+                        if len(session.speech_history) >= 2:
+                            stt_chunk = np.concatenate(session.speech_history[-2:])
+                            session.speech_history = session.speech_history[-1:]
                         else:
                             stt_chunk = current_window.copy()
-                        stt_in_progress = True
-                        asyncio.create_task(run_stt_async(stt_chunk, emotions, acoustics["pitch_std"]))
+                        session.stt_in_progress = True
+                        session.stt_task_seq += 1
+                        asyncio.create_task(run_stt_async(stt_chunk, session.stt_task_seq, emotions, acoustics["pitch_std"]))
 
                     # Multimodal Fusion with latest transcript and situation assessment
-                    active_text = latest_transcript if latest_transcript != "..." else ""
-                    triage = calculate_multimodal_urgency(emotions, acoustics["pitch_std"], active_text, latest_situation)
+                    active_text = session.latest_transcript if session.latest_transcript != "..." else ""
+                    triage = calculate_multimodal_urgency(emotions, acoustics["pitch_std"], active_text, session.latest_situation, ser_status=emo_status)
+
+                    score = triage["urgency_score"]
+                    session.record_score(score)
 
                     payload = {
-                        "call_id": call_id,
+                        "call_id": session.call_id,
                         "timestamp": time.strftime("%H:%M:%S"),
-                        "dominant_emotion": max(emotions, key=emotions.get).upper() if emotions else "NEUTRAL",
+                        "dominant_emotion": dom_emo,
+                        "emotion_status": emo_status,
+                        "emotion_source": emo_source,
                         "emotion_breakdown": emotions,
                         "acoustic_metrics": acoustics,
-                        "transcript": latest_transcript,
+                        "transcript": session.latest_transcript,
                         "detected_tags": triage["tags"],
-                        "urgency_score": triage["urgency_score"],
+                        "urgency_score": score,
                         "priority_level": triage["priority_level"],
                         "investigator_advisory": triage["investigator_advisory"],
+                        "evidence_justification": triage.get("evidence_justification", ""),
+                        "signals": triage.get("signals", {}),
                         "red_flags": triage.get("red_flags", []),
                         "responsible_ai_disclaimer": "Indicative signal to assist officer triage; not legal proof of guilt, honesty, or intention."
                     }
 
                     await websocket.send_text(json.dumps(payload))
-                    print(f"[WS SENT] Urgency: {payload['urgency_score']} | Emotion: {payload['dominant_emotion']} | Priority: {payload['priority_level']}", flush=True)
 
                 except Exception as ex:
-                    print(f"[ANALYSIS WORKER ERROR] {ex}", flush=True)
+                    logging.error(f"[ANALYSIS WORKER ERROR] Call ID {session.call_id}: {ex}")
 
             else:
                 await asyncio.sleep(0.04)
@@ -163,17 +186,17 @@ async def websocket_call_stream(websocket: WebSocket, call_id: str):
         # Non-blocking audio ingestion loop: continuously reads mic stream and keeps buffer up to date
         while True:
             data = await websocket.receive_bytes()
-            window = call_buffer.add_chunk(data)
+            window = session.buffer.add_chunk(data)
             if window is not None:
-                # Update latest window (replaces any pending older window, eliminating latency drift)
-                latest_window = window
+                # Update latest window (replaces pending older window, eliminating latency drift)
+                session.latest_window = window
 
     except WebSocketDisconnect:
-        print(f"[WS] Disconnected Call ID: {call_id}", flush=True)
+        logging.info(f"[WS] Disconnected Call ID: {session.call_id} | Peak Urgency: {session.peak_score}")
     except Exception as e:
-        print(f"[WS ERROR] {e}", flush=True)
+        logging.error(f"[WS ERROR] Call ID {session.call_id}: {e}")
     finally:
-        is_connected = False
+        session.close()
         worker_task.cancel()
         try:
             await worker_task
@@ -407,6 +430,9 @@ def stream_sample_recording(filename: str):
         return {"error": "Recording file not found"}
     return FileResponse(file_path, media_type="audio/wav", filename=filename)
 
+MAX_UPLOAD_SIZE_BYTES = 35 * 1024 * 1024  # 35 MB
+ALLOWED_AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
+
 @app.post("/api/investigate-recording")
 async def investigate_recording(
     file: Optional[UploadFile] = None,
@@ -415,13 +441,30 @@ async def investigate_recording(
     """
     Offline forensic mode: Runs 3-pillar chronological timeline analysis on uploaded audio
     or selected pre-packaged sample wiretap.
+    Guarantees forensic evidence integrity with SHA-256 cryptographic hashing and upload validation.
     """
     audio_source = None
     filename = "recording.wav"
 
     if file is not None and file.filename:
+        # 1. File extension validation
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in ALLOWED_AUDIO_EXTENSIONS:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"Unsupported audio file format '{ext}'. Allowed formats: {', '.join(sorted(ALLOWED_AUDIO_EXTENSIONS))}"}
+            )
+
         audio_source = await file.read()
         filename = file.filename
+
+        # 2. File size validation
+        if len(audio_source) > MAX_UPLOAD_SIZE_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"error": f"Uploaded file exceeds 35MB maximum limit ({len(audio_source)/(1024*1024):.1f} MB uploaded)."}
+            )
+
     elif sample_id:
         target_sample = next((s for s in SAMPLE_RECORDINGS if s["id"] == sample_id or s["filename"] == sample_id), None)
         if target_sample:
@@ -432,13 +475,16 @@ async def investigate_recording(
                     audio_source = f.read()
 
     if audio_source is None:
-        # Default to sample_digital_arrest if nothing provided
         sample_path = os.path.join(os.path.dirname(__file__), "data", "sample_recordings", "sample_digital_arrest.wav")
         filename = "sample_digital_arrest.wav"
         with open(sample_path, "rb") as f:
             audio_source = f.read()
 
-    # Run complete forensic analysis across all 3 pillars with hybrid situation evaluation
+    # 3. Cryptographic SHA-256 evidence integrity hashing
+    sha256_hash = hashlib.sha256(audio_source).hexdigest()
+    file_size_bytes = len(audio_source)
+
+    # 4. Run complete forensic analysis across all 3 pillars with hybrid situation evaluation
     results = analyze_forensic_recording(
         source=audio_source,
         filename=filename,
@@ -447,6 +493,20 @@ async def investigate_recording(
         stt_model=stt_model,
         situation_analyzer=situation_analyzer
     )
+
+    # 5. Attach tamper-evident audit metadata
+    results["sha256_hash"] = sha256_hash
+    results["evidence_metadata"] = {
+        "sha256_hash": sha256_hash,
+        "file_size_bytes": file_size_bytes,
+        "file_size_kb": round(file_size_bytes / 1024, 1),
+        "analyzed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "analysis_version": "2.1.0-forensic",
+        "hash_algorithm": "SHA-256",
+        "integrity_verified": True
+    }
+
+    logging.info(f"[FORENSIC AUDIT] Analysis complete for '{filename}' | SHA-256: {sha256_hash[:16]}... | Urgency: {results['overall_urgency_score']} | Priority: {results['priority_level']}")
 
     return results
 

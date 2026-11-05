@@ -4,7 +4,7 @@ Connects to the dedicated Hugging Face Space running emotion2vec+ (Alibaba / Fun
 Includes fallback heuristic for offline/local development without GPU.
 """
 
-from typing import Dict
+from typing import Dict, Any, Optional
 import os
 import tempfile
 import numpy as np
@@ -15,7 +15,6 @@ class SpeechEmotionModel:
         self.space_url = space_url
         self.hf_token = hf_token
         self.client = None
-        self.last_emotions = {"neutral": 0.90, "fearful": 0.02, "sad": 0.03, "angry": 0.02, "surprised": 0.03}
         self._quota_cooldown_until = 0.0
         self._init_client()
 
@@ -31,18 +30,49 @@ class SpeechEmotionModel:
                 auth_str = "authenticated" if token else "unauthenticated"
                 print(f"[INFO] Connected to Hugging Face SER Space: {self.space_url} ({auth_str})")
             except Exception as e:
-                print(f"[WARN] Could not connect to HF Space ({e}). Falling back to heuristic mode.")
+                print(f"[WARN] Could not connect to HF Space ({e}). Real inference unavailable.")
                 self.client = None
         else:
-            print("[INFO] No HF_SPACE_URL configured. Running SER in local heuristic mode.")
+            print("[INFO] No HF_SPACE_URL configured. SER model in unavailable mode.")
             self.client = None
 
-    def predict(self, audio_chunk: np.ndarray, sample_rate: int = 16000) -> Dict[str, float]:
+    def predict(self, audio_chunk: np.ndarray, sample_rate: int = 16000) -> Dict[str, Any]:
         """
-        Receives 16 kHz numpy audio array and returns emotion probabilities.
+        Receives 16 kHz numpy audio array and performs emotion classification.
+        Returns explicit status without fabricating fake emotion numbers:
+        {
+            "status": "SUCCESS" | "NO_SPEECH" | "INSUFFICIENT_AUDIO" | "MODEL_UNAVAILABLE",
+            "source": "model" | "none",
+            "emotions": {"fearful": float, "sad": float, ...} or {},
+            "dominant_emotion": str ("FEARFUL", "NEUTRAL", etc. or "UNAVAILABLE" / "SILENCE"),
+            "error": Optional[str]
+        }
         """
         import time
-        if self.client is not None and len(audio_chunk) > 0 and time.time() >= self._quota_cooldown_until:
+
+        # 1. Edge Case: Insufficient audio length (< 0.4s)
+        if len(audio_chunk) < int(0.4 * sample_rate):
+            return {
+                "status": "INSUFFICIENT_AUDIO",
+                "source": "none",
+                "emotions": {},
+                "dominant_emotion": "UNAVAILABLE",
+                "error": "Audio chunk too short for speech emotion recognition (< 0.4s)"
+            }
+
+        # 2. Edge Case: Silence / Non-speech gate (do not assign fabricated neutral or fear)
+        rms = float(np.sqrt(np.mean(audio_chunk**2))) if len(audio_chunk) > 0 else 0.0
+        if rms < 0.012:
+            return {
+                "status": "NO_SPEECH",
+                "source": "none",
+                "emotions": {},
+                "dominant_emotion": "SILENCE",
+                "error": None
+            }
+
+        # 3. Model Inference via Hugging Face Space (emotion2vec+)
+        if self.client is not None and time.time() >= self._quota_cooldown_until:
             temp_path = None
             try:
                 import wave
@@ -78,16 +108,30 @@ class SpeechEmotionModel:
                     for key in ["fearful", "sad", "angry", "neutral", "surprised"]:
                         if key not in clean:
                             clean[key] = 0.0
-                    self.last_emotions = clean
-                    return clean
+
+                    dominant = max(clean, key=clean.get).upper() if clean else "NEUTRAL"
+                    return {
+                        "status": "SUCCESS",
+                        "source": "model",
+                        "emotions": clean,
+                        "dominant_emotion": dominant,
+                        "error": None
+                    }
 
             except Exception as e:
                 err_msg = str(e)
                 if "ZeroGPU quota" in err_msg or "exceeded your free" in err_msg:
                     self._quota_cooldown_until = time.time() + 300.0  # 5 min cooldown
-                    print(f"[WARN] Hugging Face ZeroGPU quota reached. Activating 5-min local heuristic fallback.")
+                    print(f"[WARN] Hugging Face ZeroGPU quota reached. Cooldown for 5 mins.")
                 else:
-                    print(f"[WARN] Error calling HF SER Space ({err_msg}). Using smoothed state.")
+                    print(f"[WARN] Error calling HF SER Space ({err_msg}).")
+                return {
+                    "status": "MODEL_UNAVAILABLE",
+                    "source": "none",
+                    "emotions": {},
+                    "dominant_emotion": "UNAVAILABLE",
+                    "error": err_msg
+                }
             finally:
                 if temp_path and os.path.exists(temp_path):
                     try:
@@ -95,9 +139,12 @@ class SpeechEmotionModel:
                     except OSError:
                         pass
 
-        # Fallback heuristic simulation if HF space is offline or initializing
-        rms = float(np.sqrt(np.mean(audio_chunk**2))) if len(audio_chunk) > 0 else 0.0
-        if rms > 0.15:
-            self.last_emotions = {"fearful": 0.82, "sad": 0.55, "angry": 0.18, "neutral": 0.08, "surprised": 0.12}
-            return self.last_emotions
-        return self.last_emotions
+        # 4. If HF Space is offline or uninitialized, report explicit UNAVAILABLE status
+        # NEVER fabricate emotion predictions from audio RMS
+        return {
+            "status": "MODEL_UNAVAILABLE",
+            "source": "none",
+            "emotions": {},
+            "dominant_emotion": "UNAVAILABLE",
+            "error": "SER model endpoint offline or unconfigured"
+        }

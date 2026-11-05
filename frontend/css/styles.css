@@ -2095,3 +2095,134 @@ kbd {
     color: var(--accent-cyan);
     opacity: 0.8;
 }
+
+/* ---------- Voice signal: speaking / pause / silent indicator ---------- */
+/* The old sweeping scan line fights with the scrolling waveform, so it is off */
+.visualizer-container::after {
+    display: none;
+}
+
+.signal-state {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: rgba(2, 8, 5, 0.75);
+    font: 600 0.68rem/1 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.signal-state::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+}
+
+.signal-state.speaking {
+    color: var(--text);
+    border-color: var(--glass-border-strong);
+}
+
+.signal-state.speaking::before {
+    background: var(--state);
+    border-color: var(--state);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--state) 60%, transparent);
+    animation: speakPulse 1s ease-out infinite;
+}
+
+.signal-state.pause {
+    color: var(--text);
+}
+
+.signal-state.silent,
+.signal-state.idle {
+    opacity: 0.8;
+}
+
+@keyframes speakPulse {
+    to {
+        box-shadow: 0 0 0 7px transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .signal-state.speaking::before {
+        animation: none;
+    }
+}
+
+/* ---------- Voice signal: scrollable timeline ---------- */
+.signal-scroll {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(110, 255, 190, 0.45) transparent;
+}
+
+.signal-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.signal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(110, 255, 190, 0.4);
+    border-radius: 999px;
+}
+
+.signal-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.signal-scroll:focus-visible {
+    outline: 1px solid var(--glass-border-strong);
+    outline-offset: 2px;
+}
+
+.signal-track {
+    position: relative;
+    min-width: 100%;
+    height: 110px;
+}
+
+/* The canvas stays pinned to the visible window; the track gives it scroll range */
+.signal-track #waveformCanvas {
+    position: sticky;
+    left: 0;
+    display: block;
+    height: 110px;
+}
+
+.signal-live-btn {
+    position: absolute;
+    right: 0.85rem;
+    bottom: 1.5rem;
+    z-index: 2;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border-strong);
+    background: rgba(2, 8, 5, 0.85);
+    color: var(--text);
+    font: 600 0.7rem/1 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+}
+
+.signal-live-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.signal-live-btn[hidden] {
+    display: none;
+}

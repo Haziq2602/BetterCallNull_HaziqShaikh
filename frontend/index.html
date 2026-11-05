@@ -35,7 +35,7 @@
                 <span class="badge-live">● Live dispatch</span>
                 <div class="system-status">
                     <span class="status-indicator online"></span>
-                    <span class="status-text">AI On-Premise Engine: ACTIVE (Air-Gapped)</span>
+                    <span class="status-text">Hybrid AI Triage Engine: ACTIVE (LPU Cloud + Edge DSP)</span>
                 </div>
             </div>
         </header>
@@ -134,8 +134,16 @@
                         <section class="block">
                             <h3 class="block-title">Voice signal</h3>
                             <div class="visualizer-container">
-                                <canvas id="waveformCanvas" width="800" height="120" role="img"
-                                    aria-label="Live audio waveform"></canvas>
+                                <div class="signal-scroll" id="signalScroll" tabindex="0"
+                                    aria-label="Voice signal timeline. Scroll sideways to review earlier audio.">
+                                    <div class="signal-track" id="signalTrack">
+                                        <canvas id="waveformCanvas" width="800" height="120" role="img"
+                                            aria-label="Live audio waveform"></canvas>
+                                    </div>
+                                </div>
+                                <span class="signal-state silent" id="signalState">SILENT</span>
+                                <button type="button" class="signal-live-btn" id="signalLive" hidden>Jump to latest
+                                    &#9654;</button>
                             </div>
                             <div class="waveform-footer">
                                 <div class="signal-metric"><span>Pitch volatility</span><strong id="pitchStd">48.6 Hz
@@ -258,7 +266,8 @@
                     <div class="forensic-details">
                         <div class="forensic-meta">
                             <span>Duration: <strong id="modalDuration">00:24</strong></span>
-                            <span>Analysis engine: <strong>3-Pillar Multimodal v2</strong></span>
+                            <span>Engine: <strong>3-Pillar Multimodal v2.1</strong></span>
+                            <span>Evidence SHA-256: <strong id="modalHash" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;" title="Cryptographic SHA-256 evidence hash">-</strong></span>
                         </div>
                         <div id="modalTags" class="tag-row">
                             <span class="tag red">#DIGITAL_ARREST</span>
@@ -294,6 +303,7 @@
                                     <th>Pitch Volatility</th>
                                     <th>Tremor</th>
                                     <th>Detected Keywords / Threat Tags</th>
+                                    <th>Segment Transcript</th>
                                 </tr>
                             </thead>
                             <tbody id="modalTimelineBody">

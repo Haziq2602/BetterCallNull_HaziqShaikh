@@ -101,7 +101,8 @@ class HybridSituationAnalyzer:
         self,
         transcript: str,
         ser_emotions: Optional[Dict[str, float]] = None,
-        pitch_std: Optional[float] = None
+        pitch_std: Optional[float] = None,
+        override_model: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Analyzes the call transcript and situation using Groq Llama-3.3-70b LLM.
@@ -114,6 +115,8 @@ class HybridSituationAnalyzer:
             self.api_key = os.getenv("GROQ_API_KEY", "")
             if self.api_key:
                 self._init_client()
+
+        target_model = override_model or self.model_name
 
         if self.client is not None:
             try:
@@ -141,7 +144,7 @@ class HybridSituationAnalyzer:
                     user_content += f"\nVoice Pitch Volatility (Jitter): {pitch_std:.1f} Hz"
 
                 chat_completion = self.client.chat.completions.create(
-                    model=self.model_name,
+                    model=target_model,
                     messages=[
                         {"role": "system", "content": system_instruction},
                         {"role": "user", "content": user_content}
@@ -155,7 +158,7 @@ class HybridSituationAnalyzer:
                 response_text = chat_completion.choices[0].message.content
                 if response_text:
                     parsed = json.loads(response_text)
-                    parsed["engine"] = "groq_llama_3.3_70b"
+                    parsed["engine"] = f"groq_{target_model}"
                     # Ensure numerical threat_points is bounded 0-25
                     parsed["threat_points"] = min(25.0, max(0.0, float(parsed.get("threat_points", 0.0))))
                     if "tags" not in parsed or not parsed["tags"]:
@@ -163,11 +166,10 @@ class HybridSituationAnalyzer:
                     return parsed
 
             except Exception as e:
-                # If primary 70b fails or times out, try 8b-instant fast fallback once
-                if self.model_name != self.fallback_model:
+                # If primary model fails or times out and we haven't tried fallback yet, try fallback model once
+                if override_model is None and target_model != self.fallback_model:
                     try:
-                        self.model_name = self.fallback_model
-                        return self.analyze_situation(transcript, ser_emotions, pitch_std)
+                        return self.analyze_situation(transcript, ser_emotions, pitch_std, override_model=self.fallback_model)
                     except Exception:
                         pass
                 print(f"[INFO] Groq Situation LLM offline or timed out ({e}). Falling back to local regex taxonomy.")

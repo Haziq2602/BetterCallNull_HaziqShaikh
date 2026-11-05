@@ -22,8 +22,11 @@ from backend.config import SAMPLE_RATE, CRITICAL_THRESHOLD, ELEVATED_THRESHOLD
 
 def load_audio_to_16k_mono(source) -> np.ndarray:
     """
-    Reads an audio file or bytes buffer into a 16kHz float32 mono numpy array.
+    Reads an audio file, bytes buffer, or numpy array into a 16kHz float32 mono numpy array.
     """
+    if isinstance(source, np.ndarray):
+        return source.astype(np.float32)
+
     if isinstance(source, (bytes, bytearray)):
         source = io.BytesIO(source)
 
@@ -69,8 +72,14 @@ def analyze_forensic_recording(
             "timeline": []
         }
 
-    # Transcribe entire file for complete clean text
-    full_transcript = stt_model.transcribe(audio)
+    # Transcribe entire file for complete clean text and segment timestamps
+    if hasattr(stt_model, "transcribe_with_segments"):
+        stt_result = stt_model.transcribe_with_segments(audio)
+        full_transcript = stt_result.get("text", "")
+        segments = stt_result.get("segments", [])
+    else:
+        full_transcript = stt_model.transcribe(audio)
+        segments = []
 
     # Hybrid situation assessment (LLM if available, local keyword regex fallback)
     if situation_analyzer:
@@ -90,7 +99,7 @@ def analyze_forensic_recording(
     window_samples = int(window_sec * SAMPLE_RATE)
     stride_samples = int(stride_sec * SAMPLE_RATE)
 
-    # Prepare chunks
+    # Prepare chunks with deterministic identifiers
     chunks_meta = []
     total_len = len(audio)
     for i in range(0, total_len, stride_samples):
@@ -101,6 +110,7 @@ def analyze_forensic_recording(
         t_end = min(duration_sec, (i + len(chunk)) / SAMPLE_RATE)
         time_label = f"{int(t_start//60):02d}:{int(t_start%60):02d}"
         chunks_meta.append({
+            "chunk_id": f"chk_{len(chunks_meta)+1:03d}",
             "index": len(chunks_meta),
             "chunk": chunk,
             "t_start": t_start,
@@ -112,21 +122,47 @@ def analyze_forensic_recording(
     if len(chunks_meta) > 12:
         step = math.ceil(len(chunks_meta) / 12)
         chunks_meta = chunks_meta[::step]
+        # Re-index chunk IDs cleanly
+        for idx, c in enumerate(chunks_meta):
+            c["chunk_id"] = f"chk_{idx+1:03d}"
+            c["index"] = idx
 
-    # Pre-compute DSP locally (instantaneous, <20ms total)
+    # Pre-compute DSP locally and map transcript segments to chunk intervals
     for c in chunks_meta:
         c["acoustics"] = acoustic_analyzer.analyze(c["chunk"])
-        c["chunk_text"] = ""
+        
+        # Match transcript segments that overlap with this chunk interval [t_start, t_end]
+        overlapping_texts = []
+        c_start = c["t_start"]
+        c_end = c["t_end"]
+        for seg in segments:
+            s_start = seg.get("start", 0.0)
+            s_end = seg.get("end", 0.0)
+            if max(s_start, c_start) < min(s_end, c_end) or (s_start >= c_start and s_start < c_end):
+                txt = seg.get("text", "").strip()
+                if txt and txt not in overlapping_texts:
+                    overlapping_texts.append(txt)
+
+        if overlapping_texts:
+            c["chunk_text"] = " ".join(overlapping_texts)
+        elif len(chunks_meta) == 1 and full_transcript:
+            c["chunk_text"] = full_transcript
+        else:
+            c["chunk_text"] = ""
 
     # Run emotion model in parallel thread pool (max 6 workers for Hugging Face Space)
     def fetch_emotion(chunk_data):
         try:
-            emo = emotion_model.predict(chunk_data["chunk"])
-            if not emo:
-                emo = {"neutral": 0.90, "fearful": 0.03, "sad": 0.03, "angry": 0.02, "surprised": 0.02}
-            return emo
-        except Exception:
-            return {"neutral": 0.90, "fearful": 0.03, "sad": 0.03, "angry": 0.02, "surprised": 0.02}
+            res = emotion_model.predict(chunk_data["chunk"])
+            return res
+        except Exception as ex:
+            return {
+                "status": "MODEL_UNAVAILABLE",
+                "source": "none",
+                "emotions": {},
+                "dominant_emotion": "UNAVAILABLE",
+                "error": str(ex)
+            }
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         emotions_results = list(executor.map(fetch_emotion, chunks_meta))
@@ -135,14 +171,26 @@ def analyze_forensic_recording(
     all_scores: List[float] = []
     all_tags = set(overall_threats["tags"])
 
-    for meta, emotions in zip(chunks_meta, emotions_results):
+    for meta, emo_res in zip(chunks_meta, emotions_results):
         t_start = meta["t_start"]
         t_end = meta["t_end"]
         time_label = meta["time_label"]
         acoustics = meta["acoustics"]
         chunk_text = meta["chunk_text"]
+        chunk_id = meta.get("chunk_id", f"chk_{len(timeline)+1:03d}")
 
-        triage = calculate_multimodal_urgency(emotions, acoustics["pitch_std"], chunk_text)
+        emo_status = emo_res.get("status", "SUCCESS") if isinstance(emo_res, dict) else "SUCCESS"
+        emo_source = emo_res.get("source", "model") if isinstance(emo_res, dict) else "model"
+        emotions = emo_res.get("emotions", {}) if (isinstance(emo_res, dict) and "emotions" in emo_res) else (emo_res if isinstance(emo_res, dict) else {})
+        dom_emo = emo_res.get("dominant_emotion") if (isinstance(emo_res, dict) and "dominant_emotion" in emo_res) else (max(emotions, key=emotions.get).upper() if emotions else "UNAVAILABLE")
+
+        triage = calculate_multimodal_urgency(
+            emotions,
+            acoustics["pitch_std"],
+            chunk_text,
+            situation_assessment=None,
+            ser_status=emo_status
+        )
 
         score = triage["urgency_score"]
         priority = triage["priority_level"]
@@ -152,16 +200,17 @@ def analyze_forensic_recording(
         for t in tags:
             all_tags.add(t)
 
-        dom_emo = max(emotions, key=emotions.get).upper() if emotions else "NEUTRAL"
-
         timeline.append({
+            "chunk_id": chunk_id,
             "time_start_sec": round(t_start, 2),
             "time_end_sec": round(t_end, 2),
             "time_label": time_label,
             "urgency_score": score,
             "priority_level": priority,
             "dominant_emotion": dom_emo,
-            "emotions": {k: round(v, 3) for k, v in emotions.items()},
+            "emotion_status": emo_status,
+            "emotion_source": emo_source,
+            "emotions": {k: round(v, 3) for k, v in emotions.items()} if emotions else {},
             "pitch_std": acoustics["pitch_std"],
             "voice_tremor": acoustics["voice_tremor"],
             "energy_level": acoustics["energy_level"],
@@ -185,8 +234,37 @@ def analyze_forensic_recording(
         summary = f"Suspicious activity / moderate caller distress noted ({', '.join(all_tags) if all_tags else 'Elevated Stress'}). Secondary officer review recommended."
     else:
         overall_priority = "ROUTINE"
+        summary = "Standard caller baseline; no active coercion or distress patterns detected."
+
     if overall_threats.get("advisory"):
         summary = f"{overall_threats['advisory']}"
+
+    # Calculate Call-Level Aggregate Emotion Metrics (for truthful monitor transfer)
+    valid_emo_chunks = [t for t in timeline if t.get("emotions") and len(t["emotions"]) > 0]
+    
+    # Peak distress chunk (matches peak urgency)
+    peak_chunk = max(timeline, key=lambda x: x["urgency_score"]) if timeline else None
+    peak_emotions = peak_chunk["emotions"] if peak_chunk and peak_chunk.get("emotions") else {}
+    
+    # If peak chunk had no valid emotion (e.g. model offline), fallback to highest valid chunk
+    if not peak_emotions and valid_emo_chunks:
+        peak_emotions = max(valid_emo_chunks, key=lambda x: x["urgency_score"])["emotions"]
+
+    # Average emotions across all valid chunks
+    avg_emotions: Dict[str, float] = {}
+    if valid_emo_chunks:
+        for k in ["fearful", "sad", "angry", "neutral", "surprised"]:
+            vals = [c["emotions"].get(k, 0.0) for c in valid_emo_chunks]
+            if vals:
+                avg_emotions[k] = round(sum(vals) / len(vals), 3)
+
+    # Call-level dominant emotion
+    if peak_chunk and peak_chunk.get("dominant_emotion") not in ["UNAVAILABLE", "SILENCE", None]:
+        dominant_call_emotion = peak_chunk["dominant_emotion"]
+    elif avg_emotions:
+        dominant_call_emotion = max(avg_emotions, key=avg_emotions.get).upper()
+    else:
+        dominant_call_emotion = "UNAVAILABLE"
 
     return {
         "filename": filename,
@@ -195,6 +273,9 @@ def analyze_forensic_recording(
         "overall_urgency_score": round(peak_score, 1),
         "priority_level": overall_priority,
         "primary_threat_tags": sorted(list(all_tags)),
+        "dominant_emotion": dominant_call_emotion,
+        "peak_emotions": peak_emotions,
+        "average_emotions": avg_emotions,
         "full_transcript": full_transcript if full_transcript else "(No distinct voice speech recognized)",
         "summary": summary,
         "red_flags": overall_threats.get("red_flags", []),

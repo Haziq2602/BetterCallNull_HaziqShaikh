@@ -88,31 +88,276 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentSelectedCallId = "CALL-9823";
     let remainingPreRecorded = 3;
 
-    // Synthetic Waveform Generator
+    // ==========================================
+    // VOICE SIGNAL VISUALIZER (scrollable ECG-style timeline)
+    // The whole session is kept as a timeline (newest on the right).
+    //   - speaking  -> sharp spikes above/below the axis that follow the voice level
+    //   - silence   -> a perfectly straight line, so pauses show up as flat gaps
+    // The panel follows the live edge automatically. Scroll left (scrollbar,
+    // mouse wheel, trackpad or touch) to review earlier signal; "Jump to latest"
+    // returns to the live edge. Only the visible slice is drawn, so long
+    // sessions stay cheap. Live mic uses the real microphone level; stored /
+    // demo calls use a simulated speech pattern.
+    // ==========================================
+    const signalState = document.getElementById("signalState");
+    const signalScroll = document.getElementById("signalScroll");
+    const signalTrack = document.getElementById("signalTrack");
+    const signalLiveBtn = document.getElementById("signalLive");
+
+    const SIGNAL_STEP_MS = 40;     // time per sample
+    const SIGNAL_COL_W = 3;        // pixels per sample (75 px of timeline per second)
+    const SIGNAL_MAX = 15000;      // samples kept (~10 min); oldest dropped beyond this
+    const SIGNAL_DROP = 2000;      // how many oldest samples to drop at once
+    const TICK_EVERY = Math.round(1000 / SIGNAL_STEP_MS);   // 1 s
+    const SPEECH_ON = 0.12;        // smoothed level that counts as "speaking"
+    const PAUSE_WINDOW_MS = 4000;  // after speech stops, label it PAUSE for this long
+    const SPEECH_HOLD_MS = 350;    // bridge tiny dips between syllables
+
+    let signalMode = "demo";       // "live" | "demo" | "idle" (idle = frozen for review)
+    let signalCallId = currentSelectedCallId;   // call whose timeline is on screen
+    const signalStore = {};                      // saved timelines, keyed by call id
+    let sigA = [];                 // speech energy per sample (0..1)
+    let sigV = [];                 // signed trace value per sample (-1..1)
+    let signalOrigin = 0;          // index of the sample at session time 00:00
+    let signalFlip = 1;            // alternates spike direction (up / down)
+    let following = true;          // pinned to the live edge?
+    let liveLevel = 0;             // 0..1, written by the mic audio callback
+    let smoothLevel = 0;
+    let lastStep = 0;
+    let lastSpeechAt = 0;
+    let isSpeaking = false;
+    let lastStateLabel = "";
+    let lastTrackW = 0;
+    let lastViewW = 0;
+    let demoTalk = { talking: true, until: 0 };
+
+    // Kept for updateTelemetryDisplay(): colour + intensity follow triage priority
     let waveAmplitude = 18;
     let waveFrequency = 0.05;
     let waveColor = "#ef4444";
 
-    function drawWaveform() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = waveColor;
-        ctx.beginPath();
+    // Start a fresh timeline, pre-filled with one screen of flat line
+    function resetSignal() {
+        const viewW = (signalScroll && signalScroll.clientWidth) || 800;
+        const cols = Math.ceil(viewW / SIGNAL_COL_W) + 2;
+        sigA = new Array(cols).fill(0);
+        sigV = new Array(cols).fill(0);
+        signalOrigin = cols;
+        following = true;
+        smoothLevel = 0;
+        lastSpeechAt = 0;
+        isSpeaking = false;
+        lastStep = 0;
+        demoTalk = { talking: true, until: 0 };
+        lastStateLabel = "";
+        if (signalLiveBtn) signalLiveBtn.hidden = true;
+    }
+    resetSignal();
 
-        const sliceWidth = canvas.width / 100;
-        let x = 0;
+    // Save the on-screen timeline under its call id, and bring a saved one back
+    function stashSignal() {
+        if (!signalCallId) return;
+        signalStore[signalCallId] = { a: sigA, v: sigV, origin: signalOrigin };
+    }
 
-        for (let i = 0; i < 100; i++) {
-            const y = (canvas.height / 2) + Math.sin(i * waveFrequency + Date.now() * 0.005) * waveAmplitude * (Math.random() * 0.4 + 0.8);
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-            x += sliceWidth;
+    function restoreSignal(saved) {
+        sigA = saved.a;
+        sigV = saved.v;
+        signalOrigin = saved.origin;
+        following = true;
+        smoothLevel = 0;
+        lastSpeechAt = 0;
+        isSpeaking = false;
+        lastStep = 0;
+        lastStateLabel = "";
+        if (signalLiveBtn) signalLiveBtn.hidden = true;
+    }
+
+    // Simulated speech: talk for 1.2-3.2 s, pause for 0.5-1.4 s, with syllable rhythm
+    function demoSpeechLevel(now) {
+        if (now >= demoTalk.until) {
+            demoTalk.talking = !demoTalk.talking;
+            demoTalk.until = now + (demoTalk.talking ? 1200 + Math.random() * 2000 : 500 + Math.random() * 900);
+        }
+        if (!demoTalk.talking) return 0;
+        const syllable = 0.5 + 0.5 * Math.sin(now * 0.018);
+        const intensity = 0.3 + 0.7 * Math.min(1, waveAmplitude / 35);
+        return (0.45 + 0.55 * Math.random()) * (0.5 + 0.5 * syllable) * intensity;
+    }
+
+    function setSignalLabel(label, cls) {
+        if (!signalState || label === lastStateLabel) return;
+        lastStateLabel = label;
+        signalState.textContent = label;
+        signalState.className = `signal-state ${cls}`;
+    }
+
+    function pushSample(t) {
+        let target = 0;
+        if (signalMode === "live") target = liveLevel;
+        else if (signalMode === "demo") target = demoSpeechLevel(t);
+
+        // fast attack, quick release so pauses drop to a flat line promptly
+        smoothLevel = target > smoothLevel ? target : smoothLevel * 0.5 + target * 0.5;
+        if (smoothLevel < 0.04) smoothLevel = 0;
+
+        if (smoothLevel > SPEECH_ON) lastSpeechAt = t;
+        isSpeaking = t - lastSpeechAt < SPEECH_HOLD_MS && lastSpeechAt > 0;
+
+        // speech alternates up/down with random height -> jagged, spiky trace;
+        // silence stays exactly 0 -> perfectly straight line
+        signalFlip = -signalFlip;
+        sigA.push(smoothLevel);
+        sigV.push(smoothLevel > 0 ? signalFlip * smoothLevel * (0.55 + Math.random() * 0.45) : 0);
+
+        // keep memory bounded on very long sessions
+        if (sigA.length > SIGNAL_MAX) {
+            sigA.splice(0, SIGNAL_DROP);
+            sigV.splice(0, SIGNAL_DROP);
+            signalOrigin -= SIGNAL_DROP;
+            if (!following && signalScroll) {
+                signalScroll.scrollLeft = Math.max(0, signalScroll.scrollLeft - SIGNAL_DROP * SIGNAL_COL_W);
+            }
+        }
+    }
+
+    // ---- scrolling controls ----
+    if (signalScroll) {
+        signalScroll.addEventListener("scroll", () => {
+            following = signalScroll.scrollLeft >= signalScroll.scrollWidth - signalScroll.clientWidth - 4;
+            if (signalLiveBtn) signalLiveBtn.hidden = following;
+        });
+        // vertical mouse wheel scrolls the timeline sideways
+        signalScroll.addEventListener("wheel", (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                signalScroll.scrollLeft += e.deltaY;
+                e.preventDefault();
+            }
+        }, { passive: false });
+    }
+    if (signalLiveBtn) {
+        signalLiveBtn.addEventListener("click", () => {
+            following = true;
+            signalLiveBtn.hidden = true;
+        });
+    }
+
+    function drawWaveform(ts) {
+        animationId = requestAnimationFrame(drawWaveform);
+        const now = ts || performance.now();
+
+        // ---- append samples at a fixed rate (frozen when the call has ended) ----
+        if (signalMode === "idle") {
+            lastStep = now;
+            isSpeaking = false;
+        } else {
+            if (now - lastStep > 500) lastStep = now - SIGNAL_STEP_MS;   // tab was hidden / first frame
+            while (now - lastStep >= SIGNAL_STEP_MS) {
+                lastStep += SIGNAL_STEP_MS;
+                pushSample(lastStep);
+            }
         }
 
+        // ---- status badge ----
+        const sim = signalMode === "demo" ? " · SIMULATED" : "";
+        if (signalMode === "idle") {
+            setSignalLabel("STOPPED", "idle");
+        } else if (isSpeaking) {
+            setSignalLabel("SPEAKING" + sim, "speaking");
+        } else if (lastSpeechAt > 0 && now - lastSpeechAt < PAUSE_WINDOW_MS) {
+            setSignalLabel("PAUSE" + sim, "pause");
+        } else {
+            setSignalLabel("SILENT" + sim, "silent");
+        }
+
+        // ---- size the scroll track, canvas and backing store ----
+        const dpr = window.devicePixelRatio || 1;
+        const viewW = (signalScroll && signalScroll.clientWidth) || canvas.clientWidth || 800;
+        const h = canvas.clientHeight || 110;
+        const total = sigA.length;
+        const trackW = Math.max(viewW, total * SIGNAL_COL_W);
+
+        if (signalTrack && trackW !== lastTrackW) {
+            signalTrack.style.width = trackW + "px";
+            lastTrackW = trackW;
+        }
+        if (viewW !== lastViewW) {
+            canvas.style.width = viewW + "px";
+            lastViewW = viewW;
+        }
+        if (canvas.width !== Math.round(viewW * dpr) || canvas.height !== Math.round(h * dpr)) {
+            canvas.width = Math.round(viewW * dpr);
+            canvas.height = Math.round(h * dpr);
+        }
+
+        // follow the live edge unless the user has scrolled back
+        if (following && signalScroll) signalScroll.scrollLeft = trackW - viewW;
+        const sl = signalScroll ? signalScroll.scrollLeft : Math.max(0, trackW - viewW);
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, viewW, h);
+
+        const mid = (h - 12) / 2;           // leave a strip at the bottom for the time ruler
+        const maxHalf = mid - 6;
+        const first = Math.max(0, Math.floor(sl / SIGNAL_COL_W) - 1);
+        const last = Math.min(total - 1, Math.ceil((sl + viewW) / SIGNAL_COL_W) + 1);
+        const xOf = (i) => i * SIGNAL_COL_W + SIGNAL_COL_W / 2 - sl;
+
+        // soft glow "fuzz" behind the line wherever there is speech energy
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = waveColor;
+        ctx.globalAlpha = 0.13;
+        for (let i = first; i <= last; i++) {
+            if (sigA[i] === 0) continue;
+            const half = Math.max(2, sigA[i] * maxHalf * 1.05);
+            ctx.fillRect(xOf(i) - SIGNAL_COL_W / 2, mid - half, SIGNAL_COL_W, half * 2);
+        }
+
+        // the trace: one continuous glowing line (flat when silent)
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 1.8;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.strokeStyle = waveColor;
+        ctx.shadowColor = waveColor;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        for (let i = first; i <= last; i++) {
+            const x = xOf(i);
+            const y = mid - sigV[i] * maxHalf;
+            if (i === first) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
         ctx.stroke();
-        animationId = requestAnimationFrame(drawWaveform);
+
+        // bright dot on the newest sample while the signal is live
+        if (signalMode !== "idle" && total - 1 >= first && total - 1 <= last) {
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(xOf(total - 1), mid - sigV[total - 1] * maxHalf, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // time ruler: a tick every second, a label every 5 s (00:00 = start of the call)
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.font = "10px 'JetBrains Mono', monospace";
+        ctx.textBaseline = "alphabetic";
+        for (let i = first; i <= last; i++) {
+            const t = i - signalOrigin;
+            if (t < 0 || t % TICK_EVERY !== 0) continue;
+            const sec = t / TICK_EVERY;
+            const x = xOf(i);
+            ctx.fillRect(x, h - (sec % 5 === 0 ? 10 : 5), 1, sec % 5 === 0 ? 10 : 5);
+            if (sec % 5 === 0) {
+                const label = `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+                ctx.fillText(label, x + 3, h - 2);
+            }
+        }
+        ctx.globalAlpha = 1;
     }
-    drawWaveform();
+    animationId = requestAnimationFrame(drawWaveform);
 
     // ==========================================
     // 1. INCOMING CALL QUEUE MANAGEMENT
@@ -256,6 +501,16 @@ document.addEventListener("DOMContentLoaded", () => {
     function setActiveCall(call) {
         currentSelectedCallId = call.call_id;
         if (activeCallId) activeCallId.textContent = `#${call.call_id}`;
+
+        if (signalCallId !== call.call_id) {
+            stashSignal();                                   // keep the call we are leaving
+            const saved = signalStore[call.call_id];
+            if (saved) restoreSignal(saved);                 // come back to its earlier signal
+            else resetSignal();
+            signalCallId = call.call_id;
+        }
+        // a finished live recording stays frozen for review; other calls use the demo signal
+        signalMode = call.call_id.startsWith("CALL-LIVE") ? "idle" : "demo";
 
         updateTelemetryDisplay({
             urgency_score: call.urgency_score,
@@ -552,14 +807,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
 
                 scriptProcessor.onaudioprocess = (e) => {
-                    if (!liveSocket || liveSocket.readyState !== WebSocket.OPEN) return;
-
                     const inputData = e.inputBuffer.getChannelData(0);
 
-                    // Dynamic wave amplitude
+                    // Voice level for the signal visualizer (noise gate + gain).
+                    // Computed before the socket check so the graph reacts even
+                    // while the WebSocket is still connecting.
                     let sum = 0;
                     for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
                     const rms = Math.sqrt(sum / inputData.length);
+                    liveLevel = Math.min(1, Math.max(0, (rms - 0.012) * 8));
+
+                    if (!liveSocket || liveSocket.readyState !== WebSocket.OPEN) return;
+
+                    // Dynamic wave amplitude
                     waveAmplitude = Math.max(10, Math.min(60, rms * 200));
 
                     // Resample to 16 kHz
@@ -584,6 +844,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnLiveMic.classList.add("btn-recording");
                 btnLiveMic.textContent = "🔴 Stop Live Call (00:00) & View Final Analysis";
                 isRecording = true;
+                resetSignal();
+                signalMode = "live";
+                signalCallId = liveCallId;
+                liveLevel = 0;
 
                 // Live timer ticker
                 liveTimerInterval = setInterval(() => {
@@ -612,6 +876,8 @@ document.addEventListener("DOMContentLoaded", () => {
             btnLiveMic.classList.remove("btn-recording");
             btnLiveMic.textContent = "Start Live Mic Triage";
             isRecording = false;
+            signalMode = "idle";
+            liveLevel = 0;
 
             // Stop MediaRecorder and package audio
             let recordedAudioUrl = null;
@@ -843,6 +1109,16 @@ document.addEventListener("DOMContentLoaded", () => {
         modalSummary.textContent = data.summary || "No active threat patterns detected.";
         modalFullTranscript.textContent = `"${data.full_transcript || '(No speech transcript recognized)'}"`;
 
+        const modalHash = document.getElementById("modalHash");
+        if (modalHash) {
+            if (data.sha256_hash) {
+                modalHash.textContent = `${data.sha256_hash.substring(0, 16)}...`;
+                modalHash.title = `Full SHA-256: ${data.sha256_hash}`;
+            } else {
+                modalHash.textContent = "VERIFIED";
+            }
+        }
+
         if (audioSrc && modalAudioPlayer) {
             modalAudioPlayer.src = audioSrc;
             modalAudioPlayer.load();
@@ -859,6 +1135,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 else if (row.priority_level === "ELEVATED") badge = `<span class="badge priority-elev">ELEVATED</span>`;
 
                 const rowTags = (row.detected_tags || []).map(t => `<span class="tag red">${t}</span>`).join(" ");
+                const snippet = row.transcript ? `"${row.transcript}"` : '<span style="color:var(--text-muted);">-</span>';
 
                 tr.innerHTML = `
                     <td style="font-family:'JetBrains Mono',monospace;">${row.time_label}</td>
@@ -868,6 +1145,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td>${row.pitch_std} Hz</td>
                     <td>${row.voice_tremor ? '⚠️ DETECTED' : 'None'}</td>
                     <td>${rowTags || '<span style="color:var(--text-muted);">-</span>'}</td>
+                    <td style="font-style:italic; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${row.transcript || ''}">${snippet}</td>
                 `;
                 modalTimelineBody.appendChild(tr);
             });
@@ -890,6 +1168,20 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!currentForensicData) return;
             const d = currentForensicData;
 
+            // Pick truthful peak emotions from forensic report, or fallback to average
+            const effectiveEmotions = (d.peak_emotions && Object.keys(d.peak_emotions).length > 0)
+                ? d.peak_emotions
+                : ((d.average_emotions && Object.keys(d.average_emotions).length > 0) ? d.average_emotions : {});
+
+            const effectiveDominantEmo = d.dominant_emotion || 
+                (d.timeline && d.timeline.find(t => t.dominant_emotion && t.dominant_emotion !== "UNAVAILABLE")?.dominant_emotion) || 
+                "NEUTRAL";
+
+            // Peak pitch std across the recording
+            const peakPitch = (d.timeline && d.timeline.length > 0)
+                ? Math.max(...d.timeline.map(t => t.pitch_std || 0))
+                : 20.0;
+
             const wiretapCall = {
                 call_id: `WIRETAP-${Math.floor(Math.random() * 9000 + 1000)}`,
                 caller_number: "Forensic Case Recording",
@@ -898,10 +1190,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 urgency_score: d.overall_urgency_score,
                 priority_level: d.priority_level,
                 tags: d.primary_threat_tags,
-                dominant_emotion: d.timeline && d.timeline[0] ? d.timeline[0].dominant_emotion : "NEUTRAL",
-                pitch_std: d.timeline && d.timeline[0] ? d.timeline[0].pitch_std : 20.0,
+                dominant_emotion: effectiveDominantEmo,
+                pitch_std: Math.round(peakPitch * 10) / 10,
                 voice_tremor: d.timeline ? d.timeline.some(t => t.voice_tremor) : false,
-                emotions: d.timeline && d.timeline[0] ? d.timeline[0].emotions : {},
+                emotions: effectiveEmotions,
                 transcript: d.full_transcript,
                 advisory: d.summary,
                 status: "ACTIVE"

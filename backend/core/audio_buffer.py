@@ -3,8 +3,38 @@ Audio Stream Buffer: Implements a rolling sliding window buffer for streaming au
 Maintains a 2.0-second context window at 16 kHz with a 1.0-second sliding stride.
 """
 
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any, List
 import numpy as np
+
+class CallSession:
+    """
+    Session-safe isolation container for a live streaming emergency call.
+    Guarantees zero cross-call contamination for concurrent officer channels.
+    Includes monotonic sequence counters to eliminate out-of-order STT overwrites.
+    """
+    def __init__(self, call_id: str):
+        self.call_id = call_id
+        self.buffer = AudioStreamBuffer(sample_rate=16000, window_duration_sec=2.0, stride_duration_sec=1.0)
+        self.latest_window: Optional[np.ndarray] = None
+        self.latest_transcript: str = "..."
+        self.latest_situation: Optional[Dict[str, Any]] = None
+        self.stt_in_progress: bool = False
+        self.speech_history: List[np.ndarray] = []
+        self.stt_task_seq: int = 0
+        self.latest_completed_stt_seq: int = 0
+        self.is_connected: bool = True
+        self.scores_history: List[float] = []
+        self.peak_score: float = 10.0
+
+    def record_score(self, score: float) -> None:
+        self.scores_history.append(score)
+        self.peak_score = max(self.peak_score, score)
+
+    def close(self):
+        self.is_connected = False
+        self.buffer.reset()
+        self.speech_history.clear()
+        self.latest_window = None
 
 class AudioStreamBuffer:
     def __init__(
