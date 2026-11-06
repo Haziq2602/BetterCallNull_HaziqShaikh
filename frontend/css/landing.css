@@ -69,17 +69,6 @@ body {
 }
 
 /* Atmospheric Ambient Spotlight (Velopay / Fxology style) */
-.ambient-spotlight {
-    position: fixed;
-    top: -12vh;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90vw;
-    height: 60vh;
-    background: radial-gradient(ellipse at 50% 12%, rgba(35, 115, 75, 0.30) 0%, rgba(15, 55, 38, 0.08) 50%, transparent 75%);
-    pointer-events: none;
-    z-index: 0;
-}
 
 /* ==========================================================
    THEATER STAGE CANVAS (Enclosed Rounded Viewport)
