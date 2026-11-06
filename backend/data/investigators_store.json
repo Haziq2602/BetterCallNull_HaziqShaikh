@@ -12,5 +12,47 @@
     "last_login_at": null,
     "salt": "df9df02b9e6444af0ac34056eb4abc64",
     "hash_hex": "fbc8442811e1e5ef653afc0543c8b7e0d8590db1a377e63338e7d3b45532b483"
+  },
+  "officer_test_1793941374": {
+    "username": "officer_test_1793941374",
+    "badge_id": "INV-3321",
+    "name": "Sub-Insp. Priya Sharma",
+    "role": "INVESTIGATOR",
+    "station": "Cyber Crime Police Station",
+    "email": "priya.sharma@police.gov.in",
+    "phone": "+91 98765 43210",
+    "is_active": true,
+    "created_at": "2026-11-06T05:02:54Z",
+    "last_login_at": null,
+    "salt": "80a55b0a02b1b4aabd6036e7538f0e96",
+    "hash_hex": "b05d8310ca7646719b334cc6a27eae458aedcc9d68f5ffa3226336f34e23a694"
+  },
+  "investigator_test_99": {
+    "username": "investigator_test_99",
+    "badge_id": "INV-9901",
+    "name": "Sub-Insp. Arjun Deshmukh",
+    "role": "INVESTIGATOR",
+    "station": "Cyber Crime Police Station, Pune Division",
+    "email": "arjun.deshmukh@cyberpolice.gov.in",
+    "phone": "+919876543210",
+    "is_active": true,
+    "created_at": "2026-11-06T05:18:00Z",
+    "last_login_at": null,
+    "salt": "d5824cba2f00b2374674f7b00dcc8a76",
+    "hash_hex": "4caf46b8f01b0eace73594b1ca69a1ddd34df972d0e7d04c2bd9ece525dd2630"
+  },
+  "officer_test_1793942284": {
+    "username": "officer_test_1793942284",
+    "badge_id": "INV-3321",
+    "name": "Sub-Insp. Priya Sharma",
+    "role": "INVESTIGATOR",
+    "station": "Cyber Crime Police Station",
+    "email": "priya.sharma@police.gov.in",
+    "phone": "+91 98765 43210",
+    "is_active": true,
+    "created_at": "2026-11-06T05:18:04Z",
+    "last_login_at": null,
+    "salt": "357511ba7b09c05412241601ddb7b925",
+    "hash_hex": "c42a19fd6d9b6160204811e7efd775121cf76d2f738a62fddf57bdfed7f705bd"
   }
 }

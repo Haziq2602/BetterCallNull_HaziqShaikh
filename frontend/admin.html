@@ -401,14 +401,21 @@
         /* Modal Overlay */
         .modal-overlay {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.82);
             backdrop-filter: blur(8px);
-            z-index: 1000;
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 99999;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
+            box-sizing: border-box;
         }
 
         .modal-card {
@@ -647,7 +654,7 @@
                         <span>👮 Duty Investigator Roster</span>
                     </h2>
                     <div style="display: flex; gap: 0.6rem;">
-                        <button class="btn-primary-action" id="btnOpenProvisionModal">
+                        <button type="button" class="btn-primary-action" id="btnOpenProvisionModal" onclick="openProvisionModal()">
                             <span>+ Provision New Officer</span>
                         </button>
                     </div>
@@ -697,13 +704,13 @@
     </div>
 
     <!-- Provisioning Modal -->
-    <div class="modal-overlay" id="provisionModal">
+    <div class="modal-overlay" id="provisionModal" onclick="if (event.target === this) closeProvisionModal()">
         <div class="modal-card">
             <div class="modal-header">
                 <h3><span>🛡️ Provision New Investigator</span></h3>
-                <button type="button" class="btn-modal-close" id="btnCloseModal">×</button>
+                <button type="button" class="btn-modal-close" id="btnCloseModal" onclick="closeProvisionModal()">×</button>
             </div>
-            <form id="provisionForm" autocomplete="off">
+            <form id="provisionForm" autocomplete="off" novalidate onsubmit="submitProvisionForm(event)">
                 <div class="modal-body">
                     <div id="provErrorBox" style="display:none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 0.65rem 0.9rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
                     <div class="form-row">
@@ -740,19 +747,19 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="provEmail">Confidential Official Email</label>
-                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@police.gov.in" required />
+                            <label for="provEmail">Confidential Official Email (Optional)</label>
+                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@police.gov.in" />
                         </div>
                         <div class="form-group">
-                            <label for="provPhone">Confidential Phone No.</label>
-                            <input type="text" id="provPhone" placeholder="e.g. +91 98765 43210" required />
+                            <label for="provPhone">Confidential Phone No. (Optional)</label>
+                            <input type="text" id="provPhone" placeholder="e.g. +91 98765 43210" />
                         </div>
                     </div>
 
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
                             <label for="provPassword" style="margin: 0;">Initial Passcode *</label>
-                            <button type="button" class="btn-link" id="btnGenPass" style="font-size: 0.72rem; color: var(--accent);">Generate Passcode</button>
+                            <button type="button" class="btn-link" id="btnGenPass" onclick="generatePasscode()" style="font-size: 0.72rem; color: var(--accent);">Generate Passcode</button>
                         </div>
                         <input type="text" id="provPassword" placeholder="Minimum 6 characters" required />
                         <small style="color: var(--muted); font-size: 0.72rem; margin-top: 0.2rem;">
@@ -762,7 +769,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-modal-cancel" id="btnCancelModal">Cancel</button>
+                    <button type="button" class="btn-modal-cancel" id="btnCancelModal" onclick="closeProvisionModal()">Cancel</button>
                     <button type="submit" class="btn-primary-action" id="btnSubmitProvision">
                         <span>Authorize & Provision Badge</span>
                         <span>✓</span>
@@ -994,49 +1001,88 @@
                 }
             };
 
-            // Modal Handlers
-            const provisionModal = document.getElementById("provisionModal");
-            const btnOpenProvisionModal = document.getElementById("btnOpenProvisionModal");
-            const btnCloseModal = document.getElementById("btnCloseModal");
-            const btnCancelModal = document.getElementById("btnCancelModal");
-            const provisionForm = document.getElementById("provisionForm");
-            const btnGenPass = document.getElementById("btnGenPass");
-            const provPassword = document.getElementById("provPassword");
-
-            btnOpenProvisionModal.addEventListener("click", () => {
-                provisionForm.reset();
+            // Modal Handlers & Global Actions
+            window.openProvisionModal = function() {
+                const modal = document.getElementById("provisionModal");
+                if (modal) {
+                    modal.style.display = "flex";
+                    modal.style.visibility = "visible";
+                    modal.style.opacity = "1";
+                }
+                const form = document.getElementById("provisionForm");
+                if (form && typeof form.reset === "function") {
+                    try { form.reset(); } catch (e) {}
+                }
                 const errBox = document.getElementById("provErrorBox");
                 if (errBox) errBox.style.display = "none";
-                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
-                provisionModal.style.display = "flex";
-            });
+                const pass = document.getElementById("provPassword");
+                if (pass) pass.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+                const uField = document.getElementById("provUsername");
+                if (uField) setTimeout(() => uField.focus(), 50);
+            };
 
-            btnCloseModal.addEventListener("click", () => provisionModal.style.display = "none");
-            btnCancelModal.addEventListener("click", () => provisionModal.style.display = "none");
+            window.closeProvisionModal = function() {
+                const modal = document.getElementById("provisionModal");
+                if (modal) modal.style.display = "none";
+            };
 
-            btnGenPass.addEventListener("click", () => {
-                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
-            });
+            window.generatePasscode = function() {
+                const pass = document.getElementById("provPassword");
+                if (pass) pass.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+            };
 
-            provisionForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
+            window.submitProvisionForm = async function(e) {
+                if (e) e.preventDefault();
                 const btnSubmit = document.getElementById("btnSubmitProvision");
                 const errBox = document.getElementById("provErrorBox");
                 if (errBox) errBox.style.display = "none";
 
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `<span>Authorizing & provisioning...</span>`;
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = `<span>Authorizing & provisioning...</span>`;
+                }
 
                 try {
+                    const uField = document.getElementById("provUsername");
+                    const bField = document.getElementById("provBadge");
+                    const nField = document.getElementById("provName");
+                    const rField = document.getElementById("provRole");
+                    const sField = document.getElementById("provStation");
+                    const eField = document.getElementById("provEmail");
+                    const pField = document.getElementById("provPhone");
+                    const passField = document.getElementById("provPassword");
+
+                    const username = uField ? uField.value.trim().toLowerCase() : "";
+                    const badge_id = bField ? bField.value.trim() : "";
+                    const name = nField ? nField.value.trim() : "";
+                    const role = rField ? rField.value : "INVESTIGATOR";
+                    const station = sField ? sField.value.trim() : "Cyber Crime Police Station, BKC Mumbai";
+                    const email = eField ? eField.value.trim() : null;
+                    const phone = pField ? pField.value.trim() : null;
+                    const password = passField ? passField.value : "";
+
+                    if (!username || username.length < 3) {
+                        throw new Error("Investigator Login ID must be at least 3 characters.");
+                    }
+                    if (!badge_id) {
+                        throw new Error("Official Badge No. is required.");
+                    }
+                    if (!name) {
+                        throw new Error("Officer Full Name is required.");
+                    }
+                    if (!password || password.length < 6) {
+                        throw new Error("Initial passcode must be at least 6 characters.");
+                    }
+
                     const payload = {
-                        username: document.getElementById("provUsername").value.trim(),
-                        badge_id: document.getElementById("provBadge").value.trim(),
-                        name: document.getElementById("provName").value.trim(),
-                        role: document.getElementById("provRole").value,
-                        station: document.getElementById("provStation").value.trim(),
-                        email: document.getElementById("provEmail").value.trim(),
-                        phone: document.getElementById("provPhone").value.trim(),
-                        password: provPassword.value
+                        username: username,
+                        badge_id: badge_id,
+                        name: name,
+                        role: role,
+                        station: station,
+                        email: email || null,
+                        phone: phone || null,
+                        password: password
                     };
 
                     const res = await authFetch("/api/admin/investigators", {
@@ -1057,19 +1103,32 @@
                     }
 
                     showToast(`Officer ${payload.name} (${payload.badge_id}) provisioned successfully!`);
-                    provisionModal.style.display = "none";
+                    window.closeProvisionModal();
                     loadRoster();
                     loadAuditLogs();
                 } catch (err) {
+                    console.error("[PROVISION ERROR]", err);
                     if (errBox) {
                         errBox.textContent = "⚠️ " + err.message;
                         errBox.style.display = "block";
                     }
                     showToast(err.message, false);
                 } finally {
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = `<span>Authorize & Provision Badge</span> <span>✓</span>`;
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = `<span>Authorize & Provision Badge</span> <span>✓</span>`;
+                    }
                 }
+            };
+
+            const btnOpen = document.getElementById("btnOpenProvisionModal");
+            if (btnOpen) btnOpen.addEventListener("click", window.openProvisionModal);
+
+            const formElem = document.getElementById("provisionForm");
+            if (formElem) formElem.addEventListener("submit", window.submitProvisionForm);
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") window.closeProvisionModal();
             });
 
             // Initial Load
