@@ -1017,6 +1017,22 @@ async def investigate_recording(
 # Mount static frontend directory (robust path relative to project root)
 _frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 
+@app.get("/", include_in_schema=False)
+def serve_root():
+    return FileResponse(os.path.join(_frontend_dir, "landing.html"))
+
+@app.get("/landing", include_in_schema=False)
+def serve_landing_page():
+    return FileResponse(os.path.join(_frontend_dir, "landing.html"))
+
+@app.get("/login", include_in_schema=False)
+def serve_login_page():
+    return FileResponse(os.path.join(_frontend_dir, "login.html"))
+
+@app.get("/console", include_in_schema=False)
+def serve_console_page():
+    return FileResponse(os.path.join(_frontend_dir, "index.html"))
+
 @app.get("/admin", include_in_schema=False)
 def serve_admin_page():
     return FileResponse(os.path.join(_frontend_dir, "admin.html"))

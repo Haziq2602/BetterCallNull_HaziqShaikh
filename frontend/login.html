@@ -14,7 +14,7 @@
         rel="stylesheet">
     <!-- Shared tokens (--accent, --text, --muted ...) come from the console stylesheet.
          Everything below is namespaced lg-* so it cannot clash with it. -->
-    <link rel="stylesheet" href="css/styles.css?v=23">
+    <link rel="stylesheet" href="css/styles.css?v=7">
     <style>
         html {
             background: #050806;
@@ -535,6 +535,50 @@
             animation: lgSpin 0.7s linear infinite;
         }
 
+        /* ---------- Duty credentials (demo) ---------- */
+        .lg-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: rgba(2, 8, 5, 0.5);
+            border: 1px dashed var(--lg-line-strong);
+            border-radius: 10px;
+            font: 400 0.74rem var(--lg-mono);
+            color: var(--lg-muted);
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .lg-demo:hover {
+            border-color: var(--lg-accent);
+            background: rgba(61, 255, 160, 0.05);
+        }
+
+        .lg-demo:focus-visible {
+            outline: 2px solid var(--lg-accent);
+            outline-offset: 2px;
+        }
+
+        .lg-demo-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .lg-demo-row span:last-child {
+            color: var(--lg-cyan);
+        }
+
+        .lg-demo code {
+            font-family: var(--lg-mono);
+            font-weight: 600;
+            color: var(--lg-accent);
+        }
+
         /* ---------- Card footer + page HUD ---------- */
         .lg-foot {
             display: flex;
@@ -657,6 +701,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="css/login-premium.css?v=3">
 </head>
 
 <body class="lg-body" id="page">
@@ -668,11 +713,8 @@
 
             <header class="lg-head">
                 <div class="lg-mark" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
-                        <path d="M12 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-                        <path d="M12 13.5c-2.8 0-5 1.8-5 3.5v.5h10v-.5c0-1.7-2.2-3.5-5-3.5z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75">
+                        <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22"/>
                     </svg>
                 </div>
                 <h1 class="lg-brand">CyberGuard</h1>
@@ -712,7 +754,7 @@
                     </div>
 
                     <div class="lg-field">
-                        <label class="lg-label" for="loginUsername">Investigator ID or badge number</label>
+                        <label class="lg-label" for="loginUsername">Investigator ID / Badge No.</label>
                         <div class="lg-wrap">
                             <span class="lg-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
@@ -732,7 +774,7 @@
 
                     <div class="lg-field">
                         <div class="lg-label-row">
-                            <label class="lg-label" for="loginPassword">Access passcode</label>
+                            <label class="lg-label" for="loginPassword">Access Passcode</label>
                             <button type="button" class="lg-link" id="btnForgotPass">Forgot passcode?</button>
                         </div>
                         <div class="lg-wrap">
@@ -789,6 +831,13 @@
                             <path d="M5 12h14" />
                             <path d="M13 6l6 6-6 6" />
                         </svg>
+                    </button>
+
+                    <!-- DEV / DEMO ONLY: set SHOW_DEMO_CREDENTIALS to false in the script (or delete this
+                         button) before real deployment -->
+                    <button type="button" class="lg-demo" id="btnDemoFill">
+                        <span class="lg-demo-row"><span>Duty credentials</span><span>Tap to fill</span></span>
+                        <span><code>investigator_01</code> / <code>cyberguard2026</code></span>
                     </button>
                 </form>
             </section>
@@ -865,6 +914,7 @@
             <footer class="lg-foot">
                 <span>Sec. 43/66 IT Act and Evidence Integrity Protocol</span>
                 <span>Every sign-in is logged with SHA-256 telemetry</span>
+                <a href="landing.html" style="display: inline-block; margin-top: 0.35rem; color: #3dffa0; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-decoration: none;">← Back to Evaluation Protocol</a>
             </footer>
         </div>
     </main>
@@ -877,6 +927,10 @@
     <script>
         (() => {
             "use strict";
+
+            // Set to false (or delete the #btnDemoFill button) before real deployment.
+            const SHOW_DEMO_CREDENTIALS = true;
+            const DEMO = { username: "investigator_01", password: "cyberguard2026" };
 
             const TOKEN_KEY = "cyberguard_token";
             const PROFILE_KEY = "cyberguard_investigator";
@@ -1166,7 +1220,6 @@
                 }
                 sessionStorage.setItem(TOKEN_KEY, data.access_token);
                 sessionStorage.setItem(PROFILE_KEY, JSON.stringify(data.investigator));
-                sessionStorage.setItem("cyberguard_just_logged_in", "true");
                 document.body.classList.add("lg-granted");
                 setState(btnLogin, "granted", "Access granted");
                 radar.boost();
@@ -1238,6 +1291,20 @@
             });
 
             // ======================================================
+            // Demo credentials chip
+            // ======================================================
+            const btnDemoFill = $("btnDemoFill");
+            if (!SHOW_DEMO_CREDENTIALS) {
+                btnDemoFill.remove();
+            } else {
+                btnDemoFill.addEventListener("click", () => {
+                    loginUsername.value = DEMO.username;
+                    loginPassword.value = DEMO.password;
+                    btnLogin.focus();
+                });
+            }
+
+            // ======================================================
             // Clock
             // ======================================================
             const clock = $("clock");
@@ -1282,6 +1349,7 @@
             }
         })();
     </script>
+    <script src="js/login-bg.js"></script>
 </body>
 
 </html>
