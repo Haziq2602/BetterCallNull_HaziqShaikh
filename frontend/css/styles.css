@@ -2245,7 +2245,7 @@ kbd {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     background: rgba(3, 7, 5, 0.88);

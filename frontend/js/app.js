@@ -5,6 +5,22 @@
  * and Forensic Wiretap Timeline Investigation.
  */
 
+// ── EARLY AUTH GUARD ─────────────────────────────────────────────────────────
+// Runs synchronously before DOM paint. If no valid session, redirect instantly.
+(function earlyAuthGuard() {
+    try {
+        const token = sessionStorage.getItem("cyberguard_token");
+        const profileRaw = sessionStorage.getItem("cyberguard_investigator");
+        const profile = profileRaw ? JSON.parse(profileRaw) : null;
+        if (!token || !profile) {
+            window.location.replace("login.html?reason=unauthenticated");
+        }
+    } catch (e) {
+        window.location.replace("login.html?reason=unauthenticated");
+    }
+})();
+// ─────────────────────────────────────────────────────────────────────────────
+
 document.addEventListener("DOMContentLoaded", () => {
     // Canvas & Waveform Visualizer
     const canvas = document.getElementById("waveformCanvas");
