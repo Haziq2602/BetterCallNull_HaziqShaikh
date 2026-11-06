@@ -45,6 +45,32 @@ INVESTIGATOR_STORE: Dict[str, Dict[str, Any]] = {
     }
 }
 
+INVESTIGATORS_FILE = os.path.join(os.path.dirname(__file__), "data", "investigators_store.json")
+
+def load_investigator_store():
+    """Loads provisioned investigators from disk cache to ensure resilience across restarts."""
+    global INVESTIGATOR_STORE
+    if os.path.exists(INVESTIGATORS_FILE):
+        try:
+            with open(INVESTIGATORS_FILE, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                if isinstance(saved, dict):
+                    INVESTIGATOR_STORE.update(saved)
+        except Exception:
+            pass
+
+def save_investigator_store():
+    """Flushes provisioned investigators to local persistent storage."""
+    try:
+        os.makedirs(os.path.dirname(INVESTIGATORS_FILE), exist_ok=True)
+        with open(INVESTIGATORS_FILE, "w", encoding="utf-8") as f:
+            json.dump(INVESTIGATOR_STORE, f, indent=2)
+    except Exception:
+        pass
+
+# Initialize store from disk on startup
+load_investigator_store()
+
 COMMANDER_ROLES = {"LEAD_INVESTIGATOR", "SUPERINTENDENT", "STATION_COMMANDER", "ADMIN"}
 
 def hash_password(password: str) -> tuple[str, str]:
@@ -82,6 +108,8 @@ def get_investigator_record(username: str) -> Optional[Dict[str, Any]]:
     cloud_user = supabase_gateway.get_investigator_by_username(username)
     if cloud_user:
         return cloud_user
+    if username not in INVESTIGATOR_STORE:
+        load_investigator_store()
     return INVESTIGATOR_STORE.get(username)
 
 def generate_magic_login_link(username: str, base_url: str = "") -> Dict[str, Any]:

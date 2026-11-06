@@ -19,6 +19,19 @@ from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger("cyberguard.supabase")
 
+# Automatically load .env file if present in project root
+_env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+if os.path.exists(_env_path):
+    try:
+        with open(_env_path, "r", encoding="utf-8") as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    os.environ.setdefault(_k.strip(), _v.strip().strip("'\""))
+    except Exception:
+        pass
+
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "").strip() or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
@@ -157,11 +170,11 @@ class SupabaseGateway:
             return []
         try:
             if self.client:
-                res = self.client.table("investigators").select("id, username, badge_id, name, role, station, email, phone, is_active, created_at, last_login_at").order("created_at", desc=False).execute()
+                res = self.client.table("investigators").select("*").order("created_at", desc=False).execute()
                 return res.data or []
             else:
                 import urllib.request
-                req_url = f"{self.url}/rest/v1/investigators?select=id,username,badge_id,name,role,station,email,phone,is_active,created_at,last_login_at&order=created_at.asc"
+                req_url = f"{self.url}/rest/v1/investigators?select=*&order=created_at.asc"
                 req = urllib.request.Request(req_url, headers=self._postgrest_headers())
                 with urllib.request.urlopen(req, timeout=5) as resp:
                     return json.loads(resp.read().decode()) or []
@@ -176,41 +189,62 @@ class SupabaseGateway:
         name: str,
         role: str,
         station: str,
-        email: str,
-        phone: str,
+        email: Optional[str],
+        phone: Optional[str],
         salt: str,
         hash_hex: str
     ) -> bool:
-        """Inserts a new investigator into Supabase."""
+        """
+        Inserts a new investigator into Supabase.
+        Automatically falls back to core schema if custom columns (email/phone) are not present.
+        """
         if not self.is_connected:
             return False
-        payload = {
+
+        now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        core_payload = {
             "username": username,
             "badge_id": badge_id,
             "name": name,
             "role": role,
             "station": station,
-            "email": email,
-            "phone": phone,
             "password_salt": salt,
             "password_hash": hash_hex,
             "is_active": True,
-            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            "created_at": now_iso,
+            "updated_at": now_iso
         }
-        try:
-            if self.client:
-                self.client.table("investigators").insert(payload).execute()
-                return True
-            else:
-                import urllib.request
-                req_url = f"{self.url}/rest/v1/investigators"
-                req = urllib.request.Request(req_url, data=json.dumps(payload).encode("utf-8"), headers=self._postgrest_headers(), method="POST")
-                with urllib.request.urlopen(req, timeout=5):
+
+        full_payload = dict(core_payload)
+        if email:
+            full_payload["email"] = email
+        if phone:
+            full_payload["phone"] = phone
+
+        # Attempt full payload first, then core payload on PGRST204 column missing error
+        attempts = [full_payload] if (email or phone) else [core_payload]
+        if full_payload != core_payload:
+            attempts.append(core_payload)
+
+        for attempt in attempts:
+            try:
+                if self.client:
+                    self.client.table("investigators").insert(attempt).execute()
                     return True
-        except Exception as ex:
-            logger.error(f"[SUPABASE ERROR] create_investigator failed: {ex}")
-            return False
+                else:
+                    import urllib.request
+                    req_url = f"{self.url}/rest/v1/investigators"
+                    req = urllib.request.Request(req_url, data=json.dumps(attempt).encode("utf-8"), headers=self._postgrest_headers(), method="POST")
+                    with urllib.request.urlopen(req, timeout=5):
+                        return True
+            except Exception as ex:
+                err_str = str(ex)
+                if "PGRST204" in err_str or "schema cache" in err_str:
+                    logger.warning(f"[SUPABASE] Schema column variance detected ({err_str[:60]}). Retrying with core schema columns.")
+                    continue
+                logger.error(f"[SUPABASE ERROR] create_investigator failed: {ex}")
+                return False
+        return False
 
     def update_investigator_status(self, username: str, is_active: bool) -> bool:
         """Updates active/suspended status for an investigator."""

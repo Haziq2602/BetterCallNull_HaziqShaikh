@@ -33,7 +33,8 @@ from backend.auth import (
     INVESTIGATOR_STORE,
     create_access_token,
     get_current_investigator,
-    require_commander_role
+    require_commander_role,
+    save_investigator_store
 )
 
 def test_admin_rbac_enforcement():
@@ -79,6 +80,8 @@ def test_list_investigators(commander):
 
 def test_provision_new_investigator(commander):
     print("\n--- TEST 3: Provisioning New Investigator via Commander API ---")
+    INVESTIGATOR_STORE.pop("investigator_test_99", None)
+    save_investigator_store()
     req = ProvisionInvestigatorRequest(
         username="investigator_test_99",
         badge_id="INV-9901",

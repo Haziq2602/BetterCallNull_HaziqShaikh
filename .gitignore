@@ -21,6 +21,7 @@ downloads/
 *.wav
 *.mp3
 *.m4a
+!backend/data/sample_recordings/*.wav
 recordings/
 uploads/
 

@@ -1772,7 +1772,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             const audioUrl = `/api/sample-recordings/${sampleId}.wav`;
-            executeForensicAnalysis(`/api/investigate-recording?sample_id=${encodeURIComponent(sampleId)}`, null, audioUrl);
+            const formData = new FormData();
+            formData.append("sample_id", sampleId);
+            executeForensicAnalysis(`/api/investigate-recording?sample_id=${encodeURIComponent(sampleId)}`, formData, audioUrl);
         });
     }
 

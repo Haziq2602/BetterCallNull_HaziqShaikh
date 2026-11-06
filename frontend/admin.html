@@ -705,6 +705,7 @@
             </div>
             <form id="provisionForm" autocomplete="off">
                 <div class="modal-body">
+                    <div id="provErrorBox" style="display:none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 0.65rem 0.9rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="provUsername">Unique Login ID *</label>
@@ -1004,6 +1005,8 @@
 
             btnOpenProvisionModal.addEventListener("click", () => {
                 provisionForm.reset();
+                const errBox = document.getElementById("provErrorBox");
+                if (errBox) errBox.style.display = "none";
                 provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
                 provisionModal.style.display = "flex";
             });
@@ -1018,6 +1021,9 @@
             provisionForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const btnSubmit = document.getElementById("btnSubmitProvision");
+                const errBox = document.getElementById("provErrorBox");
+                if (errBox) errBox.style.display = "none";
+
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = `<span>Authorizing & provisioning...</span>`;
 
@@ -1039,14 +1045,26 @@
                         body: JSON.stringify(payload)
                     });
 
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.detail || "Provisioning failed.");
+                    let errorMsg = `Server returned HTTP ${res.status}`;
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch {}
+
+                    if (!res.ok) {
+                        if (data && data.detail) errorMsg = data.detail;
+                        throw new Error(errorMsg);
+                    }
 
                     showToast(`Officer ${payload.name} (${payload.badge_id}) provisioned successfully!`);
                     provisionModal.style.display = "none";
                     loadRoster();
                     loadAuditLogs();
                 } catch (err) {
+                    if (errBox) {
+                        errBox.textContent = "⚠️ " + err.message;
+                        errBox.style.display = "block";
+                    }
                     showToast(err.message, false);
                 } finally {
                     btnSubmit.disabled = false;

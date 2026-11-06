@@ -13,6 +13,7 @@ import concurrent.futures
 import numpy as np
 import soundfile as sf
 from scipy import signal
+import logging
 
 from backend.models.emotion_model import SpeechEmotionModel
 from backend.models.acoustic_dsp import AcousticAnalyzer
@@ -23,16 +24,30 @@ from backend.config import SAMPLE_RATE, CRITICAL_THRESHOLD, ELEVATED_THRESHOLD
 def load_audio_to_16k_mono(source) -> np.ndarray:
     """
     Reads an audio file, bytes buffer, or numpy array into a 16kHz float32 mono numpy array.
+    Safely handles empty buffers, missing headers, or corrupt files without crashing.
     """
+    if source is None:
+        return np.zeros(0, dtype=np.float32)
+
     if isinstance(source, np.ndarray):
         return source.astype(np.float32)
 
     if isinstance(source, (bytes, bytearray)):
+        if len(source) == 0:
+            return np.zeros(0, dtype=np.float32)
         source = io.BytesIO(source)
 
-    data, sr = sf.read(source, dtype="float32")
+    try:
+        data, sr = sf.read(source, dtype="float32")
+    except Exception as ex:
+        logging.warning(f"[AUDIO DECODE] Soundfile could not decode source ({ex}). Returning silence buffer.")
+        return np.zeros(0, dtype=np.float32)
+
     if data.ndim > 1:
         data = np.mean(data, axis=1)
+
+    if len(data) == 0:
+        return np.zeros(0, dtype=np.float32)
 
     if sr != SAMPLE_RATE:
         gcd = math.gcd(sr, SAMPLE_RATE)

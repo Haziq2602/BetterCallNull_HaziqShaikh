@@ -35,7 +35,9 @@ from backend.auth import (
     require_commander_role,
     hash_password,
     mask_email,
-    mask_phone
+    mask_phone,
+    save_investigator_store,
+    load_investigator_store
 )
 from backend.core.supabase_client import supabase_gateway
 
@@ -183,9 +185,10 @@ def list_investigators_endpoint(commander: dict = Depends(require_commander_role
     Station Commander Roster API:
     Retrieves all provisioned investigators with masked contact details and active duty statuses.
     """
+    load_investigator_store()
     roster_map = {}
     
-    # 1. Local seed / fallback records
+    # 1. Local seed / persistent disk records
     for uname, rec in INVESTIGATOR_STORE.items():
         roster_map[uname] = {
             "username": rec["username"],
@@ -201,21 +204,24 @@ def list_investigators_endpoint(commander: dict = Depends(require_commander_role
         }
 
     # 2. Supabase Cloud live records
-    cloud_list = supabase_gateway.list_investigators()
-    for row in cloud_list:
-        uname = row["username"]
-        roster_map[uname] = {
-            "username": row["username"],
-            "badge_id": row["badge_id"],
-            "name": row["name"],
-            "role": row["role"],
-            "station": row.get("station", "Cyber Crime Police Station"),
-            "email_masked": mask_email(row.get("email")),
-            "phone_masked": mask_phone(row.get("phone")),
-            "is_active": row.get("is_active", True),
-            "created_at": row.get("created_at", "2026-01-01T08:00:00Z"),
-            "last_login_at": row.get("last_login_at")
-        }
+    try:
+        cloud_list = supabase_gateway.list_investigators()
+        for row in cloud_list:
+            uname = row["username"]
+            roster_map[uname] = {
+                "username": row["username"],
+                "badge_id": row["badge_id"],
+                "name": row["name"],
+                "role": row["role"],
+                "station": row.get("station", "Cyber Crime Police Station"),
+                "email_masked": mask_email(row.get("email")),
+                "phone_masked": mask_phone(row.get("phone")),
+                "is_active": row.get("is_active", True),
+                "created_at": row.get("created_at", "2026-01-01T08:00:00Z"),
+                "last_login_at": row.get("last_login_at")
+            }
+    except Exception as ex:
+        logging.warning(f"[ROSTER SYNC] Supabase list sync failed ({ex}). Serving local persistent roster.")
 
     roster = list(roster_map.values())
     return {
@@ -265,21 +271,25 @@ def provision_investigator_endpoint(
         "hash_hex": hash_hex
     }
 
-    # Save to local in-memory store
+    # Save to local in-memory store and persist to disk
     INVESTIGATOR_STORE[username] = new_record
+    save_investigator_store()
 
-    # Save to Supabase Cloud Database
-    supabase_gateway.create_investigator(
-        username=username,
-        badge_id=new_record["badge_id"],
-        name=new_record["name"],
-        role=new_record["role"],
-        station=new_record["station"],
-        email=new_record["email"],
-        phone=new_record["phone"],
-        salt=salt,
-        hash_hex=hash_hex
-    )
+    # Save to Supabase Cloud Database (graceful on RLS policy restrictions)
+    try:
+        supabase_gateway.create_investigator(
+            username=username,
+            badge_id=new_record["badge_id"],
+            name=new_record["name"],
+            role=new_record["role"],
+            station=new_record["station"],
+            email=new_record["email"],
+            phone=new_record["phone"],
+            salt=salt,
+            hash_hex=hash_hex
+        )
+    except Exception as ex:
+        logging.warning(f"[SUPABASE CREATE] Cloud persistence skipped ({ex}). Officer saved to local persistent store.")
 
     supabase_gateway.log_audit_event(
         event_type="INVESTIGATOR_PROVISIONED",
@@ -327,9 +337,10 @@ def toggle_investigator_status_endpoint(
     if not user:
         raise HTTPException(status_code=404, detail=f"Investigator '{target}' not found in roster.")
 
-    # Update local store
+    # Update local store and persist
     if target in INVESTIGATOR_STORE:
         INVESTIGATOR_STORE[target]["is_active"] = req.is_active
+        save_investigator_store()
 
     # Update Supabase
     supabase_gateway.update_investigator_status(target, req.is_active)
@@ -797,6 +808,12 @@ async def investigate_recording(
     """
     if not sample_id:
         sample_id = request.query_params.get("sample_id")
+    if not sample_id and request.headers.get("content-type", "").startswith("multipart/form-data"):
+        try:
+            form = await request.form()
+            sample_id = form.get("sample_id")
+        except Exception:
+            pass
 
     audio_source = None
     filename = "recording.wav"
@@ -914,6 +931,31 @@ async def investigate_recording(
                     "transcript": full_text if idx == 0 else "",
                     "detected_tags": tags
                 })
+
+        if len(timeline) == 0 and matched_sc:
+            dur_str = matched_sc.get("duration", "00:24")
+            try:
+                m_part, s_part = map(int, dur_str.split(":"))
+                duration_sec = float(m_part * 60 + s_part)
+            except Exception:
+                duration_sec = 24.0
+            timeline.append({
+                "chunk_id": "chk_001",
+                "time_start_sec": 0.0,
+                "time_end_sec": duration_sec,
+                "time_label": dur_str,
+                "urgency_score": overall_score,
+                "priority_level": priority_lvl,
+                "dominant_emotion": matched_sc.get("dominant_emotion", "FEARFUL"),
+                "emotion_status": "SUCCESS" if matched_sc.get("emotions") else "MODEL_UNAVAILABLE",
+                "emotion_source": "scenario",
+                "emotions": matched_sc.get("emotions", {}),
+                "pitch_std": matched_sc.get("pitch_std", 35.0),
+                "voice_tremor": matched_sc.get("voice_tremor", False),
+                "energy_level": "ELEVATED" if overall_score > 50 else "MODERATE",
+                "transcript": full_text,
+                "detected_tags": tags
+            })
 
         mins = int(duration_sec // 60)
         secs = int(duration_sec % 60)

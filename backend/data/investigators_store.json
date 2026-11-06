@@ -1,0 +1,16 @@
+{
+  "investigator_01": {
+    "username": "investigator_01",
+    "badge_id": "INV-7842",
+    "name": "Insp. Haziq Shaikh",
+    "role": "LEAD_INVESTIGATOR",
+    "station": "Cyber Crime Police Station",
+    "email": "insp.haziq@cyberpolice.gov.in",
+    "phone": "+91 98200 12345",
+    "is_active": true,
+    "created_at": "2026-01-01T08:00:00Z",
+    "last_login_at": null,
+    "salt": "df9df02b9e6444af0ac34056eb4abc64",
+    "hash_hex": "fbc8442811e1e5ef653afc0543c8b7e0d8590db1a377e63338e7d3b45532b483"
+  }
+}

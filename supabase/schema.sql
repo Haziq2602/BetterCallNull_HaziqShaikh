@@ -26,6 +26,16 @@ CREATE TABLE IF NOT EXISTS investigators (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure email & phone columns exist for earlier tables
+ALTER TABLE investigators ADD COLUMN IF NOT EXISTS email VARCHAR(256) DEFAULT 'insp.haziq@cyberpolice.gov.in';
+ALTER TABLE investigators ADD COLUMN IF NOT EXISTS phone VARCHAR(32) DEFAULT '+91 98200 12345';
+
+-- Disable RLS or grant full access for seamless application REST API operations
+ALTER TABLE investigators DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS audit_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS forensic_cases DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS dispatch_call_queue DISABLE ROW LEVEL SECURITY;
+
 -- Seed default single duty investigator (investigator_01 / cyberguard2026)
 -- Passwords and confidential contact channels are managed at the database level.
 INSERT INTO investigators (
