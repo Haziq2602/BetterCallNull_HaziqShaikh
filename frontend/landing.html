@@ -6,29 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="#020403">
-    <title>CyberGuard — Boutique Speech Emotion &amp; Triage Console</title>
+    <title>CyberGuard — Boutique Speech Emotion &amp; Consensus Triage Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Doto:wght@600;700;800;900&family=DotGothic16&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/landing.css?v=12">
+    <link rel="stylesheet" href="css/landing.css?v=13">
 </head>
 
 <body>
 
     <!-- MAIN SITE CONTAINER (FULL-BLEED SEAMLESS BACKGROUND) -->
     <main class="site-container">
-        <!-- Top Bar: Minimal Brand + Boutique Capsule Button -->
+        <!-- Top Bar: Minimal Brand + Center Live Node + Boutique Capsule Button -->
         <header class="top-bar">
             <a href="landing.html" class="brand-badge" id="brandLogo">
-                <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                <span class="brand-glyph">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
                         viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="1.75" aria-hidden="true">
                         <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
-                    </svg></span>
+                    </svg>
+                </span>
                 <span class="brand-text">CYBERGUARD</span>
             </a>
+
+            <div class="top-bar-node-badge">
+                <span class="pulse-dot"></span>
+                <span>DISPATCH NODE 1930 / 112 • ACTIVE</span>
+            </div>
 
             <a href="login.html" class="btn-capsule" id="btnTopLogin" title="Authorized Investigator Terminal">
                 <span>Investigator Access</span>
@@ -36,7 +43,7 @@
             </a>
         </header>
 
-        <!-- Hero Typography Section (Velopay / InferaAI High-Contrast Elegance) -->
+        <!-- Hero Section (High-Contrast Elegance + Dual CTAs + Curved Arc) -->
         <section class="hero-block" id="hero">
             <div class="hero-pill-badge">
                 <span class="pulse-dot"></span>
@@ -53,32 +60,31 @@
                 under 15ms, and extortion context intelligence.
             </p>
 
+            <!-- Dual Action Row (matching reference video hero buttons) -->
             <div class="hero-actions-row">
                 <button type="button" class="btn-capsule btn-capsule-solid" id="btnHeroLaunch"
                     style="font-size: 0.92rem; padding: 0.52rem 0.52rem 0.52rem 1.45rem;">
                     <span>Launch Command Console</span>
                     <span class="btn-arrow-circle" style="width: 32px; height: 32px;">↗</span>
                 </button>
+                <a href="#pipeline" class="btn-capsule btn-capsule-ghost" id="btnHeroExplore"
+                    style="font-size: 0.90rem; padding: 0.52rem 1.35rem;">
+                    <span>Explore Architecture ▾</span>
+                </a>
             </div>
 
-            <!-- Velopay / InferaAI Curved Telemetry Horizon (Seamless Arc) -->
+            <!-- Curved Telemetry Horizon Arc (Laser Glow & Floating Chips) -->
             <div class="telemetry-horizon-wrap" aria-hidden="true">
-                <!-- Atmospheric Ambient Glow Bloom -->
                 <div class="arc-ambient-glow"></div>
 
                 <svg class="telemetry-horizon-svg" viewBox="0 0 960 235" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <!-- Wide Soft Atmospheric Blur -->
                         <filter id="arcGlowWide" x="-50%" y="-50%" width="200%" height="200%">
                             <feGaussianBlur stdDeviation="20" result="blurWide" />
                         </filter>
-
-                        <!-- Core Intense Laser Blur -->
                         <filter id="arcGlowCore" x="-30%" y="-30%" width="160%" height="160%">
                             <feGaussianBlur stdDeviation="6" result="blurCore" />
                         </filter>
-
-                        <!-- Horizon Smooth Volumetric Under-Fill Gradient -->
                         <linearGradient id="horizonVolumetric" x1="480" y1="36" x2="480" y2="235"
                             gradientUnits="userSpaceOnUse">
                             <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.18" />
@@ -86,8 +92,6 @@
                             <stop offset="55%" stop-color="#0e3a24" stop-opacity="0.02" />
                             <stop offset="100%" stop-color="#020403" stop-opacity="0" />
                         </linearGradient>
-
-                        <!-- Multi-Stop Ultra-Smooth Stroke Gradient -->
                         <linearGradient id="arcStrokeGrad" x1="0" y1="120" x2="960" y2="120"
                             gradientUnits="userSpaceOnUse">
                             <stop offset="0%" stop-color="#3dffa0" stop-opacity="0" />
@@ -102,8 +106,6 @@
                             <stop offset="90%" stop-color="#3dffa0" stop-opacity="0.08" />
                             <stop offset="100%" stop-color="#3dffa0" stop-opacity="0" />
                         </linearGradient>
-
-                        <!-- Inner Perspective Wire Gradient -->
                         <linearGradient id="innerWireGrad" x1="480" y1="60" x2="480" y2="220"
                             gradientUnits="userSpaceOnUse">
                             <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.20" />
@@ -112,17 +114,13 @@
                         </linearGradient>
                     </defs>
 
-                    <!-- Volumetric Ambient Under-Fill -->
                     <path d="M 40 220 Q 480 38 920 220 Z" fill="url(#horizonVolumetric)" />
-
-                    <!-- Radial Dotted Perspective Grid -->
                     <path d="M 120 220 Q 480 75 840 220" stroke="url(#innerWireGrad)" stroke-width="1.2"
                         stroke-dasharray="3 6" />
                     <path d="M 200 220 Q 480 110 760 220" stroke="url(#innerWireGrad)" stroke-width="1"
                         stroke-dasharray="2 7" />
                     <path d="M 280 220 Q 480 145 680 220" stroke="rgba(61, 255, 160, 0.10)" stroke-width="0.8" />
 
-                    <!-- Latitude Spoke Rays -->
                     <line x1="480" y1="42" x2="330" y2="220" stroke="rgba(61, 255, 160, 0.06)" stroke-width="1"
                         stroke-dasharray="2 4" />
                     <line x1="480" y1="42" x2="480" y2="220" stroke="rgba(61, 255, 160, 0.10)" stroke-width="1"
@@ -130,20 +128,14 @@
                     <line x1="480" y1="42" x2="630" y2="220" stroke="rgba(61, 255, 160, 0.06)" stroke-width="1"
                         stroke-dasharray="2 4" />
 
-                    <!-- LAYER 1: Soft Atmospheric Bloom Layer -->
                     <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="26"
                         stroke-linecap="round" opacity="0.4" filter="url(#arcGlowWide)" />
-
-                    <!-- LAYER 2: Concentrated Inner Neon Layer -->
                     <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="9"
                         stroke-linecap="round" opacity="0.8" filter="url(#arcGlowCore)" />
-
-                    <!-- LAYER 3: Core Arc Stroke -->
                     <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="2.5"
                         stroke-linecap="round" />
                 </svg>
 
-                <!-- Floating Telemetry Chips -->
                 <div class="horizon-floating-chips">
                     <div class="floating-chip chip-left" title="Active Triage Intercept">
                         <span class="chip-dot red"></span>
@@ -159,125 +151,591 @@
                     </div>
                 </div>
             </div>
-
         </section>
 
-        <!-- Horizontal Scroll Protocol Deck -->
-        <section class="protocol-section" id="protocol">
-            <div class="section-header-row">
-                <div class="section-header-title">
-                    <span>[ 01-04 // PROTOCOL MODULES ]</span>
-                </div>
+        <!-- Trusted By Helplines & Interoperability Row (Reference Video: "Trusted by security teams") -->
+        <section class="trust-marquee-section" id="trust" aria-label="Interoperability">
+            <div class="trust-caption">
+                <span>INTEROPERABLE WITH NATIONAL CYBER DEFENSE &amp; HELPLINE PROTOCOLS</span>
             </div>
-
-            <div class="horizontal-scroll-container" id="cardsTrack">
-                <!-- Card 01: Live Call Queue & Triage -->
-                <div class="protocol-card" id="card01">
-                    <div class="card-top-row">
-                        <span class="col-index">[ 01 // DISPATCH ]</span>
-                    </div>
-                    <h2 class="col-title">Live Call Queue &amp; Triage</h2>
-                    <p class="col-desc">
-                        Emergency calls are auto-ranked by multi-modal distress scores. Critical extortion
-                        threats surface immediately to queue apex.
-                    </p>
-                </div>
-
-                <!-- Card 02: 3-Pillar Multimodal Telemetry -->
-                <div class="protocol-card" id="card02">
-                    <div class="card-top-row">
-                        <span class="col-index">[ 02 // SENSORS ]</span>
-                    </div>
-                    <h2 class="col-title">3-Pillar Multimodal Telemetry</h2>
-                    <p class="col-desc">
-                        Triangulated consensus evaluating <strong>Voice Emotion (P1 SER)</strong>, <strong>SciPy
-                            Glottal Tremors &lt;15ms (P2 DSP)</strong>, and <strong>Groq Whisper Indic Threat
-                            Keywords (P3 STT)</strong> to eliminate false positives.
-                    </p>
-                </div>
-
-                <!-- Card 03: 2-Pillar Resilience Failsafe -->
-                <div class="protocol-card" id="card03">
-                    <div class="card-top-row">
-                        <span class="col-index">[ 03 // AIR-GAPPED ]</span>
-                    </div>
-                    <h2 class="col-title">2-Pillar Resilience Failsafe</h2>
-                    <p class="col-desc">
-                        Automatic failover to pure CPU edge DSP (45%) and local regex taxonomy (55%) when cloud
-                        GPU models warm up.
-                    </p>
-                </div>
-
-                <!-- Card 04: Wiretap Forensics & Chain-of-Custody -->
-                <div class="protocol-card" id="card04">
-                    <div class="card-top-row">
-                        <span class="col-index">[ 04 // EVIDENCE ]</span>
-                    </div>
-                    <h2 class="col-title">Wiretap Forensics &amp; Chain-of-Custody</h2>
-                    <p class="col-desc">
-                        Second-by-second timeline analysis of case wiretaps with cryptographic SHA-256
-                        tamper-evident integrity hashing.
-                    </p>
-                </div>
+            <div class="trust-badges-row">
+                <div class="trust-pill"><span class="trust-dot"></span><span>HELPLINE 1930</span></div>
+                <div class="trust-pill"><span class="trust-dot"></span><span>MHA I4C CYBERCRIME</span></div>
+                <div class="trust-pill"><span class="trust-dot"></span><span>NCRP CITIZEN PORTAL</span></div>
+                <div class="trust-pill"><span class="trust-dot"></span><span>CERT-IN INCIDENT DESK</span></div>
+                <div class="trust-pill"><span class="trust-dot"></span><span>STATE POLICE CYBER CELLS</span></div>
+                <div class="trust-pill"><span class="trust-dot"></span><span>RBI ANTI-MULE NETWORK</span></div>
             </div>
         </section>
 
-        <!-- Finale Convert-to-Console Section -->
+        <!-- Section 01: Continuous Consensus Pipeline (Reference Video: "Why security needs to be continuous") -->
+        <section class="pipeline-section" id="pipeline">
+            <div class="section-badge-row">
+                <span class="section-tag">[ 01 // ARCHITECTURE ]</span>
+            </div>
+            <div class="section-head-wrap">
+                <h2 class="section-title">Why Distress Triangulation Must Be Continuous</h2>
+                <p class="section-subtitle">
+                    Extortion syndicates adapt rapidly to static keywords. CyberGuard maintains continuous, multi-vector
+                    triangulation across acoustic, glottal, and contextual intelligence to eliminate false positives.
+                </p>
+            </div>
+
+            <!-- Interactive Continuous Triangulation Loop (Animated Circuit) -->
+            <div class="pipeline-interactive-grid">
+                <div class="pipeline-card active" data-pillar="p1" id="pipeCardP1">
+                    <div class="card-pill-tag">PILLAR 01 // SER</div>
+                    <h3 class="pipe-title">Voice Emotion Recognition</h3>
+                    <p class="pipe-desc">Mel-spectrogram acoustic classifier mapping speech energy and acute panic vectors.</p>
+                    <div class="pipe-stat-row">
+                        <span class="stat-badge">WEIGHT: 35%</span>
+                        <span class="stat-status text-green">ACTIVE STREAM</span>
+                    </div>
+                </div>
+
+                <div class="pipeline-card" data-pillar="p2" id="pipeCardP2">
+                    <div class="card-pill-tag">PILLAR 02 // DSP</div>
+                    <h3 class="pipe-title">SciPy Glottal Tremors</h3>
+                    <p class="pipe-desc">Sub-15ms pitch jitter capturing physical vocal cord spasms under direct threat.</p>
+                    <div class="pipe-stat-row">
+                        <span class="stat-badge">WEIGHT: 35%</span>
+                        <span class="stat-status text-mint">&lt;15MS CAPTURE</span>
+                    </div>
+                </div>
+
+                <div class="pipeline-card" data-pillar="p3" id="pipeCardP3">
+                    <div class="card-pill-tag">PILLAR 03 // STT</div>
+                    <h3 class="pipe-title">Groq Indic Threat Lexicon</h3>
+                    <p class="pipe-desc">Detects spoofed CBI seals, arrest coercion scripts, and asset liquidation commands.</p>
+                    <div class="pipe-stat-row">
+                        <span class="stat-badge">WEIGHT: 30%</span>
+                        <span class="stat-status text-cyan">REGEX + LLM</span>
+                    </div>
+                </div>
+
+                <div class="pipeline-card pipeline-card-consensus" id="pipeCardConsensus">
+                    <div class="card-pill-tag tag-consensus">APEX CONSENSUS</div>
+                    <h3 class="pipe-title">Bayesian Quorum Matrix</h3>
+                    <p class="pipe-desc">Zero-hallucination mathematical synthesis generating instant 0–100 urgency index.</p>
+                    <div class="pipe-stat-row">
+                        <span class="stat-badge badge-consensus">QUORUM: 3/3</span>
+                        <span class="stat-status text-red">TRIAGE SCORE: 94</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 02: Distress Intelligence Capabilities (Reference Video: "Security capabilities" 2x2 Bento Grid) -->
+        <section class="capabilities-section" id="capabilities">
+            <div class="section-badge-row">
+                <span class="section-tag">[ 02 // CAPABILITIES ]</span>
+            </div>
+            <div class="section-head-wrap">
+                <h2 class="section-title">Distress Intelligence Capabilities</h2>
+                <p class="section-subtitle">
+                    Four synchronized layers engineered specifically to defeat psychological digital arrest extortion.
+                </p>
+            </div>
+
+            <div class="bento-capabilities-grid">
+                <!-- Card 1: Acoustic Glottal Tremor DSP (<15ms) -->
+                <div class="bento-card" id="bentoCardDsp">
+                    <div class="bento-card-header">
+                        <div class="bento-mini-pill">
+                            <span class="pulse-dot-green"></span>
+                            <span>Acoustic DSP &bull; &lt;15ms</span>
+                        </div>
+                        <span class="bento-num">01</span>
+                    </div>
+
+                    <!-- Interactive Micro-Widget: Scanning Jitter Oscilloscope -->
+                    <div class="bento-visual-box">
+                        <div class="dsp-oscilloscope-wrap">
+                            <div class="dsp-scan-line"></div>
+                            <div class="dsp-bar-cluster">
+                                <span class="dsp-bar" style="height: 38%;"></span>
+                                <span class="dsp-bar" style="height: 65%;"></span>
+                                <span class="dsp-bar" style="height: 92%;"></span>
+                                <span class="dsp-bar" style="height: 48%;"></span>
+                                <span class="dsp-bar" style="height: 84%;"></span>
+                                <span class="dsp-bar" style="height: 100%;"></span>
+                                <span class="dsp-bar" style="height: 72%;"></span>
+                                <span class="dsp-bar" style="height: 88%;"></span>
+                                <span class="dsp-bar" style="height: 54%;"></span>
+                                <span class="dsp-bar" style="height: 95%;"></span>
+                            </div>
+                            <div class="dsp-status-overlay">
+                                <span>PITCH VOLATILITY: 48.6 Hz (ERRATIC)</span>
+                                <span class="badge-vocal-alert">TREMORS DETECTED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="bento-title">Sub-15ms Vocal Glottal DSP</h3>
+                    <p class="bento-desc">
+                        SciPy acoustic signal analysis isolates micro-tremors and involuntary throat spasms. Identifies
+                        terror even when the victim is coerced to speak calmly or in suppressed whispers.
+                    </p>
+                </div>
+
+                <!-- Card 2: Digital Arrest Coercion Classifier -->
+                <div class="bento-card" id="bentoCardCoercion">
+                    <div class="bento-card-header">
+                        <div class="bento-mini-pill pill-alert">
+                            <span class="pulse-dot-red"></span>
+                            <span>Coercion Detected</span>
+                        </div>
+                        <span class="bento-num">02</span>
+                    </div>
+
+                    <!-- Interactive Micro-Widget: Verified Threat Badges -->
+                    <div class="bento-visual-box">
+                        <div class="threat-taxonomy-cluster">
+                            <div class="threat-pill threat-critical">
+                                <span class="threat-icon">⚠️</span>
+                                <span>CBI / POLICE SPOOFING</span>
+                            </div>
+                            <div class="threat-pill threat-high">
+                                <span class="threat-icon">🔒</span>
+                                <span>VIRTUAL DETENTION SCRIPT</span>
+                            </div>
+                            <div class="threat-pill threat-medium">
+                                <span class="threat-icon">⚡</span>
+                                <span>IMMEDIATE MULE LIQUIDATION</span>
+                            </div>
+                            <div class="threat-pill threat-amber">
+                                <span class="threat-icon">👁️</span>
+                                <span>ISOLATION ORDER (CAMERA ON)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="bento-title">Digital Arrest Coercion Classifier</h3>
+                    <p class="bento-desc">
+                        Identifies organized fraud intimidation playbooks in real time. Flags fake court notices, spoofed
+                        law enforcement warrants, and coercive demands to keep phone calls connected.
+                    </p>
+                </div>
+
+                <!-- Card 3: 2-Pillar Edge Resilient Failsafe -->
+                <div class="bento-card" id="bentoCardFailsafe">
+                    <div class="bento-card-header">
+                        <div class="bento-mini-pill">
+                            <span class="pulse-dot-cyan"></span>
+                            <span>Air-Gapped Failsafe</span>
+                        </div>
+                        <span class="bento-num">03</span>
+                    </div>
+
+                    <!-- Interactive Micro-Widget: Mode Switcher -->
+                    <div class="bento-visual-box">
+                        <div class="failsafe-interactive-wrap">
+                            <div class="failsafe-mode-toggle" id="failsafeToggle" role="button" tabindex="0"
+                                title="Click to toggle between Cloud and Edge Failsafe">
+                                <span class="toggle-option active" id="modeCloud">CLOUD GPU (3-PILLAR)</span>
+                                <span class="toggle-option" id="modeEdge">EDGE CPU (2-PILLAR)</span>
+                            </div>
+                            <div class="failsafe-route-info" id="failsafeRouteInfo">
+                                <span class="route-stat">FAILOVER LATENCY: &lt;12ms</span>
+                                <span class="route-note">CPU DSP (45%) + Regex (55%) &bull; ZERO WAN LAG</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="bento-title">2-Pillar Edge Resilient Failsafe</h3>
+                    <p class="bento-desc">
+                        Guarantees uninterrupted station operation. If cloud GPUs or internet connections disconnect, the
+                        terminal automatically falls back to local CPU heuristics with zero call loss.
+                    </p>
+                </div>
+
+                <!-- Card 4: Cryptographic Chain-of-Custody Forensics -->
+                <div class="bento-card" id="bentoCardForensics">
+                    <div class="bento-card-header">
+                        <div class="bento-mini-pill">
+                            <span class="pulse-dot-mint"></span>
+                            <span>SHA-256 Custody</span>
+                        </div>
+                        <span class="bento-num">04</span>
+                    </div>
+
+                    <!-- Interactive Micro-Widget: Orbiting Vault Rings -->
+                    <div class="bento-visual-box">
+                        <div class="crypto-vault-wrap">
+                            <div class="vault-ring ring-outer"></div>
+                            <div class="vault-ring ring-inner"></div>
+                            <div class="vault-core-node">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3dffa0"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <div class="vault-chip-floating chip-hash">SHA-256: 8f4e...29a1</div>
+                            <div class="vault-chip-floating chip-admissible">COURT-ADMISSIBLE &bull; LOCKED</div>
+                        </div>
+                    </div>
+
+                    <h3 class="bento-title">Wiretap Forensics &amp; Chain-of-Custody</h3>
+                    <p class="bento-desc">
+                        Cryptographically binds second-by-second vocal biomarkers and extracted threat keywords. Exports
+                        tamper-evident PDF evidence dossiers directly suitable for judicial prosecution.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 03: Consensus Across Responders (Reference Video: "Security impact across every team" - Dynamic Stage) -->
+        <section class="responders-section" id="responders">
+            <div class="section-badge-row">
+                <span class="section-tag">[ 03 // OPERATIONAL IMPACT ]</span>
+            </div>
+            <div class="section-head-wrap">
+                <h2 class="section-title">Consensus Intelligence Across Every Responder</h2>
+                <p class="section-subtitle">
+                    Equipping each tier of emergency defense with instantaneous, verified situational awareness.
+                </p>
+            </div>
+
+            <!-- Two-Column Interactive Tab Showcase (Direct match to reference video) -->
+            <div class="responder-showcase-container">
+                <!-- Left Column: Clickable Vertical Responder Tabs -->
+                <div class="responder-tabs-col" role="tablist">
+                    <!-- Tab 1: 1930 Dispatchers -->
+                    <button type="button" class="responder-tab-btn active" role="tab" id="tabDispatcher"
+                        data-responder="dispatcher" aria-selected="true">
+                        <div class="tab-header-row">
+                            <div class="tab-title-side">
+                                <span class="tab-icon">🎧</span>
+                                <span class="tab-role-name">1930 Emergency Dispatchers</span>
+                            </div>
+                            <span class="tab-step-idx">■ 01</span>
+                        </div>
+                        <p class="tab-summary-text">
+                            Auto-ranks incoming call queues by acute panic biomarkers. Surfaces genuine extortion coercion
+                            to queue apex within 3 seconds.
+                        </p>
+                    </button>
+
+                    <!-- Tab 2: Investigators -->
+                    <button type="button" class="responder-tab-btn" role="tab" id="tabInvestigator"
+                        data-responder="investigator" aria-selected="false">
+                        <div class="tab-header-row">
+                            <div class="tab-title-side">
+                                <span class="tab-icon">🛡️</span>
+                                <span class="tab-role-name">Cyber Crime Investigators</span>
+                            </div>
+                            <span class="tab-step-idx">■ 02</span>
+                        </div>
+                        <p class="tab-summary-text">
+                            Second-by-second vocal volatility curves expose fraudulent police claims and pinpoint coercive
+                            interrogation timelines.
+                        </p>
+                    </button>
+
+                    <!-- Tab 3: Bank Fraud Units -->
+                    <button type="button" class="responder-tab-btn" role="tab" id="tabBank"
+                        data-responder="bank" aria-selected="false">
+                        <div class="tab-header-row">
+                            <div class="tab-title-side">
+                                <span class="tab-icon">🏛️</span>
+                                <span class="tab-role-name">Bank Fraud &amp; Asset Freeze Units</span>
+                            </div>
+                            <span class="tab-step-idx">■ 03</span>
+                        </div>
+                        <p class="tab-summary-text">
+                            Immediate golden-hour freeze advisories dispatched to partner banks before victims complete
+                            irreversible wire transfers.
+                        </p>
+                    </button>
+
+                    <!-- Tab 4: Station Commanders -->
+                    <button type="button" class="responder-tab-btn" role="tab" id="tabCommander"
+                        data-responder="commander" aria-selected="false">
+                        <div class="tab-header-row">
+                            <div class="tab-title-side">
+                                <span class="tab-icon">⭐</span>
+                                <span class="tab-role-name">Station Commanders</span>
+                            </div>
+                            <span class="tab-step-idx">■ 04</span>
+                        </div>
+                        <p class="tab-summary-text">
+                            Full audit log oversight, active officer duty rosters, and station-wide triage accuracy metrics
+                            in real time.
+                        </p>
+                    </button>
+                </div>
+
+                <!-- Right Column: Interactive Dynamic Visual Stage (Changes dynamically on tab click) -->
+                <div class="responder-stage-col" aria-live="polite">
+                    <div class="stage-card-frame" id="responderStage">
+                        <!-- Dynamic Background Ambient Gradient -->
+                        <div class="stage-ambient-glow" id="stageGlow"></div>
+
+                        <!-- Card Header & Badge -->
+                        <div class="stage-top-meta">
+                            <div class="stage-badge-pill" id="stageBadgePill">
+                                <span class="pulse-dot"></span>
+                                <span id="stageBadgeText">ACTIVE TRIAGE &bull; CALL #9823</span>
+                            </div>
+                            <span class="stage-unit-tag" id="stageUnitTag">UNIT: 1930 DISPATCH APEX</span>
+                        </div>
+
+                        <!-- Main Responder Showcase Graphic -->
+                        <div class="stage-center-graphic">
+                            <!-- Visual Avatar / Duty Badge Card -->
+                            <div class="stage-avatar-card">
+                                <div class="stage-avatar-emblem" id="stageAvatarEmblem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 24 24"
+                                        fill="none" stroke="#3dffa0" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" id="stageAvatarSvg">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                </div>
+                                <div class="stage-officer-info">
+                                    <h4 class="stage-officer-name" id="stageOfficerName">Operator Sharma</h4>
+                                    <span class="stage-officer-sub" id="stageOfficerSub">1930 Cybercrime Emergency Triage</span>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Telemetry Pills Cluster -->
+                            <div class="stage-telemetry-cluster" id="stagePillsCluster">
+                                <div class="stage-pill pill-red">
+                                    <span class="pill-dot"></span>
+                                    <span>ACUTE PANIC: 94/100</span>
+                                </div>
+                                <div class="stage-pill pill-green">
+                                    <span class="pill-dot"></span>
+                                    <span>PITCH VOLATILITY: 48.6 Hz</span>
+                                </div>
+                                <div class="stage-pill pill-amber">
+                                    <span class="pill-dot"></span>
+                                    <span>DIGITAL ARREST EXTORTION</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Testimonial / Impact Statement Box -->
+                        <div class="stage-quote-box">
+                            <p class="stage-quote-text" id="stageQuoteText">
+                                &ldquo;Prior to CyberGuard, operators spent 8 critical minutes attempting to calm terrified
+                                citizens. Now, acute physical vocal tremors confirm coercion within 3 seconds of call pickup.&rdquo;
+                            </p>
+                        </div>
+
+                        <!-- Action Bar -->
+                        <div class="stage-action-bar">
+                            <a href="index.html" class="stage-action-btn" id="stageActionBtn">
+                                <span id="stageActionText">Launch Dispatch Console</span>
+                                <span class="btn-arrow-circle">↗</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 04: Measurable Operational Outcomes (Reference Video: "Measurable security outcomes") -->
+        <section class="outcomes-section" id="impact">
+            <div class="section-badge-row">
+                <span class="section-tag">[ 04 // MEASURABLE OUTCOMES ]</span>
+            </div>
+            <div class="section-head-wrap">
+                <h2 class="section-title">Measurable Operational Outcomes</h2>
+                <p class="section-subtitle">
+                    How automated acoustic consensus transforms emergency helpline intervention and asset preservation.
+                </p>
+            </div>
+
+            <div class="outcomes-grid">
+                <!-- Left Column: Tactical Glass Evidence Card Stack -->
+                <div class="outcomes-card-stack">
+                    <div class="triage-evidence-card">
+                        <div class="evidence-header-row">
+                            <div class="evidence-title-group">
+                                <span class="evidence-card-title">Distress Consensus Dossier</span>
+                                <span class="evidence-case-id">CASE #CG-2026-9823</span>
+                            </div>
+                            <div class="evidence-score-pill">
+                                <span class="score-val">94</span>
+                                <span class="score-denom">/ 100</span>
+                            </div>
+                        </div>
+
+                        <!-- Verified Checkpoints -->
+                        <div class="evidence-checklist">
+                            <div class="check-item">
+                                <span class="check-box verified">✓</span>
+                                <div class="check-meta">
+                                    <span class="check-label">Acoustic Glottal Tremors Confirmed</span>
+                                    <span class="check-detail">&lt;15ms pitch jitter detected (SciPy DSP)</span>
+                                </div>
+                            </div>
+                            <div class="check-item">
+                                <span class="check-box verified">✓</span>
+                                <div class="check-meta">
+                                    <span class="check-label">Coercion &amp; Impersonation Match</span>
+                                    <span class="check-detail">Spoofed CBI Mumbai VoIP + Virtual Arrest threat</span>
+                                </div>
+                            </div>
+                            <div class="check-item">
+                                <span class="check-box verified">✓</span>
+                                <div class="check-meta">
+                                    <span class="check-label">Consensus Quorum: 3/3 Verified</span>
+                                    <span class="check-detail">Zero algorithmic hallucinations &bull; High confidence</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verified Stamp -->
+                        <div class="evidence-stamp-row">
+                            <span class="stamp-badge">OFFICIALLY AUDITED &bull; TAMPER-EVIDENT SHA-256</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Big Bold Metrics Rows (Matching reference video metrics) -->
+                <div class="outcomes-metrics-col">
+                    <div class="metric-row-item">
+                        <div class="metric-tag-pill">LATENCY</div>
+                        <div class="metric-number-display">&lt;15ms</div>
+                        <p class="metric-description">
+                            Sub-15ms glottal acoustic tremor detection captures micro-spasms without waiting for full sentence transcription.
+                        </p>
+                    </div>
+
+                    <div class="metric-row-item">
+                        <div class="metric-tag-pill">ACCURACY</div>
+                        <div class="metric-number-display">94.8%</div>
+                        <p class="metric-description">
+                            Triangulated 3-pillar consensus eliminating false positives and ensuring valid emergency escalations.
+                        </p>
+                    </div>
+
+                    <div class="metric-row-item">
+                        <div class="metric-tag-pill">GOLDEN HOUR</div>
+                        <div class="metric-number-display">8.4x faster</div>
+                        <p class="metric-description">
+                            Intervention completed before victims reach ATM or digital banking portals to complete fraudulent transfers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 05: Interactive Live Distress Sandbox (Interactive Soundboard & Waveform Simulator) -->
+        <section class="sandbox-section" id="sandbox">
+            <div class="section-badge-row">
+                <span class="section-tag">[ 05 // INTERACTIVE DEMO ]</span>
+            </div>
+            <div class="section-head-wrap">
+                <h2 class="section-title">Test Live Distress Intercept</h2>
+                <p class="section-subtitle">
+                    Simulate real-time helpline incoming calls and observe how the acoustic consensus engine classifies vocal terror.
+                </p>
+            </div>
+
+            <div class="sandbox-console-card">
+                <!-- Sandbox Controls -->
+                <div class="sandbox-controls-row">
+                    <div class="sandbox-btn-group">
+                        <button type="button" class="btn-capsule btn-capsule-solid" id="btnSimPanic"
+                            style="font-size: 0.86rem; padding: 0.45rem 1.15rem;">
+                            <span>⚠️ Simulate Scam Distress Call (#CALL-9823)</span>
+                        </button>
+                        <button type="button" class="btn-capsule btn-capsule-ghost" id="btnSimCalm"
+                            style="font-size: 0.86rem; padding: 0.45rem 1.15rem;">
+                            <span>ℹ️ Simulate Calm Inquiry (#CALL-9819)</span>
+                        </button>
+                    </div>
+                    <div class="sandbox-status-chip" id="sandboxStatusChip">
+                        <span class="pulse-dot"></span>
+                        <span id="sandboxStatusText">READY &bull; CLICK SIMULATION</span>
+                    </div>
+                </div>
+
+                <!-- Oscilloscope Waveform Canvas -->
+                <div class="sandbox-canvas-wrap">
+                    <canvas id="sandboxWaveCanvas" width="900" height="95"></canvas>
+                </div>
+
+                <!-- Telemetry Output Row -->
+                <div class="sandbox-output-row">
+                    <div class="sandbox-gauge-box">
+                        <span class="output-label">URGENCY SCORE</span>
+                        <div class="output-score-val" id="sandboxScoreVal">93<span class="score-sub">/100</span></div>
+                        <span class="output-status-tag tag-critical" id="sandboxScoreTag">CRITICAL TRIAGE</span>
+                    </div>
+
+                    <div class="sandbox-transcript-box">
+                        <span class="output-label">LIVE TRANSCRIPT TELEMETRY</span>
+                        <p class="output-quote" id="sandboxTranscriptText">
+                            &ldquo;They told me they are from CBI Mumbai and my bank account is linked to money laundering...
+                            they said I cannot disconnect this call or local police will reach my home...&rdquo;
+                        </p>
+                        <div class="output-tags-row" id="sandboxTagsRow">
+                            <span class="micro-tag red">#DIGITAL_ARREST</span>
+                            <span class="micro-tag red">#ACUTE_PANIC</span>
+                            <span class="micro-tag green">#VOCAL_TREMORS_48.6Hz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finale CTA Banner (Reference Video: High-Contrast Bottom Call to Action) -->
         <section class="finale-section" id="console">
-            <h2 class="finale-heading">
-                Dispatch with Clarity <span class="pencil-glyph">↗</span>
-            </h2>
-            <p class="finale-desc">
-                Empowering cybercrime dispatchers and investigation teams with instantaneous duress verification and
-                consensus intelligence.
-            </p>
-            <div class="finale-actions">
-                <a href="login.html" class="btn-capsule btn-capsule-solid" id="btnFinaleLogin"
-                    style="font-size: 0.90rem; padding: 0.55rem 0.60rem 0.55rem 1.4rem;">
-                    <span>Investigator Sign In</span>
-                    <span class="btn-arrow-circle">↗</span>
-                </a>
+            <div class="finale-banner-card">
+                <div class="finale-ambient-glow"></div>
+                <h2 class="finale-heading">
+                    Triage Extortion Calls with Algorithmic Certainty <span class="pencil-glyph">↗</span>
+                </h2>
+                <p class="finale-desc">
+                    Deploy CyberGuard across emergency 1930 dispatch lines and cybercrime investigation terminals.
+                    Verify duress within 15 milliseconds.
+                </p>
+                <div class="finale-actions">
+                    <button type="button" class="btn-capsule btn-capsule-solid" id="btnFinaleLaunch"
+                        style="font-size: 0.92rem; padding: 0.55rem 0.55rem 0.55rem 1.45rem;">
+                        <span>Launch Command Console</span>
+                        <span class="btn-arrow-circle" style="width: 32px; height: 32px;">↗</span>
+                    </button>
+                    <a href="login.html" class="btn-capsule btn-capsule-ghost" id="btnFinaleLogin"
+                        style="font-size: 0.90rem; padding: 0.55rem 1.35rem;">
+                        <span>Investigator Sign In</span>
+                    </a>
+                </div>
             </div>
         </section>
 
-        <!-- Institutional Documentation & Architecture Footer -->
+        <!-- Tactical System Footer -->
         <footer class="system-footer" id="docs">
             <div class="footer-grid">
                 <div class="footer-col col-brand">
                     <div class="footer-brand">
-                        <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                        <span class="brand-glyph">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"
                                 viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round"
                                 stroke-linejoin="round" stroke-width="1.75" aria-hidden="true">
                                 <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
-                            </svg></span>
-                        <span class="brand-title">CYBERGUARD</span>
+                            </svg>
+                        </span>
+                        <span class="brand-text">CYBERGUARD</span>
                     </div>
-                    <p class="footer-tagline">
-                        Real-Time Speech Emotion &amp; Vocal Biomarker Triage Architecture for Cybercrime Helplines
-                        (1930 / 112) and Forensic Audio Analysts.
+                    <p class="footer-summary">
+                        Institutional multi-modal consensus platform assisting cybercrime helplines (1930 / 112)
+                        with real-time vocal biomarker distress triage.
                     </p>
-                    <div class="footer-compliance-stamp">
-                        RFC 6234 SHA-256 Chain-of-Custody Compliant
-                    </div>
                 </div>
 
                 <div class="footer-col">
-                    <h4 class="footer-heading">Protocol Architecture</h4>
+                    <h4 class="footer-heading">Platform Architecture</h4>
                     <ul class="footer-links">
-                        <li><a href="#protocol" class="footer-link">Pillar 1: emotion2vec+ SER Model</a></li>
-                        <li><a href="#protocol" class="footer-link">Pillar 2: SciPy Acoustic Tremors (&lt;15ms)</a></li>
-                        <li><a href="#protocol" class="footer-link">Pillar 3: Groq LPU Whisper Indic STT</a></li>
-                        <li><a href="#protocol" class="footer-link">Air-Gapped 2-Pillar Resilient Failsafe</a></li>
-                        <li><a href="index.html?load=wiretap" class="footer-link">Cryptographic Evidence Vault
-                                Hashing</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-col">
-                    <h4 class="footer-heading">Forensic Standards</h4>
-                    <ul class="footer-links">
-                        <li><span class="footer-static-item">Deterministic SHA-256 Audit Trails</span></li>
-                        <li><span class="footer-static-item">Investigator RBAC Access Control</span></li>
+                        <li><span class="footer-static-item">Pillar 1: Voice Emotion Recognition (SER)</span></li>
+                        <li><span class="footer-static-item">Pillar 2: SciPy Vocal Glottal Tremors (DSP)</span></li>
+                        <li><span class="footer-static-item">Pillar 3: Groq Indic Threat Keywords (STT)</span></li>
+                        <li><span class="footer-static-item">Edge Resilient Air-Gapped Fallback</span></li>
+                        <li><span class="footer-static-item">Tamper-Evident SHA-256 Wiretaps</span></li>
                     </ul>
                 </div>
 
@@ -285,14 +743,10 @@
                     <h4 class="footer-heading">Investigator Resources</h4>
                     <ul class="footer-links">
                         <li><a href="login.html" class="footer-link-highlight">Authorized Investigator Portal ↗</a></li>
-                        <li><a href="index.html?load=CALL-9823" class="footer-link">Inspect Digital Arrest
-                                (#CALL-9823)</a></li>
-                        <li><a href="index.html?load=wiretap" class="footer-link">Inspect Forensic Case Wiretaps</a>
-                        </li>
-                        <li><a href="index.html?action=failsafe" class="footer-link">Test Edge Resilient Failsafe</a>
-                        </li>
-                        <li><a href="/api/health" target="_blank" class="footer-link">Diagnostic API Health Endpoint</a>
-                        </li>
+                        <li><a href="index.html?load=CALL-9823" class="footer-link">Inspect Digital Arrest (#CALL-9823)</a></li>
+                        <li><a href="index.html?load=wiretap" class="footer-link">Inspect Forensic Case Wiretaps</a></li>
+                        <li><a href="index.html?action=failsafe" class="footer-link">Test Edge Resilient Failsafe</a></li>
+                        <li><a href="/api/health" target="_blank" class="footer-link">Diagnostic API Health Endpoint</a></li>
                     </ul>
                 </div>
             </div>
@@ -308,11 +762,13 @@
         </footer>
     </main>
 
-    <!-- Clean Floating Bottom Dock -->
+    <!-- Clean Floating Bottom Dock (Synchronized Section Highlighting) -->
     <nav class="floating-dock" aria-label="Quick page navigation">
         <a class="dock-item active" href="#hero" id="dockOverview">Overview</a>
-        <a class="dock-item" href="#protocol" id="dockProtocol">Protocol Cards</a>
-        <a class="dock-item" href="#docs" id="dockDocs">Documentation</a>
+        <a class="dock-item" href="#pipeline" id="dockPipeline">Architecture</a>
+        <a class="dock-item" href="#capabilities" id="dockCapabilities">Capabilities</a>
+        <a class="dock-item" href="#responders" id="dockResponders">Responders</a>
+        <a class="dock-item" href="#impact" id="dockImpact">Outcomes</a>
         <a class="dock-item" href="index.html" id="btnDockConsole"><span class="dock-dot"></span>Launch Console</a>
     </nav>
 
@@ -321,6 +777,7 @@
         (() => {
             "use strict";
 
+            // Evaluator Demo Session Setup
             function setupEvaluatorSession() {
                 if (!sessionStorage.getItem("cyberguard_token")) {
                     sessionStorage.setItem("cyberguard_token", "evaluator_token_2026_demo");
@@ -334,8 +791,10 @@
                 }
             }
 
+            // Console Launcher Buttons
             const launchButtons = [
                 document.getElementById("btnHeroLaunch"),
+                document.getElementById("btnFinaleLaunch"),
                 document.getElementById("btnDockConsole")
             ];
             launchButtons.forEach(btn => {
@@ -348,28 +807,275 @@
                 }
             });
 
+            // 1. Responders Interactive Showcase Data
+            const responderData = {
+                dispatcher: {
+                    badge: "ACTIVE TRIAGE • CALL #9823",
+                    unit: "UNIT: 1930 DISPATCH APEX",
+                    avatarName: "Operator Sharma",
+                    avatarSub: "1930 Cybercrime Emergency Triage",
+                    avatarSvg: `<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>`,
+                    pills: [
+                        { text: "ACUTE PANIC: 94/100", cls: "pill-red" },
+                        { text: "PITCH VOLATILITY: 48.6 Hz", cls: "pill-green" },
+                        { text: "DIGITAL ARREST EXTORTION", cls: "pill-amber" }
+                    ],
+                    quote: "“Prior to CyberGuard, operators spent 8 critical minutes attempting to calm terrified citizens. Now, acute physical vocal tremors confirm coercion within 3 seconds of call pickup.”",
+                    actionText: "Inspect Call #9823 on Console",
+                    actionUrl: "index.html?load=CALL-9823"
+                },
+                investigator: {
+                    badge: "EVIDENCE DOSSIER • CASE #CG-9823",
+                    unit: "UNIT: CYBER CRIME INVESTIGATION WING",
+                    avatarName: "Insp. Haziq Shaikh",
+                    avatarSub: "Lead Cybercrime Investigator (INV-7842)",
+                    avatarSvg: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>`,
+                    pills: [
+                        { text: "SPOOFED MUMBAI CBI VoIP", cls: "pill-red" },
+                        { text: "COERCION SCRIPT MATCHED", cls: "pill-cyan" },
+                        { text: "SHA-256 TAMPER-PROOF", cls: "pill-mint" }
+                    ],
+                    quote: "“Second-by-second vocal pitch shifts reveal exactly when the fraud syndicate threatened arrest and demanded bank liquidation. We present these cryptographic acoustic timelines in court.”",
+                    actionText: "Open Investigator Wiretap Console",
+                    actionUrl: "index.html?load=wiretap"
+                },
+                bank: {
+                    badge: "GOLDEN HOUR • ACCOUNT FREEZE ACTIVE",
+                    unit: "UNIT: FINANCIAL FRAUD & ANTI-MULE DESK",
+                    avatarName: "Officer R. Menon",
+                    avatarSub: "State Anti-Mule Nodal Coordinator",
+                    avatarSvg: `<rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line>`,
+                    pills: [
+                        { text: "FREEZE ADVISORY TRIGGERED", cls: "pill-red" },
+                        { text: "FLAGGED MULE ROUTE: ₹14.5L", cls: "pill-amber" },
+                        { text: "ZERO ESCAPE WINDOW", cls: "pill-green" }
+                    ],
+                    quote: "“The Golden Hour window is preserved. Our automated bank freeze advisories dispatch before the victim is pressured into initiating an illicit RTGS/NEFT transaction.”",
+                    actionText: "View Bank Freeze Telemetry",
+                    actionUrl: "index.html?load=CALL-9823"
+                },
+                commander: {
+                    badge: "STATION COMMAND • 100% OPERATIONAL",
+                    unit: "UNIT: CYBER POLICE HEADQUARTERS",
+                    avatarName: "DCP V. Patil",
+                    avatarSub: "Superintendent of Cyber Police",
+                    avatarSvg: `<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>`,
+                    pills: [
+                        { text: "ACTIVE SQUAD: 8 OFFICERS", cls: "pill-mint" },
+                        { text: "STATION AUDIT TRAIL LOGGED", cls: "pill-cyan" },
+                        { text: "AIR-GAPPED FAILSAFE READY", cls: "pill-green" }
+                    ],
+                    quote: "“Real-time station oversight with complete supervisor escalation and duty roster synchronization. We maintain 100% availability even during network disruptions.”",
+                    actionText: "Open Station Commander Console",
+                    actionUrl: "admin.html"
+                }
+            };
+
+            const tabButtons = document.querySelectorAll(".responder-tab-btn");
+            const stageBadgeText = document.getElementById("stageBadgeText");
+            const stageUnitTag = document.getElementById("stageUnitTag");
+            const stageAvatarName = document.getElementById("stageOfficerName");
+            const stageAvatarSub = document.getElementById("stageOfficerSub");
+            const stageAvatarSvg = document.getElementById("stageAvatarSvg");
+            const stagePillsCluster = document.getElementById("stagePillsCluster");
+            const stageQuoteText = document.getElementById("stageQuoteText");
+            const stageActionBtn = document.getElementById("stageActionBtn");
+            const stageActionText = document.getElementById("stageActionText");
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const responderKey = btn.getAttribute("data-responder");
+                    if (!responderData[responderKey]) return;
+
+                    tabButtons.forEach(b => {
+                        b.classList.remove("active");
+                        b.setAttribute("aria-selected", "false");
+                    });
+                    btn.classList.add("active");
+                    btn.setAttribute("aria-selected", "true");
+
+                    const data = responderData[responderKey];
+
+                    // Smooth update
+                    if (stageBadgeText) stageBadgeText.textContent = data.badge;
+                    if (stageUnitTag) stageUnitTag.textContent = data.unit;
+                    if (stageAvatarName) stageAvatarName.textContent = data.avatarName;
+                    if (stageAvatarSub) stageAvatarSub.textContent = data.avatarSub;
+                    if (stageAvatarSvg) stageAvatarSvg.innerHTML = data.avatarSvg;
+                    if (stageQuoteText) stageQuoteText.textContent = data.quote;
+
+                    if (stagePillsCluster) {
+                        stagePillsCluster.innerHTML = data.pills.map(p =>
+                            `<div class="stage-pill ${p.cls}"><span class="pill-dot"></span><span>${p.text}</span></div>`
+                        ).join("");
+                    }
+
+                    if (stageActionBtn && stageActionText) {
+                        stageActionText.textContent = data.actionText;
+                        stageActionBtn.setAttribute("href", data.actionUrl);
+                        stageActionBtn.onclick = (e) => {
+                            e.preventDefault();
+                            setupEvaluatorSession();
+                            window.location.href = data.actionUrl;
+                        };
+                    }
+                });
+            });
+
+            // 2. Failsafe Interactive Toggle
+            const failsafeToggle = document.getElementById("failsafeToggle");
+            const modeCloud = document.getElementById("modeCloud");
+            const modeEdge = document.getElementById("modeEdge");
+            const failsafeRouteInfo = document.getElementById("failsafeRouteInfo");
+
+            if (failsafeToggle) {
+                failsafeToggle.addEventListener("click", () => {
+                    const isCloudActive = modeCloud.classList.contains("active");
+                    if (isCloudActive) {
+                        modeCloud.classList.remove("active");
+                        modeEdge.classList.add("active");
+                        if (failsafeRouteInfo) {
+                            failsafeRouteInfo.innerHTML = `
+                                <span class="route-stat text-amber">AIR-GAPPED EDGE ENGAGED (&lt;8ms)</span>
+                                <span class="route-note">CPU DSP (45%) + Local Regex (55%) &bull; 100% WAN RESILIENT</span>
+                            `;
+                        }
+                    } else {
+                        modeEdge.classList.remove("active");
+                        modeCloud.classList.add("active");
+                        if (failsafeRouteInfo) {
+                            failsafeRouteInfo.innerHTML = `
+                                <span class="route-stat">FAILOVER LATENCY: &lt;12ms</span>
+                                <span class="route-note">CPU DSP (45%) + Regex (55%) &bull; ZERO WAN LAG</span>
+                            `;
+                        }
+                    }
+                });
+            }
+
+            // 3. Interactive Live Distress Sandbox Waveform & Simulator
+            const btnSimPanic = document.getElementById("btnSimPanic");
+            const btnSimCalm = document.getElementById("btnSimCalm");
+            const sandboxCanvas = document.getElementById("sandboxWaveCanvas");
+            const sandboxScoreVal = document.getElementById("sandboxScoreVal");
+            const sandboxScoreTag = document.getElementById("sandboxScoreTag");
+            const sandboxStatusText = document.getElementById("sandboxStatusText");
+            const sandboxTranscriptText = document.getElementById("sandboxTranscriptText");
+            const sandboxTagsRow = document.getElementById("sandboxTagsRow");
+
+            let currentSimMode = "panic";
+            let animTime = 0;
+
+            if (sandboxCanvas) {
+                const ctx = sandboxCanvas.getContext("2d");
+
+                function drawWaveform() {
+                    ctx.clearRect(0, 0, sandboxCanvas.width, sandboxCanvas.height);
+                    const width = sandboxCanvas.width;
+                    const height = sandboxCanvas.height;
+                    const midY = height / 2;
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, midY);
+
+                    const isPanic = currentSimMode === "panic";
+                    const amp = isPanic ? 28 : 8;
+                    const freq = isPanic ? 0.045 : 0.015;
+                    const strokeColor = isPanic ? "#ff4d4d" : "#2fe890";
+
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 2.2;
+                    ctx.shadowBlur = isPanic ? 14 : 6;
+                    ctx.shadowColor = strokeColor;
+
+                    for (let x = 0; x < width; x += 4) {
+                        const jitter = isPanic ? Math.sin(x * 0.12 + animTime * 0.2) * (Math.random() * 8) : 0;
+                        const y = midY + Math.sin(x * freq + animTime * 0.08) * amp + jitter;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+
+                    animTime += 1;
+                    requestAnimationFrame(drawWaveform);
+                }
+                requestAnimationFrame(drawWaveform);
+            }
+
+            if (btnSimPanic) {
+                btnSimPanic.addEventListener("click", () => {
+                    currentSimMode = "panic";
+                    if (sandboxScoreVal) sandboxScoreVal.innerHTML = `93<span class="score-sub">/100</span>`;
+                    if (sandboxScoreTag) {
+                        sandboxScoreTag.textContent = "CRITICAL TRIAGE";
+                        sandboxScoreTag.className = "output-status-tag tag-critical";
+                    }
+                    if (sandboxStatusText) sandboxStatusText.textContent = "INTERCEPTING • ACUTE DURESS";
+                    if (sandboxTranscriptText) {
+                        sandboxTranscriptText.innerHTML = `&ldquo;They told me they are from CBI Mumbai and my bank account is linked to money laundering... they said I cannot disconnect this call or local police will reach my home...&rdquo;`;
+                    }
+                    if (sandboxTagsRow) {
+                        sandboxTagsRow.innerHTML = `
+                            <span class="micro-tag red">#DIGITAL_ARREST</span>
+                            <span class="micro-tag red">#ACUTE_PANIC</span>
+                            <span class="micro-tag green">#VOCAL_TREMORS_48.6Hz</span>
+                        `;
+                    }
+                });
+            }
+
+            if (btnSimCalm) {
+                btnSimCalm.addEventListener("click", () => {
+                    currentSimMode = "calm";
+                    if (sandboxScoreVal) sandboxScoreVal.innerHTML = `14<span class="score-sub">/100</span>`;
+                    if (sandboxScoreTag) {
+                        sandboxScoreTag.textContent = "ROUTINE INQUIRY";
+                        sandboxScoreTag.className = "output-status-tag tag-routine";
+                    }
+                    if (sandboxStatusText) sandboxStatusText.textContent = "INTERCEPTING • NORMAL CADENCE";
+                    if (sandboxTranscriptText) {
+                        sandboxTranscriptText.innerHTML = `&ldquo;Hello officer, I just wanted to verify whether my previous lost debit card acknowledgement receipt has been processed or if I should visit the station.&rdquo;`;
+                    }
+                    if (sandboxTagsRow) {
+                        sandboxTagsRow.innerHTML = `
+                            <span class="micro-tag green">#ROUTINE_INQUIRY</span>
+                            <span class="micro-tag green">#CALM_VOCAL_CADENCE</span>
+                            <span class="micro-tag gray">#NO_THREAT_KEYWORDS</span>
+                        `;
+                    }
+                });
+            }
+
+            // 4. Smooth Section Dock Navigation & Active Highlights
             const dockOverview = document.getElementById("dockOverview");
-            const dockProtocol = document.getElementById("dockProtocol");
-            const dockDocs = document.getElementById("dockDocs");
+            const dockPipeline = document.getElementById("dockPipeline");
+            const dockCapabilities = document.getElementById("dockCapabilities");
+            const dockResponders = document.getElementById("dockResponders");
+            const dockImpact = document.getElementById("dockImpact");
 
             window.addEventListener("scroll", () => {
-                const scrollPos = window.scrollY + 250;
-                const heroSection = document.getElementById("hero");
-                const protocolSection = document.getElementById("protocol");
-                const docsSection = document.getElementById("docs");
+                const scrollPos = window.scrollY + 280;
+                const heroSec = document.getElementById("hero");
+                const pipeSec = document.getElementById("pipeline");
+                const capSec = document.getElementById("capabilities");
+                const respSec = document.getElementById("responders");
+                const impactSec = document.getElementById("impact");
 
-                if (docsSection && scrollPos >= docsSection.offsetTop) {
-                    if (dockDocs) dockDocs.classList.add("active");
-                    if (dockProtocol) dockProtocol.classList.remove("active");
-                    if (dockOverview) dockOverview.classList.remove("active");
-                } else if (protocolSection && scrollPos >= protocolSection.offsetTop) {
-                    if (dockProtocol) dockProtocol.classList.add("active");
-                    if (dockDocs) dockDocs.classList.remove("active");
-                    if (dockOverview) dockOverview.classList.remove("active");
-                } else {
-                    if (dockOverview) dockOverview.classList.add("active");
-                    if (dockProtocol) dockProtocol.classList.remove("active");
-                    if (dockDocs) dockDocs.classList.remove("active");
+                const items = [
+                    { sec: impactSec, dock: dockImpact },
+                    { sec: respSec, dock: dockResponders },
+                    { sec: capSec, dock: dockCapabilities },
+                    { sec: pipeSec, dock: dockPipeline },
+                    { sec: heroSec, dock: dockOverview }
+                ];
+
+                let matched = false;
+                for (const item of items) {
+                    if (item.sec && scrollPos >= item.sec.offsetTop && !matched) {
+                        if (item.dock) item.dock.classList.add("active");
+                        matched = true;
+                    } else if (item.dock) {
+                        item.dock.classList.remove("active");
+                    }
                 }
             }, { passive: true });
         })();
