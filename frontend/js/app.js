@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else {
-            window.location.replace("login.html");
+            window.location.replace("landing.html");
         }
     }
 
@@ -1125,7 +1125,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const finalDurationStr = `${mm}:${ss}`;
 
             const peakScore = Math.round(liveSessionData.peakScore);
-            const avgScore = liveSessionData.scoresList.length > 0 
+            const avgScore = liveSessionData.scoresList.length > 0
                 ? Math.round(liveSessionData.scoresList.reduce((a, b) => a + b, 0) / liveSessionData.scoresList.length)
                 : peakScore;
 
@@ -1404,8 +1404,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? d.peak_emotions
                 : ((d.average_emotions && Object.keys(d.average_emotions).length > 0) ? d.average_emotions : {});
 
-            const effectiveDominantEmo = d.dominant_emotion || 
-                (d.timeline && d.timeline.find(t => t.dominant_emotion && t.dominant_emotion !== "UNAVAILABLE")?.dominant_emotion) || 
+            const effectiveDominantEmo = d.dominant_emotion ||
+                (d.timeline && d.timeline.find(t => t.dominant_emotion && t.dominant_emotion !== "UNAVAILABLE")?.dominant_emotion) ||
                 "NEUTRAL";
 
             // Peak pitch std across the recording
@@ -1438,4 +1438,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial Load
     loadCallQueue();
+
+    // Support URL parameters for landing page fast-track evaluations
+    const landingParams = new URLSearchParams(window.location.search);
+    const loadTarget = landingParams.get("load");
+    const actionTarget = landingParams.get("action");
+
+    if (loadTarget === "CALL-9823" || loadTarget === "panic") {
+        setTimeout(() => {
+            const panicCall = localCallsState.find(c => c.call_id === "CALL-9823");
+            if (panicCall) setActiveCall(panicCall);
+        }, 600);
+    } else if (loadTarget === "wiretap" || loadTarget === "forensics") {
+        setTimeout(() => {
+            if (sampleSelect) {
+                sampleSelect.value = "sample_digital_arrest";
+                if (btnLoadSample) btnLoadSample.click();
+            }
+        }, 800);
+    } else if (actionTarget === "failsafe") {
+        setTimeout(() => {
+            if (queueAlert) {
+                queueAlert.textContent = "🛡️ 2-Pillar Resilience Failsafe Active: Zero-Downtime DSP & Indic Regex consensus mode running.";
+                queueAlert.classList.add("active");
+            }
+        }, 600);
+    }
 });

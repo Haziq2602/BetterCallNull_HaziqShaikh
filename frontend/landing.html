@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#020403">
+    <title>CyberGuard — Boutique Speech Emotion & Triage Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/landing.css?v=4">
+</head>
+
+<body>
+    <!-- Top Ambient Spotlight Flare -->
+    <div class="ambient-spotlight" aria-hidden="true"></div>
+
+    <!-- MAIN THEATER STAGE CANVAS -->
+    <div class="stage-canvas">
+        <div class="stage-content">
+            <!-- Top Bar: Minimal Brand + Center Nav + Boutique Capsule Button -->
+            <header class="top-bar">
+                <a href="landing.html" class="brand-badge" id="brandLogo">
+                    <span class="brand-glyph">⬡</span>
+                    <span class="brand-text">CYBERGUARD</span>
+                </a>
+
+                <nav class="nav-pill-group" aria-label="Primary navigation">
+                    <a href="#hero" class="nav-pill-link active" id="navHome">Overview</a>
+                    <a href="#protocol" class="nav-pill-link" id="navProtocol">Protocol Deck</a>
+                    <a href="#protocol" class="nav-pill-link" id="navSensors">3-Pillar Sensors</a>
+                    <a href="index.html?load=wiretap" class="nav-pill-link" id="navForensics">Forensics</a>
+                </nav>
+
+                <a href="login.html" class="btn-capsule" id="btnTopLogin" title="Authorized Investigator Terminal">
+                    <span>Investigator Access</span>
+                    <span class="btn-arrow-circle">↗</span>
+                </a>
+            </header>
+
+            <!-- Hero Typography Section (Velopay / InferaAI High-Contrast Elegance) -->
+            <section class="hero-block" id="hero">
+                <div class="hero-pill-badge">
+                    <span class="pulse-dot"></span>
+                    <span>LIVE DISTRESS TELEMETRY • HELPLINE 1930 / 112</span>
+                </div>
+
+                <h1 class="hero-heading">
+                    AI Distress Intelligence<br>
+                    <strong>Consensus Triage Console</strong>
+                </h1>
+
+                <p class="hero-lead">
+                    Assisting cybercrime helplines (1930 / 112) with real-time vocal terror biomarkers, pitch spasms under 15ms, and extortion context intelligence.
+                </p>
+
+                <div class="hero-actions-row">
+                    <button type="button" class="btn-capsule btn-capsule-solid" id="btnHeroLaunch" style="font-size: 0.92rem; padding: 0.52rem 0.52rem 0.52rem 1.45rem;">
+                        <span>Launch Command Console</span>
+                        <span class="btn-arrow-circle" style="width: 32px; height: 32px;">↗</span>
+                    </button>
+                    <button type="button" class="btn-capsule btn-capsule-ghost" id="btnHeroWalkthrough" style="font-size: 0.88rem; padding: 0.52rem 1.25rem;">
+                        <span>▶ Quick Walkthrough</span>
+                    </button>
+                </div>
+
+                <!-- Velopay / InferaAI Curved Telemetry Horizon (SVG + Glass Badges, Zero Lag) -->
+                <div class="telemetry-horizon-wrap" aria-hidden="true">
+                    <svg class="telemetry-horizon-svg" viewBox="0 0 900 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="horizonGrad" x1="450" y1="30" x2="450" y2="180" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.5" />
+                                <stop offset="60%" stop-color="#2fe890" stop-opacity="0.12" />
+                                <stop offset="100%" stop-color="#020403" stop-opacity="0" />
+                            </linearGradient>
+                            <linearGradient id="arcStroke" x1="0" y1="90" x2="900" y2="90" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.1" />
+                                <stop offset="30%" stop-color="#3dffa0" stop-opacity="0.8" />
+                                <stop offset="50%" stop-color="#ffffff" stop-opacity="1" />
+                                <stop offset="70%" stop-color="#3dffa0" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#3dffa0" stop-opacity="0.1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Horizon glow fill -->
+                        <path d="M 50 180 Q 450 40 850 180 Z" fill="url(#horizonGrad)" />
+                        <!-- Primary illuminated curved arc -->
+                        <path d="M 50 180 Q 450 40 850 180" stroke="url(#arcStroke)" stroke-width="2" stroke-linecap="round" />
+                        <!-- Secondary pulse grid arcs -->
+                        <path d="M 120 180 Q 450 70 780 180" stroke="rgba(61, 255, 160, 0.25)" stroke-width="1" stroke-dasharray="4 6" />
+                        <path d="M 220 180 Q 450 100 680 180" stroke="rgba(61, 255, 160, 0.15)" stroke-width="1" />
+                        <!-- Telemetry Nodes -->
+                        <circle cx="210" cy="120" r="4" fill="#3dffa0" />
+                        <circle cx="340" cy="80" r="4.5" fill="#ffffff" />
+                        <circle cx="450" cy="55" r="5" fill="#3dffa0" />
+                        <circle cx="560" cy="80" r="4.5" fill="#ffffff" />
+                        <circle cx="690" cy="120" r="4" fill="#3dffa0" />
+                        <!-- Connection Rays -->
+                        <line x1="340" y1="80" x2="450" y2="55" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                        <line x1="450" y1="55" x2="560" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                    </svg>
+
+                    <!-- Floating Telemetry Chips (InferaAI style) -->
+                    <div class="horizon-floating-chips">
+                        <div class="floating-chip chip-left" title="Active Triage Intercept">
+                            <span class="chip-dot red"></span>
+                            <span>94/100 CRITICAL TRIAGE</span>
+                        </div>
+                        <div class="floating-chip chip-right" title="SciPy Acoustic Tremor DSP">
+                            <span class="chip-dot green"></span>
+                            <span>&lt;15MS VOCAL TREMORS</span>
+                        </div>
+                        <div class="floating-chip chip-center" title="Consensus Integrity">
+                            <span class="chip-dot amber"></span>
+                            <span>3-PILLAR CONSENSUS VERIFIED</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trust Strip / Compliance Badges (Velopay style) -->
+                <div class="trust-strip">
+                    <span class="trust-item"><span class="dot"></span> MHA 1930 HELPLINE SPEC</span>
+                    <span class="trust-item"><span class="dot"></span> SCIPY DSP &lt;15MS</span>
+                    <span class="trust-item"><span class="dot"></span> GROQ LPU 750 T/S</span>
+                    <span class="trust-item"><span class="dot"></span> SHA-256 EVIDENCE VAULT</span>
+                </div>
+            </section>
+
+            <!-- Horizontal Scroll Protocol Deck (Seamless Native Scroll & Staggered Slow Entrance) -->
+            <section class="protocol-section" id="protocol">
+                <div class="section-header-row">
+                    <div class="section-header-title">
+                        <span>[ 01-04 // PROTOCOL MODULES ]</span>
+                    </div>
+                    <div class="deck-nav-controls">
+                        <button type="button" class="deck-nav-btn" id="scrollDeckLeft" title="Scroll left" aria-label="Scroll left">←</button>
+                        <button type="button" class="deck-nav-btn" id="scrollDeckRight" title="Scroll right" aria-label="Scroll right">→</button>
+                    </div>
+                </div>
+
+                <!-- Horizontal Scroll Track (Native, silky-smooth, zero wheel-delay) -->
+                <div class="horizontal-scroll-container" id="cardsTrack">
+                    <!-- Card 01: Live Call Queue & Triage -->
+                    <div class="protocol-card" id="card01">
+                        <div>
+                            <div class="card-top-row">
+                                <span class="col-index">[ 01 // DISPATCH ]</span>
+                                <span class="metric-pill danger">94/100 Critical</span>
+                            </div>
+                            <h2 class="col-title">Live Call Queue &amp; Triage</h2>
+                            <p class="col-desc">
+                                Emergency calls are auto-ranked by multi-modal distress scores. Critical extortion threats surface immediately to queue apex.
+                            </p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-card-action" id="btnLoadDigitalArrest" title="Simulate Digital Arrest Call">
+                                <span>Load Digital Arrest (#CALL-9823)</span>
+                                <span class="btn-arrow-circle">↗</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 02: 3-Pillar Multimodal Telemetry -->
+                    <div class="protocol-card" id="card02">
+                        <div>
+                            <div class="card-top-row">
+                                <span class="col-index">[ 02 // SENSORS ]</span>
+                                <span class="metric-pill">3 Specialists</span>
+                            </div>
+                            <h2 class="col-title">3-Pillar Multimodal Telemetry</h2>
+                            <p class="col-desc">
+                                Simultaneous evaluation of Voice Emotion (P1), SciPy Vocal Tremors &lt;15ms (P2), and Indic Threat Keywords (P3).
+                            </p>
+                            <div class="telemetry-pills-wrap">
+                                <button type="button" class="telemetry-chip p1" id="pillP1" title="Inspect Emotion SER">P1 Emotion (SER)</button>
+                                <button type="button" class="telemetry-chip p2" id="pillP2" title="Inspect SciPy Acoustic DSP">P2 Acoustic DSP</button>
+                                <button type="button" class="telemetry-chip p3" id="pillP3" title="Inspect Groq Whisper STT">P3 Groq Whisper</button>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-card-action" id="btnInspectPillars" title="Inspect Telemetry Breakdown">
+                                <span>Inspect Telemetry Matrix</span>
+                                <span class="btn-arrow-circle">↗</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 03: 2-Pillar Resilience Failsafe -->
+                    <div class="protocol-card" id="card03">
+                        <div>
+                            <div class="card-top-row">
+                                <span class="col-index">[ 03 // AIR-GAPPED ]</span>
+                                <span class="metric-pill">0ms Downtime</span>
+                            </div>
+                            <h2 class="col-title">2-Pillar Resilience Failsafe</h2>
+                            <p class="col-desc">
+                                Automatic failover to pure CPU edge DSP (45%) and local regex taxonomy (55%) when cloud GPU models warm up.
+                            </p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-card-action" id="btnTestFailsafe" title="Test Air-Gapped Resilient Failsafe">
+                                <span>Test 2-Pillar Failsafe</span>
+                                <span class="btn-arrow-circle">↗</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 04: Wiretap Forensics & Chain-of-Custody -->
+                    <div class="protocol-card" id="card04">
+                        <div>
+                            <div class="card-top-row">
+                                <span class="col-index">[ 04 // EVIDENCE ]</span>
+                                <span class="metric-pill">SHA-256 Vault</span>
+                            </div>
+                            <h2 class="col-title">Wiretap Forensics &amp; Chain-of-Custody</h2>
+                            <p class="col-desc">
+                                Second-by-second timeline analysis of case wiretaps with cryptographic SHA-256 tamper-evident integrity hashing.
+                            </p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-card-action" id="btnInspectWiretaps" title="Inspect Wiretap Case Audio">
+                                <span>Inspect Case Wiretaps</span>
+                                <span class="btn-arrow-circle">↗</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Finale Convert-to-Console Section -->
+            <section class="finale-section" id="console">
+                <h2 class="finale-heading">
+                    Dispatch with Clarity <span class="pencil-glyph">↗</span>
+                </h2>
+                <p class="finale-desc">
+                    Empowering cybercrime dispatchers and investigation teams with instantaneous duress verification and consensus intelligence.
+                </p>
+                <div class="finale-actions">
+                    <button type="button" class="btn-capsule btn-capsule-solid" id="btnFinaleLaunch" style="font-size: 0.95rem; padding: 0.60rem 0.60rem 0.60rem 1.6rem;">
+                        <span>Launch Command Console</span>
+                        <span class="btn-arrow-circle" style="width: 34px; height: 34px; font-size: 16px;">↗</span>
+                    </button>
+                    <a href="login.html" class="btn-capsule btn-capsule-ghost" id="btnFinaleLogin" style="font-size: 0.90rem; padding: 0.60rem 1.4rem;">
+                        <span>Investigator Sign In</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Clean Floating Bottom Dock (Praised by user) -->
+    <nav class="floating-dock" aria-label="Quick page navigation">
+        <a class="dock-item active" href="#hero" id="dockOverview">Overview</a>
+        <a class="dock-item" href="#protocol" id="dockProtocol">Protocol Cards</a>
+        <a class="dock-item" href="index.html" id="btnDockConsole"><span class="dock-dot"></span>Launch Console</a>
+    </nav>
+
+    <!-- Interactive Walkthrough / Evaluation Protocol Modal (Matches User Image 1) -->
+    <div class="boutique-modal-backdrop" id="modalBackdrop">
+        <div class="boutique-modal-box">
+            <div class="modal-header-row">
+                <div class="modal-title-group">
+                    <h3 class="modal-title" id="modalTitle">
+                        <span>🚨</span> CyberGuard Quick Evaluation Protocol
+                    </h3>
+                    <div class="modal-subtitle">FAST-TRACK DEMO WALKTHROUGH FOR JURY &amp; COMMANDERS</div>
+                </div>
+                <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="Close dialog">&times;</button>
+            </div>
+
+            <div class="modal-metrics-grid">
+                <div class="modal-metric-card">
+                    <div class="modal-metric-val" id="modalUrgency" style="color: #ef4444;">94 / 100</div>
+                    <div class="modal-metric-lbl">Multi-Modal Urgency</div>
+                </div>
+                <div class="modal-metric-card">
+                    <div class="modal-metric-val" id="modalPriority" style="color: #ef4444;">CRITICAL</div>
+                    <div class="modal-metric-lbl">Triage Priority</div>
+                </div>
+                <div class="modal-metric-card">
+                    <div class="modal-metric-val" id="modalTremor">52 Hz Jitter</div>
+                    <div class="modal-metric-lbl">Acoustic Tremor (F₀)</div>
+                </div>
+            </div>
+
+            <div class="modal-body-panel" id="modalBody">
+                <!-- Filled dynamically with scenario details -->
+            </div>
+
+            <div class="modal-footer-row">
+                <label class="modal-checkbox-label">
+                    <input type="checkbox" id="modalDontAutoLaunch" />
+                    <span>Don't auto-launch on startup</span>
+                </label>
+
+                <button type="button" class="btn-capsule btn-capsule-solid" id="btnModalLaunchConsole" style="padding: 0.45rem 0.5rem 0.45rem 1.25rem;">
+                    <span id="modalLaunchBtnText">Begin Evaluation</span>
+                    <span class="btn-arrow-circle">↗</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Script Logic -->
+    <script>
+        (() => {
+            "use strict";
+
+            // Evaluator duty credentials bootstrap
+            function setupEvaluatorSession() {
+                if (!sessionStorage.getItem("cyberguard_token")) {
+                    sessionStorage.setItem("cyberguard_token", "evaluator_token_2026_demo");
+                    sessionStorage.setItem("cyberguard_investigator", JSON.stringify({
+                        username: "investigator_01",
+                        badge_id: "INV-7842",
+                        name: "Insp. Haziq Shaikh",
+                        role: "LEAD_INVESTIGATOR",
+                        station: "Cyber Crime Police Station"
+                    }));
+                }
+            }
+
+            // Smooth Horizontal Deck Navigation Buttons (No wheel-hijacking / Zero lag)
+            const cardsTrack = document.getElementById("cardsTrack");
+            const btnScrollLeft = document.getElementById("scrollDeckLeft");
+            const btnScrollRight = document.getElementById("scrollDeckRight");
+
+            if (btnScrollLeft && cardsTrack) {
+                btnScrollLeft.addEventListener("click", () => {
+                    cardsTrack.scrollBy({ left: -320, behavior: "smooth" });
+                });
+            }
+            if (btnScrollRight && cardsTrack) {
+                btnScrollRight.addEventListener("click", () => {
+                    cardsTrack.scrollBy({ left: 320, behavior: "smooth" });
+                });
+            }
+
+            // Modal System (Matches User Image 1)
+            const modal = document.getElementById("modalBackdrop");
+            const modalCloseBtn = document.getElementById("modalCloseBtn");
+            const modalTitle = document.getElementById("modalTitle");
+            const modalUrgency = document.getElementById("modalUrgency");
+            const modalPriority = document.getElementById("modalPriority");
+            const modalTremor = document.getElementById("modalTremor");
+            const modalBody = document.getElementById("modalBody");
+            const btnModalLaunchConsole = document.getElementById("btnModalLaunchConsole");
+            const modalLaunchBtnText = document.getElementById("modalLaunchBtnText");
+
+            let targetConsoleUrl = "index.html";
+
+            function openModal(title, urgency, priority, tremor, bodyHtml, url, btnText = "Begin Evaluation") {
+                if (modalTitle) modalTitle.innerHTML = title;
+                if (modalUrgency) modalUrgency.textContent = urgency;
+                if (modalPriority) modalPriority.textContent = priority;
+                if (modalTremor) modalTremor.textContent = tremor;
+                if (modalBody) modalBody.innerHTML = bodyHtml;
+                if (modalLaunchBtnText) modalLaunchBtnText.textContent = btnText;
+                targetConsoleUrl = url;
+                if (modal) modal.classList.add("active");
+            }
+
+            function closeModal() {
+                if (modal) modal.classList.remove("active");
+            }
+
+            if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeModal);
+            if (modal) {
+                modal.addEventListener("click", (e) => {
+                    if (e.target === modal) closeModal();
+                });
+            }
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && modal && modal.classList.contains("active")) {
+                    closeModal();
+                }
+            });
+
+            if (btnModalLaunchConsole) {
+                btnModalLaunchConsole.addEventListener("click", () => {
+                    setupEvaluatorSession();
+                    window.location.href = targetConsoleUrl;
+                });
+            }
+
+            // Console Launcher Buttons
+            const launchButtons = [
+                document.getElementById("btnHeroLaunch"),
+                document.getElementById("btnFinaleLaunch"),
+                document.getElementById("btnDockConsole")
+            ];
+            launchButtons.forEach(btn => {
+                if (btn) {
+                    btn.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        setupEvaluatorSession();
+                        window.location.href = "index.html";
+                    });
+                }
+            });
+
+            // Quick Walkthrough Button (Hero)
+            const btnHeroWalkthrough = document.getElementById("btnHeroWalkthrough");
+            if (btnHeroWalkthrough) {
+                btnHeroWalkthrough.addEventListener("click", () => {
+                    openModal(
+                        "<span>🚨</span> CyberGuard Quick Evaluation Protocol",
+                        "94 / 100",
+                        "CRITICAL",
+                        "52 Hz Jitter",
+                        `<strong>Live Distress Queue:</strong> Emergency calls are auto-ranked by multi-modal distress scores.<br>
+                         <strong>3-Pillar Consensus:</strong> Simultaneous Voice Emotion (P1), SciPy DSP Vocal Tremor &lt;15ms (P2), and Indic STT (P3).<br>
+                         <strong>Air-Gapped Failsafe:</strong> Instant fallback to edge DSP with zero triage downtime.<br>
+                         <strong>Evidence Vault:</strong> Tamper-evident second-by-second timeline with SHA-256 integrity seal.`,
+                        "index.html",
+                        "Begin Evaluation"
+                    );
+                });
+            }
+
+            // Card 01: Digital Arrest
+            const btnLoadDigitalArrest = document.getElementById("btnLoadDigitalArrest");
+            if (btnLoadDigitalArrest) {
+                btnLoadDigitalArrest.addEventListener("click", () => {
+                    openModal(
+                        "<span>🚨</span> Live Intercept: Digital Arrest (#CALL-9823)",
+                        "94 / 100",
+                        "CRITICAL",
+                        "52 Hz Jitter",
+                        `<strong>Threat Scenario:</strong> CBI &amp; Customs Impersonation Extortion.<br>
+                         <em>"Sir, they are claiming they are from Mumbai Customs. They said my Aadhaar was found in an illegal parcel and I have to stay on digital arrest..."</em><br>
+                         <div style="margin-top:0.65rem; color:#2fe890; font-family:var(--font-mono); font-size:0.75rem;">
+                         ACTION ADVISORY: Escalate to Cyber Cell Commander and initiate emergency bank account freeze.
+                         </div>`,
+                        "index.html?load=CALL-9823",
+                        "Load Digital Arrest (#CALL-9823)"
+                    );
+                });
+            }
+
+            // Card 02: 3-Pillar Telemetry Badges
+            const pillP1 = document.getElementById("pillP1");
+            const pillP2 = document.getElementById("pillP2");
+            const pillP3 = document.getElementById("pillP3");
+            const btnInspectPillars = document.getElementById("btnInspectPillars");
+
+            function showPillarModal(pNum) {
+                if (pNum === 1) {
+                    openModal(
+                        "<span>📊</span> Pillar 1: Acoustic Emotion Recognition (SER)",
+                        "86% Fear",
+                        "CRITICAL",
+                        "Valence -0.78",
+                        `<strong>Foundation Model:</strong> emotion2vec+ (Seed variant) by FunASR.<br>
+                         Detects non-verbal acoustic emotion probabilities:<br>
+                         <span style="color:#fbbf24;">• Fear / Panic: 86.4%</span> | <span style="color:#5df2b8;">• Grief: 64.1%</span> | <span style="color:#8fa89a;">• Calm: 04.1%</span>`,
+                        "index.html",
+                        "Inspect Emotion SER"
+                    );
+                } else if (pNum === 2) {
+                    openModal(
+                        "<span>🔬</span> Pillar 2: Acoustic DSP Vocal Biomarkers",
+                        "52 Hz σ_F0",
+                        "HIGH STRESS",
+                        "Tremor Detected",
+                        `<strong>DSP Engine:</strong> Pure SciPy &amp; NumPy autocorrelation (&lt;15ms CPU).<br>
+                         Measures involuntary vocal cord tremors and pitch instability under duress:<br>
+                         <span style="color:#2fe890;">• Pitch Volatility: 52 Hz (Panic Threshold &gt; 40 Hz)</span><br>
+                         <span style="color:#2fe890;">• Spasm Signature: Involuntary Glottal Spasms Active</span>`,
+                        "index.html",
+                        "Inspect Acoustic DSP"
+                    );
+                } else {
+                    openModal(
+                        "<span>💬</span> Pillar 3: Speech STT &amp; Threat Intelligence",
+                        "25 Threat Pts",
+                        "CRITICAL",
+                        "Hindi + English",
+                        `<strong>STT Engine:</strong> Groq LPU Whisper Large V3 Turbo + Local Indic Regex Taxonomy.<br>
+                         Matched Extortion Category: <strong>Digital Arrest &amp; Police Impersonation</strong>.<br>
+                         <span style="color:#5df2b8;">Keywords: "CBI", "digital arrest", "customs", "illegal parcel", "अरेस्ट"</span>`,
+                        "index.html",
+                        "Inspect Groq Whisper STT"
+                    );
+                }
+            }
+
+            if (pillP1) pillP1.addEventListener("click", () => showPillarModal(1));
+            if (pillP2) pillP2.addEventListener("click", () => showPillarModal(2));
+            if (pillP3) pillP3.addEventListener("click", () => showPillarModal(3));
+            if (btnInspectPillars) btnInspectPillars.addEventListener("click", () => showPillarModal(1));
+
+            // Card 03: Failsafe
+            const btnTestFailsafe = document.getElementById("btnTestFailsafe");
+            if (btnTestFailsafe) {
+                btnTestFailsafe.addEventListener("click", () => {
+                    openModal(
+                        "<span>🛡️</span> 2-Pillar Resilience Failsafe Active",
+                        "88 / 100",
+                        "CRITICAL",
+                        "Air-Gapped Mode",
+                        `<strong>Zero Downtime Resilience:</strong><br>
+                         When cloud GPU models experience cold-start latency, the engine dynamically shifts weights to pure CPU edge DSP (45%) and local regex taxonomy (55%) with zero triage downtime.`,
+                        "index.html?action=failsafe",
+                        "Test 2-Pillar Failsafe"
+                    );
+                });
+            }
+
+            // Card 04: Wiretaps
+            const btnInspectWiretaps = document.getElementById("btnInspectWiretaps");
+            if (btnInspectWiretaps) {
+                btnInspectWiretaps.addEventListener("click", () => {
+                    openModal(
+                        "<span>📁</span> Case Wiretap Forensics &amp; Chain-of-Custody",
+                        "92 / 100",
+                        "EVIDENCE GRADE",
+                        "SHA-256 Sealed",
+                        `<strong>Case Evidence File:</strong> sample_digital_arrest.wav<br>
+                         Tamper-evident forensic timeline analysis with cryptographic SHA-256 evidence integrity hashing and investigator badge accountability.`,
+                        "index.html?load=wiretap",
+                        "Inspect Case Wiretaps"
+                    );
+                });
+            }
+
+            // Floating dock scroll tracking
+            const dockOverview = document.getElementById("dockOverview");
+            const dockProtocol = document.getElementById("dockProtocol");
+            const navHome = document.getElementById("navHome");
+            const navProtocol = document.getElementById("navProtocol");
+
+            window.addEventListener("scroll", () => {
+                const scrollPos = window.scrollY + 250;
+                const heroSection = document.getElementById("hero");
+                const protocolSection = document.getElementById("protocol");
+
+                if (protocolSection && scrollPos >= protocolSection.offsetTop) {
+                    if (dockProtocol) dockProtocol.classList.add("active");
+                    if (dockOverview) dockOverview.classList.remove("active");
+                    if (navProtocol) navProtocol.classList.add("active");
+                    if (navHome) navHome.classList.remove("active");
+                } else {
+                    if (dockOverview) dockOverview.classList.add("active");
+                    if (dockProtocol) dockProtocol.classList.remove("active");
+                    if (navHome) navHome.classList.add("active");
+                    if (navProtocol) navProtocol.classList.remove("active");
+                }
+            }, { passive: true });
+        })();
+    </script>
+</body>
+
+</html>
