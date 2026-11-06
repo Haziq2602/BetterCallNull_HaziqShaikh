@@ -5,7 +5,7 @@ FastAPI Server: Real-Time WebSockets for Audio Streaming & REST APIs for Case Fi
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 import numpy as np
 import os
@@ -1016,5 +1016,10 @@ async def investigate_recording(
 
 # Mount static frontend directory (robust path relative to project root)
 _frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+
+@app.get("/admin", include_in_schema=False)
+def serve_admin_page():
+    return FileResponse(os.path.join(_frontend_dir, "admin.html"))
+
 app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
 
