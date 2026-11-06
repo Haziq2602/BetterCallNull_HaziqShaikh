@@ -250,9 +250,15 @@
                         <h2>Active call <span class="call-ref" id="activeCallId">#CALL-9823</span></h2>
                         <p class="subtitle">Live multimodal telemetry stream</p>
                     </div>
-                    <div class="live-priority-indicator">
-                        <span class="pill-label">Triage status</span>
-                        <span class="pill-value critical" id="livePriority">CRITICAL</span>
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <button class="btn-guide-nav" id="btnExportActiveCallPdf" type="button" title="Export current call telemetry as official Indian Police forensic dossier PDF" style="border-color: rgba(61, 255, 160, 0.4); background: rgba(61, 255, 160, 0.1); color: #3dffa0; gap: 0.35rem;">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            <span>Export PDF Dossier</span>
+                        </button>
+                        <div class="live-priority-indicator">
+                            <span class="pill-label">Triage status</span>
+                            <span class="pill-value critical" id="livePriority">CRITICAL</span>
+                        </div>
                     </div>
                 </div>
 
@@ -481,6 +487,10 @@
                 </div>
 
                 <div class="modal-actions">
+                    <button class="btn-primary" id="btnExportForensicPdf" type="button" style="background: linear-gradient(135deg, #059669, #10b981); color: #022c15; border: 1px solid #34d399; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Export Police Dossier (PDF)</span>
+                    </button>
                     <button class="btn-primary" id="btnLoadIntoMonitor">Load Into Active Call Monitor</button>
                     <button class="btn-secondary" id="btnCloseModalBottom">Close Report</button>
                 </div>
@@ -572,6 +582,10 @@
                 </div>
 
                 <div class="modal-actions">
+                    <button class="btn-primary" id="btnExportLivePdf" type="button" style="background: linear-gradient(135deg, #059669, #10b981); color: #022c15; border: 1px solid #34d399; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem;">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Export Police Dossier (PDF)</span>
+                    </button>
                     <button class="btn-primary" id="btnSaveLiveCall">Retain in Active Call History</button>
                     <button class="btn-secondary" id="btnCloseLiveModalBottom">Close Report</button>
                 </div>
@@ -672,8 +686,10 @@
         </div>
     </div>
     <!-- ===================================================== -->
+    <!-- OFFICIAL GOVERNMENT OF INDIA / POLICE DEPARTMENT FORENSIC DOSSIER PRINT CONTAINER -->
+    <div id="policeDossierPrintContainer" class="police-dossier-print" aria-hidden="true"></div>
 
-    <script src="js/app.js?v=11"></script>
+    <script src="js/app.js?v=12"></script>
 </body>
 
 </html>
