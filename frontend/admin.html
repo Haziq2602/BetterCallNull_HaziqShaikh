@@ -688,8 +688,15 @@
         }
 
         @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.97) translateY(8px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.97) translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .modal-header-line {
@@ -941,8 +948,15 @@
         }
 
         @keyframes toastSlideUp {
-            from { transform: translateY(16px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(16px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -1117,7 +1131,8 @@
                     </div>
                     <div class="dossier-info-block">
                         <span>Confidential Email</span>
-                        <strong id="dossierEmail" style="font-family: var(--font-mono);">i***q@cyberpolice.gov.in</strong>
+                        <strong id="dossierEmail"
+                            style="font-family: var(--font-mono);">i***q@cyberpolice.gov.in</strong>
                     </div>
                     <div class="dossier-info-block">
                         <span>Confidential Phone</span>
@@ -1128,10 +1143,12 @@
 
             <div class="modal-footer-line">
                 <button type="button" class="btn-modal-ghost" id="btnCloseDossierBtn">Close</button>
-                <button type="button" class="btn-table-action" id="btnDossierMagicLink" style="padding: 0.42rem 0.85rem;">
+                <button type="button" class="btn-table-action" id="btnDossierMagicLink"
+                    style="padding: 0.42rem 0.85rem;">
                     Dispatch Link
                 </button>
-                <button type="button" class="btn-table-action danger" id="btnDossierToggleStatus" style="padding: 0.42rem 0.85rem;">
+                <button type="button" class="btn-table-action danger" id="btnDossierToggleStatus"
+                    style="padding: 0.42rem 0.85rem;">
                     Suspend Badge
                 </button>
             </div>
@@ -1151,7 +1168,8 @@
                     <div class="modal-row-pair">
                         <div class="modal-field-unit">
                             <label for="provUsername">Login ID *</label>
-                            <input type="text" id="provUsername" placeholder="e.g. investigator_02" required autofocus />
+                            <input type="text" id="provUsername" placeholder="e.g. investigator_02" required
+                                autofocus />
                         </div>
                         <div class="modal-field-unit">
                             <label for="provBadge">Badge No. *</label>
@@ -1183,7 +1201,8 @@
                     <div class="modal-row-pair">
                         <div class="modal-field-unit">
                             <label for="provEmail">Email *</label>
-                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@cyberpolice.gov.in" required />
+                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@cyberpolice.gov.in"
+                                required />
                         </div>
                         <div class="modal-field-unit">
                             <label for="provPhone">Phone *</label>
@@ -1382,7 +1401,7 @@
                                         <button type="button" class="btn-table-action ${inv.is_active ? 'danger' : 'success'}"
                                             onclick="toggleOfficerStatus('${escapeHtml(inv.username)}', ${!inv.is_active})"
                                             title="${inv.is_active ? 'Suspend badge credentials' : 'Reactivate badge'}">
-                                            ${inv.is_active ? '🔒 Suspend' : '✓ Activate'}
+                                            ${inv.is_active ? ' Suspend' : '✓ Activate'}
                                         </button>
                                     ` : `
                                         <span class="self-account-tag">(Your Account)</span>
@@ -1399,7 +1418,7 @@
             }
 
             // Officer Dossier Modal
-            window.openOfficerDossier = function(username) {
+            window.openOfficerDossier = function (username) {
                 const inv = cachedInvestigators.find(i => i.username === username);
                 if (!inv) return;
 
@@ -1429,7 +1448,7 @@
                 } else {
                     btnToggle.style.display = "inline-flex";
                     btnToggle.className = `btn-table-action ${inv.is_active ? 'danger' : 'success'}`;
-                    btnToggle.textContent = inv.is_active ? "🔒 Suspend Badge" : "✓ Reactivate Badge";
+                    btnToggle.textContent = inv.is_active ? " Suspend Badge" : "✓ Reactivate Badge";
                     btnToggle.onclick = async () => {
                         await toggleOfficerStatus(inv.username, !inv.is_active);
                         modal.style.display = "none";
@@ -1513,7 +1532,7 @@
                 }).join("");
             }
 
-            window.dispatchMagicLink = async function(username, name) {
+            window.dispatchMagicLink = async function (username, name) {
                 try {
                     const res = await authFetch(`/api/admin/investigators/${encodeURIComponent(username)}/dispatch-link`, {
                         method: "POST"
@@ -1527,7 +1546,7 @@
                 }
             };
 
-            window.toggleOfficerStatus = async function(username, newStatus) {
+            window.toggleOfficerStatus = async function (username, newStatus) {
                 const actionLabel = newStatus ? "reactivate" : "suspend";
                 if (!confirm(`Are you sure you want to ${actionLabel.toUpperCase()} '${username}'?`)) return;
 
