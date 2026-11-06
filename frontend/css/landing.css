@@ -373,21 +373,6 @@ body {
     animation: arcAuraBreath 5s ease-in-out infinite alternate;
 }
 
-/* Concentrated Specular Lens Glint at the Arc Summit */
-.arc-specular-glint {
-    position: absolute;
-    top: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 250px;
-    height: 60px;
-    background: radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.85) 0%, rgba(61, 255, 160, 0.5) 30%, transparent 75%);
-    filter: blur(14px);
-    pointer-events: none;
-    z-index: 1;
-    animation: glintPulse 4s ease-in-out infinite alternate;
-}
-
 @keyframes arcAuraBreath {
     0% {
         opacity: 0.80;
@@ -398,17 +383,6 @@ body {
         opacity: 1;
         transform: translateX(-50%) scale(1.04);
         filter: blur(44px);
-    }
-}
-
-@keyframes glintPulse {
-    0%, 100% {
-        opacity: 0.75;
-        transform: translateX(-50%) scale(0.95);
-    }
-    50% {
-        opacity: 1;
-        transform: translateX(-50%) scale(1.08);
     }
 }
 
