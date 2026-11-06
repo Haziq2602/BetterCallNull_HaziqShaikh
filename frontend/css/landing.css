@@ -446,30 +446,6 @@ body {
     animation: arcVectorBreath 4.5s ease-in-out infinite;
 }
 
-/* Telemetry Node Radar Ripples at the Apex */
-.pulse-ring-slow {
-    transform-origin: 480px 38px;
-    animation: radarPulse 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-}
-
-.pulse-ring-fast {
-    transform-origin: 480px 38px;
-    animation: radarPulse 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 1.2s;
-}
-
-@keyframes radarPulse {
-    0% {
-        r: 6;
-        opacity: 0.9;
-    }
-    70% {
-        opacity: 0.35;
-    }
-    100% {
-        r: 28;
-        opacity: 0;
-    }
-}
 
 .horizon-floating-chips {
     position: absolute;

@@ -12,7 +12,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/landing.css?v=6">
+    <link rel="stylesheet" href="css/landing.css?v=7">
 </head>
 
 <body>
@@ -25,7 +25,7 @@
             <!-- Top Bar: Minimal Brand + Center Nav + Boutique Capsule Button -->
             <header class="top-bar">
                 <a href="landing.html" class="brand-badge" id="brandLogo">
-                    <span class="brand-glyph">⬡</span>
+                    <span class="brand-glyph"><svg width="32" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#3dffa0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" aria-hidden="true"><path d="M3.5,25.018h9.8767l2.2775-10.9731,2.2775,20.1622L20.2092,9.0623l2.2775,29.8754L24.7642,9.1925,27.0417,36.428l2.2775-25.4062L31.5967,29.778l2.2775-16.2172,2.2775,11.3627H44.5"/></svg></span>
                     <span class="brand-text">CYBERGUARD</span>
                 </a>
 
@@ -137,32 +137,6 @@
                         <!-- LAYER 4: Bright Specular Apex Glint Line -->
                         <path d="M 400 44 Q 480 37 560 44" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" opacity="0.9" filter="url(#arcGlowCore)" />
 
-                        <!-- Telemetry Nodes along the Arc -->
-                        <!-- Node 1: Left Dispatch Hub -->
-                        <circle cx="210" cy="138" r="4" fill="#3dffa0" />
-                        <circle cx="210" cy="138" r="9" stroke="rgba(61, 255, 160, 0.4)" stroke-width="1" />
-
-                        <!-- Node 2: Sensor Ingestion -->
-                        <circle cx="340" cy="84" r="5" fill="#ffffff" />
-                        <circle cx="340" cy="84" r="11" stroke="rgba(255, 255, 255, 0.35)" stroke-width="1" />
-
-                        <!-- Node 3: APEX CONSENSUS CORE (Pulsing Centerpiece) -->
-                        <circle cx="480" cy="38" r="18" stroke="rgba(61, 255, 160, 0.35)" stroke-width="1" class="pulse-ring-slow" />
-                        <circle cx="480" cy="38" r="10" stroke="rgba(61, 255, 160, 0.65)" stroke-width="1.2" class="pulse-ring-fast" />
-                        <circle cx="480" cy="38" r="6" fill="#ffffff" filter="url(#nodeGlow)" />
-                        <circle cx="480" cy="38" r="3.5" fill="#021207" />
-
-                        <!-- Node 4: STT Engine Hub -->
-                        <circle cx="620" cy="84" r="5" fill="#ffffff" />
-                        <circle cx="620" cy="84" r="11" stroke="rgba(255, 255, 255, 0.35)" stroke-width="1" />
-
-                        <!-- Node 5: Evidence Vault Terminal -->
-                        <circle cx="750" cy="138" r="4" fill="#3dffa0" />
-                        <circle cx="750" cy="138" r="9" stroke="rgba(61, 255, 160, 0.4)" stroke-width="1" />
-
-                        <!-- Subtle Inter-Node Telemetry Beams -->
-                        <line x1="340" y1="84" x2="480" y2="38" stroke="rgba(255,255,255,0.45)" stroke-width="1" stroke-dasharray="3 3" />
-                        <line x1="480" y1="38" x2="620" y2="84" stroke="rgba(255,255,255,0.45)" stroke-width="1" stroke-dasharray="3 3" />
                     </svg>
 
                     <!-- Floating Telemetry Chips (InferaAI style) -->
@@ -206,7 +180,6 @@
                         <div>
                             <div class="card-top-row">
                                 <span class="col-index">[ 01 // DISPATCH ]</span>
-                                <span class="metric-pill danger">94/100 Critical</span>
                             </div>
                             <h2 class="col-title">Live Call Queue &amp; Triage</h2>
                             <p class="col-desc">
@@ -226,7 +199,6 @@
                         <div>
                             <div class="card-top-row">
                                 <span class="col-index">[ 02 // SENSORS ]</span>
-                                <span class="metric-pill">3 Specialists</span>
                             </div>
                             <h2 class="col-title">3-Pillar Multimodal Telemetry</h2>
                             <p class="col-desc">
@@ -246,7 +218,6 @@
                         <div>
                             <div class="card-top-row">
                                 <span class="col-index">[ 03 // AIR-GAPPED ]</span>
-                                <span class="metric-pill">0ms Downtime</span>
                             </div>
                             <h2 class="col-title">2-Pillar Resilience Failsafe</h2>
                             <p class="col-desc">
@@ -266,7 +237,6 @@
                         <div>
                             <div class="card-top-row">
                                 <span class="col-index">[ 04 // EVIDENCE ]</span>
-                                <span class="metric-pill">SHA-256 Vault</span>
                             </div>
                             <h2 class="col-title">Wiretap Forensics &amp; Chain-of-Custody</h2>
                             <p class="col-desc">
@@ -305,16 +275,12 @@
                     <!-- Col 1: System Identification -->
                     <div class="footer-col col-brand">
                         <div class="footer-brand">
-                            <span class="brand-glyph">⬡</span>
+                            <span class="brand-glyph"><svg width="28" height="16" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#3dffa0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" aria-hidden="true"><path d="M3.5,25.018h9.8767l2.2775-10.9731,2.2775,20.1622L20.2092,9.0623l2.2775,29.8754L24.7642,9.1925,27.0417,36.428l2.2775-25.4062L31.5967,29.778l2.2775-16.2172,2.2775,11.3627H44.5"/></svg></span>
                             <span class="brand-title">CYBERGUARD</span>
                         </div>
                         <p class="footer-tagline">
                             Real-Time Speech Emotion &amp; Vocal Biomarker Triage Architecture for Cybercrime Helplines (1930 / 112) and Forensic Audio Analysts.
                         </p>
-                        <div class="system-status-badge">
-                            <span class="status-pulse"></span>
-                            <span>Core Engine: Operational &bull; Edge DSP Active</span>
-                        </div>
                         <div class="footer-compliance-stamp">
                             RFC 6234 SHA-256 Chain-of-Custody Compliant
                         </div>
@@ -336,9 +302,6 @@
                     <div class="footer-col">
                         <h4 class="footer-heading">Forensic Standards</h4>
                         <ul class="footer-links">
-                            <li><span class="footer-static-item">Sec. 43/66 Information Technology Act</span></li>
-                            <li><span class="footer-static-item">Sec. 65B Indian Evidence Act Certificate</span></li>
-                            <li><span class="footer-static-item">NCRP 1930 Triage Integration Spec</span></li>
                             <li><span class="footer-static-item">Deterministic SHA-256 Audit Trails</span></li>
                             <li><span class="footer-static-item">Investigator RBAC Access Control</span></li>
                         </ul>
@@ -360,7 +323,7 @@
                 <!-- Bottom Copyright & Security Seal Row -->
                 <div class="footer-bottom-row">
                     <div class="footer-copyright">
-                        &copy; 2026 CyberGuard Protocol. Developed for Ministry of Home Affairs / National Cyber Crime Hackathon Evaluation.
+                        &copy; 2026 CyberGuard Protocol. All rights reserved.
                     </div>
                     <div class="footer-security-notice">
                         RESTRICTED LAW ENFORCEMENT PLATFORM &bull; ACCESS STRICTLY AUDITED
