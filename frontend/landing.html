@@ -6,359 +6,309 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="#020403">
-    <title>CyberGuard — Boutique Speech Emotion & Triage Console</title>
+    <title>CyberGuard — Boutique Speech Emotion &amp; Triage Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Doto:wght@600;700;800;900&family=DotGothic16&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/landing.css?v=11">
+    <link rel="stylesheet" href="css/landing.css?v=12">
 </head>
 
 <body>
 
     <!-- MAIN SITE CONTAINER (FULL-BLEED SEAMLESS BACKGROUND) -->
     <main class="site-container">
-        <!-- Top Bar: Minimal Brand + Center Nav + Boutique Capsule Button -->
+        <!-- Top Bar: Minimal Brand + Boutique Capsule Button -->
         <header class="top-bar">
-                <a href="landing.html" class="brand-badge" id="brandLogo">
-                    <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                            viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round"
-                            stroke-linejoin="round" stroke-width="1.75" aria-hidden="true">
-                            <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
-                        </svg></span>
-                    <span class="brand-text">CYBERGUARD</span>
-                </a>
+            <a href="landing.html" class="brand-badge" id="brandLogo">
+                <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                        viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="1.75" aria-hidden="true">
+                        <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
+                    </svg></span>
+                <span class="brand-text">CYBERGUARD</span>
+            </a>
 
-                <nav class="nav-pill-group" aria-label="Primary navigation">
-                    <a href="#hero" class="nav-pill-link active" id="navHome">Overview</a>
-                    <a href="#protocol" class="nav-pill-link" id="navProtocol">Protocol Deck</a>
-                    <a href="#docs" class="nav-pill-link" id="navDocs">Documentation</a>
-                    <a href="index.html?load=wiretap" class="nav-pill-link" id="navForensics">Forensics</a>
-                </nav>
+            <a href="login.html" class="btn-capsule" id="btnTopLogin" title="Authorized Investigator Terminal">
+                <span>Investigator Access</span>
+                <span class="btn-arrow-circle">↗</span>
+            </a>
+        </header>
 
-                <a href="login.html" class="btn-capsule" id="btnTopLogin" title="Authorized Investigator Terminal">
-                    <span>Investigator Access</span>
+        <!-- Hero Typography Section (Velopay / InferaAI High-Contrast Elegance) -->
+        <section class="hero-block" id="hero">
+            <div class="hero-pill-badge">
+                <span class="pulse-dot"></span>
+                <span>LIVE DISTRESS TELEMETRY • HELPLINE 1930 / 112</span>
+            </div>
+
+            <h1 class="hero-heading">
+                AI Distress Intelligence<br>
+                <strong>Consensus Triage Console</strong>
+            </h1>
+
+            <p class="hero-lead">
+                Assisting cybercrime helplines (1930 / 112) with real-time vocal terror biomarkers, pitch spasms
+                under 15ms, and extortion context intelligence.
+            </p>
+
+            <div class="hero-actions-row">
+                <button type="button" class="btn-capsule btn-capsule-solid" id="btnHeroLaunch"
+                    style="font-size: 0.92rem; padding: 0.52rem 0.52rem 0.52rem 1.45rem;">
+                    <span>Launch Command Console</span>
+                    <span class="btn-arrow-circle" style="width: 32px; height: 32px;">↗</span>
+                </button>
+            </div>
+
+            <!-- Velopay / InferaAI Curved Telemetry Horizon (Seamless Arc) -->
+            <div class="telemetry-horizon-wrap" aria-hidden="true">
+                <!-- Atmospheric Ambient Glow Bloom -->
+                <div class="arc-ambient-glow"></div>
+
+                <svg class="telemetry-horizon-svg" viewBox="0 0 960 235" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Wide Soft Atmospheric Blur -->
+                        <filter id="arcGlowWide" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="20" result="blurWide" />
+                        </filter>
+
+                        <!-- Core Intense Laser Blur -->
+                        <filter id="arcGlowCore" x="-30%" y="-30%" width="160%" height="160%">
+                            <feGaussianBlur stdDeviation="6" result="blurCore" />
+                        </filter>
+
+                        <!-- Horizon Smooth Volumetric Under-Fill Gradient -->
+                        <linearGradient id="horizonVolumetric" x1="480" y1="36" x2="480" y2="235"
+                            gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.18" />
+                            <stop offset="25%" stop-color="#2fe890" stop-opacity="0.08" />
+                            <stop offset="55%" stop-color="#0e3a24" stop-opacity="0.02" />
+                            <stop offset="100%" stop-color="#020403" stop-opacity="0" />
+                        </linearGradient>
+
+                        <!-- Multi-Stop Ultra-Smooth Stroke Gradient -->
+                        <linearGradient id="arcStrokeGrad" x1="0" y1="120" x2="960" y2="120"
+                            gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#3dffa0" stop-opacity="0" />
+                            <stop offset="10%" stop-color="#3dffa0" stop-opacity="0.08" />
+                            <stop offset="25%" stop-color="#2fe890" stop-opacity="0.45" />
+                            <stop offset="42%" stop-color="#3dffa0" stop-opacity="0.88" />
+                            <stop offset="48%" stop-color="#ffffff" stop-opacity="0.98" />
+                            <stop offset="50%" stop-color="#ffffff" stop-opacity="1" />
+                            <stop offset="52%" stop-color="#ffffff" stop-opacity="0.98" />
+                            <stop offset="58%" stop-color="#3dffa0" stop-opacity="0.88" />
+                            <stop offset="75%" stop-color="#2fe890" stop-opacity="0.45" />
+                            <stop offset="90%" stop-color="#3dffa0" stop-opacity="0.08" />
+                            <stop offset="100%" stop-color="#3dffa0" stop-opacity="0" />
+                        </linearGradient>
+
+                        <!-- Inner Perspective Wire Gradient -->
+                        <linearGradient id="innerWireGrad" x1="480" y1="60" x2="480" y2="220"
+                            gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.20" />
+                            <stop offset="60%" stop-color="#3dffa0" stop-opacity="0.04" />
+                            <stop offset="100%" stop-color="#3dffa0" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Volumetric Ambient Under-Fill -->
+                    <path d="M 40 220 Q 480 38 920 220 Z" fill="url(#horizonVolumetric)" />
+
+                    <!-- Radial Dotted Perspective Grid -->
+                    <path d="M 120 220 Q 480 75 840 220" stroke="url(#innerWireGrad)" stroke-width="1.2"
+                        stroke-dasharray="3 6" />
+                    <path d="M 200 220 Q 480 110 760 220" stroke="url(#innerWireGrad)" stroke-width="1"
+                        stroke-dasharray="2 7" />
+                    <path d="M 280 220 Q 480 145 680 220" stroke="rgba(61, 255, 160, 0.10)" stroke-width="0.8" />
+
+                    <!-- Latitude Spoke Rays -->
+                    <line x1="480" y1="42" x2="330" y2="220" stroke="rgba(61, 255, 160, 0.06)" stroke-width="1"
+                        stroke-dasharray="2 4" />
+                    <line x1="480" y1="42" x2="480" y2="220" stroke="rgba(61, 255, 160, 0.10)" stroke-width="1"
+                        stroke-dasharray="2 4" />
+                    <line x1="480" y1="42" x2="630" y2="220" stroke="rgba(61, 255, 160, 0.06)" stroke-width="1"
+                        stroke-dasharray="2 4" />
+
+                    <!-- LAYER 1: Soft Atmospheric Bloom Layer -->
+                    <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="26"
+                        stroke-linecap="round" opacity="0.4" filter="url(#arcGlowWide)" />
+
+                    <!-- LAYER 2: Concentrated Inner Neon Layer -->
+                    <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="9"
+                        stroke-linecap="round" opacity="0.8" filter="url(#arcGlowCore)" />
+
+                    <!-- LAYER 3: Core Arc Stroke -->
+                    <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="2.5"
+                        stroke-linecap="round" />
+                </svg>
+
+                <!-- Floating Telemetry Chips -->
+                <div class="horizon-floating-chips">
+                    <div class="floating-chip chip-left" title="Active Triage Intercept">
+                        <span class="chip-dot red"></span>
+                        <span>94/100 CRITICAL TRIAGE</span>
+                    </div>
+                    <div class="floating-chip chip-right" title="SciPy Acoustic Tremor DSP">
+                        <span class="chip-dot green"></span>
+                        <span>&lt;15MS VOCAL TREMORS</span>
+                    </div>
+                    <div class="floating-chip chip-center" title="Consensus Integrity">
+                        <span class="chip-dot amber"></span>
+                        <span>3-PILLAR CONSENSUS VERIFIED</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Horizontal Scroll Protocol Deck -->
+        <section class="protocol-section" id="protocol">
+            <div class="section-header-row">
+                <div class="section-header-title">
+                    <span>[ 01-04 // PROTOCOL MODULES ]</span>
+                </div>
+            </div>
+
+            <div class="horizontal-scroll-container" id="cardsTrack">
+                <!-- Card 01: Live Call Queue & Triage -->
+                <div class="protocol-card" id="card01">
+                    <div class="card-top-row">
+                        <span class="col-index">[ 01 // DISPATCH ]</span>
+                    </div>
+                    <h2 class="col-title">Live Call Queue &amp; Triage</h2>
+                    <p class="col-desc">
+                        Emergency calls are auto-ranked by multi-modal distress scores. Critical extortion
+                        threats surface immediately to queue apex.
+                    </p>
+                </div>
+
+                <!-- Card 02: 3-Pillar Multimodal Telemetry -->
+                <div class="protocol-card" id="card02">
+                    <div class="card-top-row">
+                        <span class="col-index">[ 02 // SENSORS ]</span>
+                    </div>
+                    <h2 class="col-title">3-Pillar Multimodal Telemetry</h2>
+                    <p class="col-desc">
+                        Triangulated consensus evaluating <strong>Voice Emotion (P1 SER)</strong>, <strong>SciPy
+                            Glottal Tremors &lt;15ms (P2 DSP)</strong>, and <strong>Groq Whisper Indic Threat
+                            Keywords (P3 STT)</strong> to eliminate false positives.
+                    </p>
+                </div>
+
+                <!-- Card 03: 2-Pillar Resilience Failsafe -->
+                <div class="protocol-card" id="card03">
+                    <div class="card-top-row">
+                        <span class="col-index">[ 03 // AIR-GAPPED ]</span>
+                    </div>
+                    <h2 class="col-title">2-Pillar Resilience Failsafe</h2>
+                    <p class="col-desc">
+                        Automatic failover to pure CPU edge DSP (45%) and local regex taxonomy (55%) when cloud
+                        GPU models warm up.
+                    </p>
+                </div>
+
+                <!-- Card 04: Wiretap Forensics & Chain-of-Custody -->
+                <div class="protocol-card" id="card04">
+                    <div class="card-top-row">
+                        <span class="col-index">[ 04 // EVIDENCE ]</span>
+                    </div>
+                    <h2 class="col-title">Wiretap Forensics &amp; Chain-of-Custody</h2>
+                    <p class="col-desc">
+                        Second-by-second timeline analysis of case wiretaps with cryptographic SHA-256
+                        tamper-evident integrity hashing.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finale Convert-to-Console Section -->
+        <section class="finale-section" id="console">
+            <h2 class="finale-heading">
+                Dispatch with Clarity <span class="pencil-glyph">↗</span>
+            </h2>
+            <p class="finale-desc">
+                Empowering cybercrime dispatchers and investigation teams with instantaneous duress verification and
+                consensus intelligence.
+            </p>
+            <div class="finale-actions">
+                <a href="login.html" class="btn-capsule btn-capsule-solid" id="btnFinaleLogin"
+                    style="font-size: 0.90rem; padding: 0.55rem 0.60rem 0.55rem 1.4rem;">
+                    <span>Investigator Sign In</span>
                     <span class="btn-arrow-circle">↗</span>
                 </a>
-            </header>
+            </div>
+        </section>
 
-            <!-- Hero Typography Section (Velopay / InferaAI High-Contrast Elegance) -->
-            <section class="hero-block" id="hero">
-                <div class="hero-pill-badge">
-                    <span class="pulse-dot"></span>
-                    <span>LIVE DISTRESS TELEMETRY • HELPLINE 1930 / 112</span>
-                </div>
-
-                <h1 class="hero-heading">
-                    AI Distress Intelligence<br>
-                    <strong>Consensus Triage Console</strong>
-                </h1>
-
-                <p class="hero-lead">
-                    Assisting cybercrime helplines (1930 / 112) with real-time vocal terror biomarkers, pitch spasms
-                    under 15ms, and extortion context intelligence.
-                </p>
-
-                <div class="hero-actions-row">
-                    <button type="button" class="btn-capsule btn-capsule-solid" id="btnHeroLaunch"
-                        style="font-size: 0.92rem; padding: 0.52rem 0.52rem 0.52rem 1.45rem;">
-                        <span>Launch Command Console</span>
-                        <span class="btn-arrow-circle" style="width: 32px; height: 32px;">↗</span>
-                    </button>
-                </div>
-
-                <!-- Velopay / InferaAI Curved Telemetry Horizon (SVG + Glass Badges, Zero Lag) -->
-                <div class="telemetry-horizon-wrap" aria-hidden="true">
-                    <!-- Atmospheric Ambient Glow Blooms behind the Arc -->
-                    <div class="arc-ambient-glow"></div>
-
-                    <svg class="telemetry-horizon-svg" viewBox="0 0 960 235" fill="none"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <!-- Wide Soft Bloom Filter -->
-                            <filter id="arcGlowWide" x="-30%" y="-30%" width="160%" height="160%">
-                                <feGaussianBlur stdDeviation="14" result="blurWide" />
-                            </filter>
-                            <!-- Core Intense Glow Filter -->
-                            <filter id="arcGlowCore" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="5" result="blurCore" />
-                            </filter>
-
-                            <!-- Horizon Volumetric Gradient Fill -->
-                            <linearGradient id="horizonVolumetric" x1="480" y1="36" x2="480" y2="225"
-                                gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.25" />
-                                <stop offset="35%" stop-color="#2fe890" stop-opacity="0.08" />
-                                <stop offset="65%" stop-color="#0e3a24" stop-opacity="0.01" />
-                                <stop offset="100%" stop-color="#020403" stop-opacity="0" />
-                            </linearGradient>
-
-                            <!-- Primary High-Voltage Stroke Gradient (Faded tips + neon laser mint) -->
-                            <linearGradient id="arcStrokeGrad" x1="0" y1="120" x2="960" y2="120"
-                                gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#3dffa0" stop-opacity="0" />
-                                <stop offset="8%" stop-color="#3dffa0" stop-opacity="0.12" />
-                                <stop offset="22%" stop-color="#2fe890" stop-opacity="0.55" />
-                                <stop offset="40%" stop-color="#3dffa0" stop-opacity="0.95" />
-                                <stop offset="50%" stop-color="#ffffff" stop-opacity="1" />
-                                <stop offset="60%" stop-color="#3dffa0" stop-opacity="0.95" />
-                                <stop offset="78%" stop-color="#2fe890" stop-opacity="0.55" />
-                                <stop offset="92%" stop-color="#3dffa0" stop-opacity="0.12" />
-                                <stop offset="100%" stop-color="#3dffa0" stop-opacity="0" />
-                            </linearGradient>
-
-                            <!-- Secondary Inner Wire Gradient -->
-                            <linearGradient id="innerWireGrad" x1="480" y1="60" x2="480" y2="220"
-                                gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#3dffa0" stop-opacity="0.25" />
-                                <stop offset="55%" stop-color="#3dffa0" stop-opacity="0.06" />
-                                <stop offset="90%" stop-color="#3dffa0" stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-
-                        <!-- Volumetric Ambient Under-Fill -->
-                        <path d="M 40 220 Q 480 38 920 220 Z" fill="url(#horizonVolumetric)" />
-
-                        <!-- Radial Dotted Matrix Grid (InferaAI inspired perspective dome) -->
-                        <path d="M 120 220 Q 480 75 840 220" stroke="url(#innerWireGrad)" stroke-width="1.2"
-                            stroke-dasharray="3 6" />
-                        <path d="M 200 220 Q 480 110 760 220" stroke="url(#innerWireGrad)" stroke-width="1"
-                            stroke-dasharray="2 7" />
-                        <path d="M 280 220 Q 480 145 680 220" stroke="rgba(61, 255, 160, 0.12)" stroke-width="0.8" />
-
-                        <!-- Latitude Perspective Spoke Rays -->
-                        <line x1="480" y1="42" x2="330" y2="220" stroke="rgba(61, 255, 160, 0.08)" stroke-width="1"
-                            stroke-dasharray="2 4" />
-                        <line x1="480" y1="42" x2="480" y2="220" stroke="rgba(61, 255, 160, 0.12)" stroke-width="1"
-                            stroke-dasharray="2 4" />
-                        <line x1="480" y1="42" x2="630" y2="220" stroke="rgba(61, 255, 160, 0.08)" stroke-width="1"
-                            stroke-dasharray="2 4" />
-
-                        <!-- LAYER 1: Wide Diffuse Atmospheric Aura Stroke -->
-                        <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="22"
-                            stroke-linecap="round" opacity="0.45" filter="url(#arcGlowWide)" />
-
-                        <!-- LAYER 2: Concentrated Inner Neon Bloom Stroke -->
-                        <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="8"
-                            stroke-linecap="round" opacity="0.85" filter="url(#arcGlowCore)" />
-
-                        <!-- LAYER 3: Razor-Sharp Core Arc Path -->
-                        <path d="M 40 220 Q 480 38 920 220" stroke="url(#arcStrokeGrad)" stroke-width="2.6"
-                            stroke-linecap="round" />
-
-                    </svg>
-
-                    <!-- Floating Telemetry Chips (InferaAI style) -->
-                    <div class="horizon-floating-chips">
-                        <div class="floating-chip chip-left" title="Active Triage Intercept">
-                            <span class="chip-dot red"></span>
-                            <span>94/100 CRITICAL TRIAGE</span>
-                        </div>
-                        <div class="floating-chip chip-right" title="SciPy Acoustic Tremor DSP">
-                            <span class="chip-dot green"></span>
-                            <span>&lt;15MS VOCAL TREMORS</span>
-                        </div>
-                        <div class="floating-chip chip-center" title="Consensus Integrity">
-                            <span class="chip-dot amber"></span>
-                            <span>3-PILLAR CONSENSUS VERIFIED</span>
-                        </div>
+        <!-- Institutional Documentation & Architecture Footer -->
+        <footer class="system-footer" id="docs">
+            <div class="footer-grid">
+                <div class="footer-col col-brand">
+                    <div class="footer-brand">
+                        <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+                                viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="1.75" aria-hidden="true">
+                                <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
+                            </svg></span>
+                        <span class="brand-title">CYBERGUARD</span>
+                    </div>
+                    <p class="footer-tagline">
+                        Real-Time Speech Emotion &amp; Vocal Biomarker Triage Architecture for Cybercrime Helplines
+                        (1930 / 112) and Forensic Audio Analysts.
+                    </p>
+                    <div class="footer-compliance-stamp">
+                        RFC 6234 SHA-256 Chain-of-Custody Compliant
                     </div>
                 </div>
 
-            </section>
-
-            <!-- Horizontal Scroll Protocol Deck (Seamless Native Scroll & Staggered Slow Entrance) -->
-            <section class="protocol-section" id="protocol">
-                <div class="section-header-row">
-                    <div class="section-header-title">
-                        <span>[ 01-04 // PROTOCOL MODULES ]</span>
-                    </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Protocol Architecture</h4>
+                    <ul class="footer-links">
+                        <li><a href="#protocol" class="footer-link">Pillar 1: emotion2vec+ SER Model</a></li>
+                        <li><a href="#protocol" class="footer-link">Pillar 2: SciPy Acoustic Tremors (&lt;15ms)</a></li>
+                        <li><a href="#protocol" class="footer-link">Pillar 3: Groq LPU Whisper Indic STT</a></li>
+                        <li><a href="#protocol" class="footer-link">Air-Gapped 2-Pillar Resilient Failsafe</a></li>
+                        <li><a href="index.html?load=wiretap" class="footer-link">Cryptographic Evidence Vault
+                                Hashing</a></li>
+                    </ul>
                 </div>
 
-                <!-- Horizontal Scroll Track (Native, silky-smooth, zero wheel-delay) -->
-                <div class="horizontal-scroll-container" id="cardsTrack">
-                    <!-- Card 01: Live Call Queue & Triage -->
-                    <div class="protocol-card" id="card01">
-                        <div>
-                            <div class="card-top-row">
-                                <span class="col-index">[ 01 // DISPATCH ]</span>
-                            </div>
-                            <h2 class="col-title">Live Call Queue &amp; Triage</h2>
-                            <p class="col-desc">
-                                Emergency calls are auto-ranked by multi-modal distress scores. Critical extortion
-                                threats surface immediately to queue apex.
-                            </p>
-                        </div>
-                        <div>
-                            <button type="button" class="btn-card-action" id="btnLoadDigitalArrest"
-                                title="Simulate Digital Arrest Call">
-                                <span>Load Digital Arrest (#CALL-9823)</span>
-                                <span class="btn-arrow-circle">↗</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 02: 3-Pillar Multimodal Telemetry -->
-                    <div class="protocol-card" id="card02">
-                        <div>
-                            <div class="card-top-row">
-                                <span class="col-index">[ 02 // SENSORS ]</span>
-                            </div>
-                            <h2 class="col-title">3-Pillar Multimodal Telemetry</h2>
-                            <p class="col-desc">
-                                Triangulated consensus evaluating <strong>Voice Emotion (P1 SER)</strong>, <strong>SciPy
-                                    Glottal Tremors &lt;15ms (P2 DSP)</strong>, and <strong>Groq Whisper Indic Threat
-                                    Keywords (P3 STT)</strong> to eliminate false positives.
-                            </p>
-                        </div>
-                        <div>
-                            <button type="button" class="btn-card-action" id="btnInspectPillars"
-                                title="Inspect Telemetry Breakdown">
-                                <span>Inspect Telemetry Matrix</span>
-                                <span class="btn-arrow-circle">↗</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 03: 2-Pillar Resilience Failsafe -->
-                    <div class="protocol-card" id="card03">
-                        <div>
-                            <div class="card-top-row">
-                                <span class="col-index">[ 03 // AIR-GAPPED ]</span>
-                            </div>
-                            <h2 class="col-title">2-Pillar Resilience Failsafe</h2>
-                            <p class="col-desc">
-                                Automatic failover to pure CPU edge DSP (45%) and local regex taxonomy (55%) when cloud
-                                GPU models warm up.
-                            </p>
-                        </div>
-                        <div>
-                            <button type="button" class="btn-card-action" id="btnTestFailsafe"
-                                title="Test Air-Gapped Resilient Failsafe">
-                                <span>Test 2-Pillar Failsafe</span>
-                                <span class="btn-arrow-circle">↗</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Card 04: Wiretap Forensics & Chain-of-Custody -->
-                    <div class="protocol-card" id="card04">
-                        <div>
-                            <div class="card-top-row">
-                                <span class="col-index">[ 04 // EVIDENCE ]</span>
-                            </div>
-                            <h2 class="col-title">Wiretap Forensics &amp; Chain-of-Custody</h2>
-                            <p class="col-desc">
-                                Second-by-second timeline analysis of case wiretaps with cryptographic SHA-256
-                                tamper-evident integrity hashing.
-                            </p>
-                        </div>
-                        <div>
-                            <button type="button" class="btn-card-action" id="btnInspectWiretaps"
-                                title="Inspect Wiretap Case Audio">
-                                <span>Inspect Case Wiretaps</span>
-                                <span class="btn-arrow-circle">↗</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Finale Convert-to-Console Section -->
-            <section class="finale-section" id="console">
-                <h2 class="finale-heading">
-                    Dispatch with Clarity <span class="pencil-glyph">↗</span>
-                </h2>
-                <p class="finale-desc">
-                    Empowering cybercrime dispatchers and investigation teams with instantaneous duress verification and
-                    consensus intelligence.
-                </p>
-                <div class="finale-actions">
-                    <a href="login.html" class="btn-capsule btn-capsule-solid" id="btnFinaleLogin"
-                        style="font-size: 0.90rem; padding: 0.55rem 0.60rem 0.55rem 1.4rem;">
-                        <span>Investigator Sign In</span>
-                        <span class="btn-arrow-circle">↗</span>
-                    </a>
-                </div>
-            </section>
-
-            <!-- Institutional Documentation & Architecture Footer (Professional Grade) -->
-            <footer class="system-footer" id="docs">
-                <div class="footer-grid">
-                    <!-- Col 1: System Identification -->
-                    <div class="footer-col col-brand">
-                        <div class="footer-brand">
-                            <span class="brand-glyph"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"
-                                    viewBox="0 0 24 24" fill="none" stroke="#3dffa0" stroke-linecap="round"
-                                    stroke-linejoin="round" stroke-width="1.75" aria-hidden="true">
-                                    <path d="M2 12h2l2.5-4.5L9 17l3-13l3 16l2.5-11.5l2 5l1-1.5H22" />
-                                </svg></span>
-                            <span class="brand-title">CYBERGUARD</span>
-                        </div>
-                        <p class="footer-tagline">
-                            Real-Time Speech Emotion &amp; Vocal Biomarker Triage Architecture for Cybercrime Helplines
-                            (1930 / 112) and Forensic Audio Analysts.
-                        </p>
-                        <div class="footer-compliance-stamp">
-                            RFC 6234 SHA-256 Chain-of-Custody Compliant
-                        </div>
-                    </div>
-
-                    <!-- Col 2: Core Protocols & Engine Docs -->
-                    <div class="footer-col">
-                        <h4 class="footer-heading">Protocol Architecture</h4>
-                        <ul class="footer-links">
-                            <li><a href="#protocol" class="footer-link">Pillar 1: emotion2vec+ SER Model</a></li>
-                            <li><a href="#protocol" class="footer-link">Pillar 2: SciPy Acoustic Tremors (&lt;15ms)</a>
-                            </li>
-                            <li><a href="#protocol" class="footer-link">Pillar 3: Groq LPU Whisper Indic STT</a></li>
-                            <li><a href="#protocol" class="footer-link">Air-Gapped 2-Pillar Resilient Failsafe</a></li>
-                            <li><a href="index.html?load=wiretap" class="footer-link">Cryptographic Evidence Vault
-                                    Hashing</a></li>
-                        </ul>
-                    </div>
-
-                    <!-- Col 3: Statutory & Evidence Guidelines -->
-                    <div class="footer-col">
-                        <h4 class="footer-heading">Forensic Standards</h4>
-                        <ul class="footer-links">
-                            <li><span class="footer-static-item">Deterministic SHA-256 Audit Trails</span></li>
-                            <li><span class="footer-static-item">Investigator RBAC Access Control</span></li>
-                        </ul>
-                    </div>
-
-                    <!-- Col 4: Investigator Terminal & Access -->
-                    <div class="footer-col">
-                        <h4 class="footer-heading">Investigator Resources</h4>
-                        <ul class="footer-links">
-                            <li><a href="login.html" class="footer-link-highlight">Authorized Investigator Portal ↗</a>
-                            </li>
-                            <li><a href="index.html?load=CALL-9823" class="footer-link">Inspect Digital Arrest
-                                    (#CALL-9823)</a></li>
-                            <li><a href="index.html?load=wiretap" class="footer-link">Inspect Forensic Case Wiretaps</a>
-                            </li>
-                            <li><a href="index.html?action=failsafe" class="footer-link">Test Edge Resilient
-                                    Failsafe</a></li>
-                            <li><a href="/api/health" target="_blank" class="footer-link">Diagnostic API Health
-                                    Endpoint</a></li>
-                        </ul>
-                    </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Forensic Standards</h4>
+                    <ul class="footer-links">
+                        <li><span class="footer-static-item">Deterministic SHA-256 Audit Trails</span></li>
+                        <li><span class="footer-static-item">Investigator RBAC Access Control</span></li>
+                    </ul>
                 </div>
 
-                <!-- Bottom Copyright & Security Seal Row -->
-                <div class="footer-bottom-row">
-                    <div class="footer-copyright">
-                        &copy; 2026 CyberGuard Protocol. All rights reserved.
-                    </div>
-                    <div class="footer-security-notice">
-                        RESTRICTED LAW ENFORCEMENT PLATFORM &bull; ACCESS STRICTLY AUDITED
-                    </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Investigator Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="login.html" class="footer-link-highlight">Authorized Investigator Portal ↗</a></li>
+                        <li><a href="index.html?load=CALL-9823" class="footer-link">Inspect Digital Arrest
+                                (#CALL-9823)</a></li>
+                        <li><a href="index.html?load=wiretap" class="footer-link">Inspect Forensic Case Wiretaps</a>
+                        </li>
+                        <li><a href="index.html?action=failsafe" class="footer-link">Test Edge Resilient Failsafe</a>
+                        </li>
+                        <li><a href="/api/health" target="_blank" class="footer-link">Diagnostic API Health Endpoint</a>
+                        </li>
+                    </ul>
                 </div>
-            </footer>
+            </div>
+
+            <div class="footer-bottom-row">
+                <div class="footer-copyright">
+                    &copy; 2026 CyberGuard Protocol. All rights reserved.
+                </div>
+                <div class="footer-security-notice">
+                    RESTRICTED LAW ENFORCEMENT PLATFORM &bull; ACCESS STRICTLY AUDITED
+                </div>
+            </div>
+        </footer>
     </main>
 
-    <!-- Clean Floating Bottom Dock (Praised by user) -->
+    <!-- Clean Floating Bottom Dock -->
     <nav class="floating-dock" aria-label="Quick page navigation">
         <a class="dock-item active" href="#hero" id="dockOverview">Overview</a>
         <a class="dock-item" href="#protocol" id="dockProtocol">Protocol Cards</a>
@@ -366,60 +316,11 @@
         <a class="dock-item" href="index.html" id="btnDockConsole"><span class="dock-dot"></span>Launch Console</a>
     </nav>
 
-    <!-- Interactive Walkthrough / Evaluation Protocol Modal (Matches User Image 1) -->
-    <div class="boutique-modal-backdrop" id="modalBackdrop">
-        <div class="boutique-modal-box">
-            <div class="modal-header-row">
-                <div class="modal-title-group">
-                    <h3 class="modal-title" id="modalTitle">
-                        <span>🚨</span> CyberGuard Quick Evaluation Protocol
-                    </h3>
-                    <div class="modal-subtitle">FAST-TRACK DEMO WALKTHROUGH FOR JURY &amp; COMMANDERS</div>
-                </div>
-                <button type="button" class="modal-close-btn" id="modalCloseBtn"
-                    aria-label="Close dialog">&times;</button>
-            </div>
-
-            <div class="modal-metrics-grid">
-                <div class="modal-metric-card">
-                    <div class="modal-metric-val" id="modalUrgency" style="color: #ef4444;">94 / 100</div>
-                    <div class="modal-metric-lbl">Multi-Modal Urgency</div>
-                </div>
-                <div class="modal-metric-card">
-                    <div class="modal-metric-val" id="modalPriority" style="color: #ef4444;">CRITICAL</div>
-                    <div class="modal-metric-lbl">Triage Priority</div>
-                </div>
-                <div class="modal-metric-card">
-                    <div class="modal-metric-val" id="modalTremor">52 Hz Jitter</div>
-                    <div class="modal-metric-lbl">Acoustic Tremor (F₀)</div>
-                </div>
-            </div>
-
-            <div class="modal-body-panel" id="modalBody">
-                <!-- Filled dynamically with scenario details -->
-            </div>
-
-            <div class="modal-footer-row">
-                <label class="modal-checkbox-label">
-                    <input type="checkbox" id="modalDontAutoLaunch" />
-                    <span>Don't auto-launch on startup</span>
-                </label>
-
-                <button type="button" class="btn-capsule btn-capsule-solid" id="btnModalLaunchConsole"
-                    style="padding: 0.45rem 0.5rem 0.45rem 1.25rem;">
-                    <span id="modalLaunchBtnText">Begin Evaluation</span>
-                    <span class="btn-arrow-circle">↗</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Interactive Script Logic -->
     <script>
         (() => {
             "use strict";
 
-            // Evaluator duty credentials bootstrap
             function setupEvaluatorSession() {
                 if (!sessionStorage.getItem("cyberguard_token")) {
                     sessionStorage.setItem("cyberguard_token", "evaluator_token_2026_demo");
@@ -433,7 +334,6 @@
                 }
             }
 
-            // Console Launcher Buttons
             const launchButtons = [
                 document.getElementById("btnHeroLaunch"),
                 document.getElementById("btnDockConsole")
@@ -448,88 +348,9 @@
                 }
             });
 
-            // Card 01: Digital Arrest
-            const btnLoadDigitalArrest = document.getElementById("btnLoadDigitalArrest");
-            if (btnLoadDigitalArrest) {
-                btnLoadDigitalArrest.addEventListener("click", () => {
-                    openModal(
-                        "<span>🚨</span> Live Intercept: Digital Arrest (#CALL-9823)",
-                        "94 / 100",
-                        "CRITICAL",
-                        "52 Hz Jitter",
-                        `<strong>Threat Scenario:</strong> CBI &amp; Customs Impersonation Extortion.<br>
-                         <em>"Sir, they are claiming they are from Mumbai Customs. They said my Aadhaar was found in an illegal parcel and I have to stay on digital arrest..."</em><br>
-                         <div style="margin-top:0.65rem; color:#2fe890; font-family:var(--font-mono); font-size:0.75rem;">
-                         ACTION ADVISORY: Escalate to Cyber Cell Commander and initiate emergency bank account freeze.
-                         </div>`,
-                        "index.html?load=CALL-9823",
-                        "Load Digital Arrest (#CALL-9823)"
-                    );
-                });
-            }
-
-            // Card 02: 3-Pillar Telemetry Matrix Modal
-            const btnInspectPillars = document.getElementById("btnInspectPillars");
-            if (btnInspectPillars) {
-                btnInspectPillars.addEventListener("click", () => {
-                    openModal(
-                        "<span>📊</span> 3-Pillar Consensus Telemetry Matrix",
-                        "94 / 100",
-                        "CRITICAL",
-                        "Triangulated",
-                        `<strong>P1 Voice Emotion (SER):</strong> 86.4% Fear/Panic (emotion2vec+ FunASR Seed).<br>
-                         <strong>P2 Acoustic Glottal Tremors:</strong> 52 Hz Pitch Jitter σ_F0 (&lt;15ms SciPy DSP).<br>
-                         <strong>P3 Indic Threat Taxonomy:</strong> Groq LPU Whisper STT matched extortion keywords.<br>
-                         <div style="margin-top:0.65rem; color:#2fe890; font-family:var(--font-mono); font-size:0.75rem;">
-                         Cross-pillar agreement: 100% consensus confirms high-duress cyber extortion.
-                         </div>`,
-                        "index.html",
-                        "Open in Command Console"
-                    );
-                });
-            }
-
-            // Card 03: Failsafe
-            const btnTestFailsafe = document.getElementById("btnTestFailsafe");
-            if (btnTestFailsafe) {
-                btnTestFailsafe.addEventListener("click", () => {
-                    openModal(
-                        "<span>🛡️</span> 2-Pillar Resilience Failsafe Active",
-                        "88 / 100",
-                        "CRITICAL",
-                        "Air-Gapped Mode",
-                        `<strong>Zero Downtime Resilience:</strong><br>
-                         When cloud GPU models experience cold-start latency, the engine dynamically shifts weights to pure CPU edge DSP (45%) and local regex taxonomy (55%) with zero triage downtime.`,
-                        "index.html?action=failsafe",
-                        "Test 2-Pillar Failsafe"
-                    );
-                });
-            }
-
-            // Card 04: Wiretaps
-            const btnInspectWiretaps = document.getElementById("btnInspectWiretaps");
-            if (btnInspectWiretaps) {
-                btnInspectWiretaps.addEventListener("click", () => {
-                    openModal(
-                        "<span>📁</span> Case Wiretap Forensics &amp; Chain-of-Custody",
-                        "92 / 100",
-                        "EVIDENCE GRADE",
-                        "SHA-256 Sealed",
-                        `<strong>Case Evidence File:</strong> sample_digital_arrest.wav<br>
-                         Tamper-evident forensic timeline analysis with cryptographic SHA-256 evidence integrity hashing and investigator badge accountability.`,
-                        "index.html?load=wiretap",
-                        "Inspect Case Wiretaps"
-                    );
-                });
-            }
-
-            // Floating dock scroll tracking
             const dockOverview = document.getElementById("dockOverview");
             const dockProtocol = document.getElementById("dockProtocol");
             const dockDocs = document.getElementById("dockDocs");
-            const navHome = document.getElementById("navHome");
-            const navProtocol = document.getElementById("navProtocol");
-            const navDocs = document.getElementById("navDocs");
 
             window.addEventListener("scroll", () => {
                 const scrollPos = window.scrollY + 250;
@@ -541,23 +362,14 @@
                     if (dockDocs) dockDocs.classList.add("active");
                     if (dockProtocol) dockProtocol.classList.remove("active");
                     if (dockOverview) dockOverview.classList.remove("active");
-                    if (navDocs) navDocs.classList.add("active");
-                    if (navProtocol) navProtocol.classList.remove("active");
-                    if (navHome) navHome.classList.remove("active");
                 } else if (protocolSection && scrollPos >= protocolSection.offsetTop) {
                     if (dockProtocol) dockProtocol.classList.add("active");
                     if (dockDocs) dockDocs.classList.remove("active");
                     if (dockOverview) dockOverview.classList.remove("active");
-                    if (navProtocol) navProtocol.classList.add("active");
-                    if (navDocs) navDocs.classList.remove("active");
-                    if (navHome) navHome.classList.remove("active");
                 } else {
                     if (dockOverview) dockOverview.classList.add("active");
                     if (dockProtocol) dockProtocol.classList.remove("active");
                     if (dockDocs) dockDocs.classList.remove("active");
-                    if (navHome) navHome.classList.add("active");
-                    if (navProtocol) navProtocol.classList.remove("active");
-                    if (navDocs) navDocs.classList.remove("active");
                 }
             }, { passive: true });
         })();

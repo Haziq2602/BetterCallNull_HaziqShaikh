@@ -4,360 +4,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGuard - Station Commander & Duty Roster</title>
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#050806">
+    <title>CyberGuard - Station Commander Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=6">
+    <link rel="stylesheet" href="css/styles.css?v=16">
     <style>
-        .admin-page-body {
-            background: var(--bg);
-            color: var(--text);
+        /* ==========================================================
+           CyberGuard Station Commander Console
+           Clean, minimal, tactical command room:
+           - Subtle emerald glow & high signal-to-noise ratio
+           - Minimal typography matching live console
+           - Hoverable & clickable officer name -> Detailed Dossier Modal
+           - Exactly ONE Provision New Officer button
+           - 2-Column layout: Roster on left, Audit Trail on right
+           ========================================================== */
+
+        :root {
+            --app-bg: #050806;
+            --card-bg: rgba(9, 18, 12, 0.88);
+            --card-border: rgba(0, 255, 136, 0.16);
+            --card-border-glow: rgba(0, 255, 136, 0.35);
+            --text-main: #e6f5ec;
+            --text-dim: #8fa89a;
+            --accent-green: #00ff88;
+            --accent-cyan: #5df2b8;
+            --danger-red: #ef4444;
+            --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 255, 136, 0.25) transparent;
+        }
+
+        body.admin-body {
             min-height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--app-bg);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            line-height: 1.45;
+            -webkit-font-smoothing: antialiased;
+            padding: 1.5rem 2rem 3rem 2rem;
             position: relative;
         }
 
-        .admin-container {
-            max-width: 1380px;
+        /* Subtle edge green glow from Pinterest inspiration (clean & minimal, no slop) */
+        .admin-page-container {
+            max-width: 1540px;
             margin: 0 auto;
-            padding: 1.5rem 2rem 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
             position: relative;
-            z-index: 1;
         }
 
-        .admin-header {
+        /* ----------------------------------------------------------
+           1. TOP HEADER BAR
+           ---------------------------------------------------------- */
+        .commander-header-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-left: 2px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 1rem 1.35rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.25rem 1.75rem;
-            background: rgba(10, 18, 14, 0.75);
+            gap: 1rem;
+            flex-wrap: wrap;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), -10px 0 30px rgba(0, 255, 136, 0.05);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            margin-bottom: 2rem;
+            -webkit-backdrop-filter: blur(20px);
         }
 
-        .admin-brand {
+        .header-brand-side {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.9rem;
         }
 
-        .admin-emblem {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: rgba(61, 255, 160, 0.12);
-            border: 1px solid rgba(61, 255, 160, 0.35);
-            color: var(--accent);
+        .commander-shield-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            color: var(--accent-green);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 14px rgba(0, 255, 136, 0.2);
+            flex-shrink: 0;
         }
 
-        .admin-title-group h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            color: #fff;
-            margin-bottom: 0.15rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .admin-badge-chip {
-            font-size: 0.68rem;
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(61, 255, 160, 0.15);
-            color: var(--accent);
-            border: 1px solid rgba(61, 255, 160, 0.3);
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .admin-title-group p {
-            font-size: 0.82rem;
-            color: var(--muted);
-        }
-
-        .admin-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-        }
-
-        .btn-nav-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text);
-            padding: 0.55rem 1rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .btn-nav-back:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.25);
-            color: #fff;
-        }
-
-        /* Stats Cards */
-        .admin-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.25rem;
-            margin-bottom: 2rem;
-        }
-
-        .admin-stat-card {
-            background: rgba(10, 18, 14, 0.65);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 1.25rem 1.5rem;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(14px);
-        }
-
-        .admin-stat-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0.4;
-        }
-
-        .stat-card-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--muted);
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .stat-card-val {
-            font-size: 1.85rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            color: #fff;
-            letter-spacing: -0.02em;
-        }
-
-        .stat-card-sub {
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-top: 0.35rem;
-        }
-
-        /* Content Split: Left Table, Right Audit Trail */
-        .admin-content-grid {
-            display: grid;
-            grid-template-columns: 2.1fr 1fr;
-            gap: 1.75rem;
-        }
-
-        .panel-box {
-            background: rgba(10, 18, 14, 0.7);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            backdrop-filter: blur(20px);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-box-header {
-            padding: 1.1rem 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(5, 12, 8, 0.45);
-        }
-
-        .panel-box-header h2 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            background: var(--accent);
-            color: #031409;
-            border: none;
-            padding: 0.55rem 1.15rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary-action:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(61, 255, 160, 0.35);
-        }
-
-        /* Roster Table */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        .roster-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.84rem;
-            text-align: left;
-        }
-
-        .roster-table th {
-            background: rgba(3, 9, 6, 0.6);
-            color: var(--muted);
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.85rem 1.25rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .roster-table td {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            vertical-align: middle;
-        }
-
-        .roster-table tr:hover td {
-            background: rgba(61, 255, 160, 0.03);
-        }
-
-        .officer-name-cell {
-            font-weight: 600;
-            color: #fff;
+        .header-brand-titles {
             display: flex;
             flex-direction: column;
             gap: 0.15rem;
         }
 
-        .officer-badge-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--accent);
+        .title-rbac-row {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
         }
 
-        .role-pill {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            padding: 0.2rem 0.55rem;
+        .title-rbac-row h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #ffffff;
+            font-family: var(--font-sans);
+        }
+
+        .badge-rbac {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.45rem;
             border-radius: 4px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: var(--text);
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: var(--accent-green);
+            letter-spacing: 0.04em;
         }
 
-        .role-pill.lead {
-            background: rgba(61, 255, 160, 0.12);
-            border-color: rgba(61, 255, 160, 0.35);
-            color: var(--accent);
+        .header-brand-titles p {
+            font-size: 0.74rem;
+            color: var(--text-dim);
+            letter-spacing: 0.01em;
         }
 
-        .status-badge {
+        .header-actions-side {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .commander-investigator-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(2, 6, 4, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            padding: 0.28rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .commander-investigator-pill .comm-role {
+            font-family: var(--font-mono);
+            font-size: 0.64rem;
+            font-weight: 700;
+            padding: 0.12rem 0.42rem;
+            border-radius: 4px;
+            background: rgba(0, 255, 136, 0.14);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+        }
+
+        .commander-investigator-pill .comm-badge {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .commander-investigator-pill .comm-name {
+            color: var(--text-dim);
+            font-size: 0.72rem;
+        }
+
+        .btn-return-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            font-size: 0.76rem;
+            font-weight: 500;
+            padding: 0.42rem 0.85rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .btn-return-live:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        /* ----------------------------------------------------------
+           2. STAT CARDS ROW (4 IN A ROW)
+           ---------------------------------------------------------- */
+        .stats-grid-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 1080px) {
+            .stats-grid-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.95rem 1.15rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .stat-card-box:hover {
+            border-color: var(--card-border-glow);
+            transform: translateY(-1px);
+        }
+
+        .stat-top-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-header-label {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .stat-big-val {
+            font-family: var(--font-mono);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.15;
+        }
+
+        .stat-big-val.connected {
+            color: var(--accent-green);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding-top: 0.4rem;
+            padding-bottom: 0.2rem;
+        }
+
+        .stat-sub-text {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            letter-spacing: 0.01em;
+        }
+
+        /* ----------------------------------------------------------
+           3. MAIN 2-COLUMN SPLIT GRID
+           ---------------------------------------------------------- */
+        .main-two-columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1.95fr) minmax(360px, 1fr);
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .main-two-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .console-panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .panel-top-header {
+            padding: 0.85rem 1.25rem;
+            background: rgba(2, 6, 4, 0.65);
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .panel-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .panel-title-group h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+        }
+
+        /* THE ONLY PROVISION OFFICER BUTTON IN ROSTER HEADER */
+        .btn-provision-officer {
+            background: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            color: #031409;
+            font-family: var(--font-sans);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.42rem 0.95rem;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(0, 255, 136, 0.3);
+            transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 0.25rem 0.6rem;
-            border-radius: 12px;
         }
 
-        .status-badge.active {
-            background: rgba(16, 185, 129, 0.15);
+        .btn-provision-officer:hover {
+            background: #8dffc6;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.55);
+            transform: translateY(-1px);
+        }
+
+        .badge-sha256 {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        /* ----------------------------------------------------------
+           4. DUTY INVESTIGATOR ROSTER TABLE
+           ---------------------------------------------------------- */
+        .roster-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .cyber-roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            text-align: left;
+        }
+
+        .cyber-roster-table th {
+            background: rgba(2, 6, 4, 0.4);
+            color: var(--text-dim);
+            font-family: var(--font-mono);
+            font-size: 0.66rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.75rem 0.85rem;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        .cyber-roster-table td {
+            padding: 0.75rem 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+            vertical-align: middle;
+        }
+
+        .cyber-roster-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .cyber-roster-table tbody tr:hover {
+            background: rgba(0, 255, 136, 0.028);
+        }
+
+        /* Officer & Badge Column */
+        .officer-badge-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .officer-click-name {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: color 0.15s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .officer-click-name:hover {
+            color: var(--accent-green);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .officer-badge-sub {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent-green);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .login-id-mono {
+            font-family: var(--font-mono);
+            color: #e6f5ec;
+            font-size: 0.76rem;
+        }
+
+        /* Role Pill */
+        .badge-role-tag {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.18rem 0.5rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .badge-role-tag.lead {
+            background: rgba(0, 255, 136, 0.12);
+            border-color: rgba(0, 255, 136, 0.4);
+            color: var(--accent-green);
+        }
+
+        /* Confidential Contact */
+        .contact-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.18rem;
+        }
+
+        .contact-item {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #c9ded3;
+            letter-spacing: 0.01em;
+        }
+
+        /* Status Dot */
+        .status-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 0.18rem 0.55rem;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .status-badge-pill.active {
+            background: rgba(16, 185, 129, 0.14);
             border: 1px solid rgba(16, 185, 129, 0.4);
             color: #86efac;
         }
 
-        .status-badge.suspended {
-            background: rgba(239, 68, 68, 0.15);
+        .status-badge-pill.suspended {
+            background: rgba(239, 68, 68, 0.14);
             border: 1px solid rgba(239, 68, 68, 0.4);
             color: #fca5a5;
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
+        .pulse-mini-dot {
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: currentColor;
         }
 
-        .table-action-btns {
+        /* Administrative Actions */
+        .table-actions-group {
             display: flex;
-            gap: 0.5rem;
             align-items: center;
+            justify-content: flex-end;
+            gap: 0.35rem;
+            flex-wrap: wrap;
         }
 
         .btn-table-action {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--glass-border);
-            color: var(--text);
-            padding: 0.35rem 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            padding: 0.28rem 0.55rem;
             border-radius: 4px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.15s ease;
+            white-space: nowrap;
+            text-align: center;
         }
 
         .btn-table-action:hover {
             background: rgba(255, 255, 255, 0.12);
-            color: #fff;
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-table-action.danger {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
         }
 
         .btn-table-action.danger:hover {
             background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.5);
-            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.6);
+            color: #ffffff;
+        }
+
+        .btn-table-action.success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #86efac;
         }
 
         .btn-table-action.success:hover {
             background: rgba(16, 185, 129, 0.2);
-            border-color: rgba(16, 185, 129, 0.5);
-            color: #86efac;
+            border-color: rgba(16, 185, 129, 0.6);
+            color: #ffffff;
         }
 
-        /* Audit Trail List */
-        .audit-list {
+        .self-account-tag {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            padding: 0.2rem 0.4rem;
+        }
+
+        /* ----------------------------------------------------------
+           5. SECURITY AUDIT TRAIL PANEL
+           ---------------------------------------------------------- */
+        .audit-trail-stream {
             list-style: none;
             padding: 0;
             margin: 0;
@@ -365,45 +591,70 @@
             overflow-y: auto;
         }
 
-        .audit-item {
-            padding: 0.9rem 1.25rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .audit-event-row {
+            padding: 0.75rem 1.15rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
+            transition: background 0.15s ease;
         }
 
-        .audit-item:last-child {
-            border-bottom: none;
+        .audit-event-row:hover {
+            background: rgba(0, 255, 136, 0.025);
         }
 
-        .audit-meta {
+        .audit-event-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.72rem;
-            color: var(--muted);
+            gap: 0.5rem;
         }
 
-        .audit-type {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            color: var(--accent);
-            font-size: 0.75rem;
+        .audit-type-text {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            letter-spacing: 0.02em;
         }
 
-        .audit-desc {
-            font-size: 0.8rem;
-            color: var(--text);
+        .audit-type-text.suspended {
+            color: #fca5a5;
+        }
+
+        .audit-type-text.neutral {
+            color: #93c5fd;
+        }
+
+        .audit-time-text {
+            font-family: var(--font-mono);
+            font-size: 0.66rem;
+            color: var(--text-dim);
+        }
+
+        .audit-desc-line {
+            font-size: 0.74rem;
+            color: #b0c9bc;
             line-height: 1.35;
         }
 
-        /* Modal Overlay */
-        .modal-overlay {
+        .audit-empty-state {
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+        }
+
+        /* ----------------------------------------------------------
+           6. MODALS: DOSSIER & PROVISION
+           ---------------------------------------------------------- */
+        .modal-backdrop-wrap {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 1000;
             display: none;
             align-items: center;
@@ -411,148 +662,284 @@
             padding: 1.5rem;
         }
 
-        .modal-card {
-            background: #08120c;
-            border: 1px solid var(--glass-border-strong);
-            border-radius: var(--radius);
+        .modal-window-box {
+            background: #09140e;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: 12px;
             width: 100%;
-            max-width: 560px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+            max-width: 520px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 255, 136, 0.12);
             overflow: hidden;
-            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: modalFadeIn 0.18s ease-out;
+            position: relative;
         }
 
-        @keyframes modalPop {
+        @keyframes modalFadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.96) translateY(10px);
+                transform: scale(0.97) translateY(8px);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1) translateY(0);
             }
         }
 
-        .modal-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
+        .modal-header-line {
+            padding: 0.95rem 1.25rem;
+            border-bottom: 1px solid var(--card-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 22, 16, 0.5);
+            background: rgba(2, 6, 4, 0.6);
         }
 
-        .modal-header h3 {
-            font-size: 1.05rem;
+        .modal-header-line h3 {
+            font-size: 0.92rem;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .btn-modal-close-x {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.25rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0.2rem;
+            transition: color 0.15s ease;
+        }
+
+        .btn-modal-close-x:hover {
+            color: #ffffff;
+        }
+
+        .modal-body-scroll {
+            padding: 1.25rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            max-height: calc(85vh - 120px);
+            overflow-y: auto;
+        }
+
+        .modal-row-pair {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+        }
+
+        @media (max-width: 520px) {
+            .modal-row-pair {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-field-unit {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .modal-field-unit label {
+            font-size: 0.67rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: var(--font-mono);
+        }
+
+        .modal-field-unit input,
+        .modal-field-unit select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-field-unit input:focus,
+        .modal-field-unit select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15);
+        }
+
+        .modal-field-unit select option {
+            background: #09140e;
+            color: #ffffff;
+        }
+
+        .passcode-gen-wrap {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .btn-modal-close {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            font-size: 1.3rem;
-            cursor: pointer;
-            line-height: 1;
+        .passcode-gen-wrap input {
+            flex: 1;
+            font-family: var(--font-mono);
         }
 
-        .modal-body {
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-
-        .form-group label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .form-group input,
-        .form-group select {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--glass-border);
+        .btn-gen-passcode {
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            color: var(--accent-green);
+            padding: 0.5rem 0.75rem;
             border-radius: 6px;
-            padding: 0.65rem 0.85rem;
-            color: #fff;
-            font-size: 0.85rem;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s ease;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(61, 255, 160, 0.15);
+        .btn-gen-passcode:hover {
+            background: rgba(0, 255, 136, 0.25);
+            color: #ffffff;
         }
 
-        .form-group select option {
-            background: #08120c;
-            color: #fff;
-        }
-
-        .modal-footer {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid var(--glass-border);
+        .modal-footer-line {
+            padding: 0.85rem 1.25rem;
+            border-top: 1px solid var(--card-border);
             display: flex;
             justify-content: flex-end;
-            gap: 0.75rem;
-            background: rgba(5, 12, 8, 0.3);
+            align-items: center;
+            gap: 0.65rem;
+            background: rgba(2, 6, 4, 0.5);
         }
 
-        .btn-modal-cancel {
+        .btn-modal-ghost {
             background: transparent;
-            border: 1px solid var(--glass-border);
-            color: var(--muted);
-            padding: 0.6rem 1.2rem;
+            border: 1px solid var(--card-border);
+            color: var(--text-dim);
+            padding: 0.42rem 0.95rem;
             border-radius: 6px;
-            font-size: 0.84rem;
+            font-size: 0.76rem;
             cursor: pointer;
+            transition: all 0.15s ease;
         }
 
-        .toast-notify {
+        .btn-modal-ghost:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Dossier Elements */
+        .dossier-top-box {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .dossier-avatar-initials {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.22), rgba(93, 242, 184, 0.08));
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: var(--accent-green);
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dossier-grid-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .dossier-info-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            background: rgba(2, 6, 4, 0.5);
+            padding: 0.65rem 0.85rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .dossier-info-block span {
+            font-size: 0.64rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-family: var(--font-mono);
+            letter-spacing: 0.05em;
+        }
+
+        .dossier-info-block strong {
+            font-size: 0.8rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* ----------------------------------------------------------
+           7. FLOATING TOAST
+           ---------------------------------------------------------- */
+        .cyber-toast-box {
             position: fixed;
             bottom: 2rem;
             right: 2rem;
-            background: #0a1f14;
-            border: 1px solid var(--accent);
-            color: #fff;
-            padding: 0.85rem 1.4rem;
+            background: rgba(6, 17, 10, 0.96);
+            border: 1px solid var(--accent-green);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 18px rgba(0, 255, 136, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #ffffff;
+            padding: 0.7rem 1.1rem;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             z-index: 2000;
             display: none;
             align-items: center;
-            gap: 0.6rem;
-            font-size: 0.86rem;
-            animation: toastSlide 0.25s ease;
+            gap: 0.65rem;
+            font-size: 0.78rem;
+            max-width: 420px;
+            animation: toastSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes toastSlide {
+        .toast-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 6px var(--accent-green);
+            flex-shrink: 0;
+        }
+
+        .cyber-toast-box.error {
+            border-color: var(--danger-red);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8), 0 0 18px rgba(239, 68, 68, 0.25);
+        }
+
+        .cyber-toast-box.error .toast-status-dot {
+            background: var(--danger-red);
+            box-shadow: 0 0 6px var(--danger-red);
+        }
+
+        @keyframes toastSlideUp {
             from {
-                transform: translateY(20px);
+                transform: translateY(16px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -561,168 +948,229 @@
     </style>
 </head>
 
-<body class="admin-page-body">
-    <div class="admin-container">
+<body class="dark-theme admin-body">
 
-        <!-- Top Header Navigation -->
-        <header class="admin-header">
-            <div class="admin-brand">
-                <div class="admin-emblem">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+    <div class="admin-page-container">
+
+        <!-- 1. TOP HEADER BAR -->
+        <header class="commander-header-card">
+            <div class="header-brand-side">
+                <div class="commander-shield-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L3 7v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7l-9-5z" />
                         <path d="M12 11a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                         <path d="M12 13.5c-2.8 0-5 1.8-5 3.5v.5h10v-.5c0-1.7-2.2-3.5-5-3.5z" />
                     </svg>
                 </div>
-                <div class="admin-title-group">
-                    <h1>
-                        STATION COMMANDER CONSOLE
-                        <span class="admin-badge-chip">RBAC RESTRICTED</span>
-                    </h1>
+                <div class="header-brand-titles">
+                    <div class="title-rbac-row">
+                        <h1>STATION COMMANDER CONSOLE</h1>
+                        <span class="badge-rbac">RBAC RESTRICTED</span>
+                    </div>
                     <p>Personnel Provisioning, Duty Roster & Security Audit Log Management</p>
                 </div>
             </div>
 
-            <div class="admin-actions">
-                <div class="investigator-pill" id="commanderPill">
-                    <span class="badge-role" id="commRole">COMMANDER</span>
-                    <span class="officer-id" id="commBadge">INV-7842</span>
-                    <span class="officer-name" id="commName">Insp. Haziq Shaikh</span>
+            <div class="header-actions-side">
+                <div class="commander-investigator-pill" id="commanderPill">
+                    <span class="comm-role" id="commRole">LEAD_INVESTIGATOR</span>
+                    <span class="comm-badge" id="commBadge">INV-7842</span>
+                    <span class="comm-name" id="commName">Insp. Haziq Shaikh</span>
                 </div>
-                <a href="index.html" class="btn-nav-back">
+
+                <a href="index.html" class="btn-return-live" title="Return to Live Console">
                     <span>← Return to Live Console</span>
                 </a>
             </div>
         </header>
 
-        <!-- Stats Overview Cards -->
-        <div class="admin-stats-grid">
-            <div class="admin-stat-card">
-                <div class="stat-card-label">
-                    <span>Active On Duty</span>
-                    <span>👮</span>
+        <!-- 2. STAT CARDS ROW (4 IN A ROW) -->
+        <section class="stats-grid-row" aria-label="Duty Overview Stats">
+            <div class="stat-card-box">
+                <div class="stat-top-line">
+                    <span class="stat-header-label">ACTIVE ON DUTY</span>
                 </div>
-                <div class="stat-card-val" id="statActiveCount">1</div>
-                <div class="stat-card-sub">Authorized live triage officers</div>
+                <div class="stat-big-val" id="statActiveCount">1</div>
+                <div class="stat-sub-text">Authorized live triage officers</div>
             </div>
 
-            <div class="admin-stat-card">
-                <div class="stat-card-label">
-                    <span>Total Provisioned</span>
-                    <span>📋</span>
+            <div class="stat-card-box">
+                <div class="stat-top-line">
+                    <span class="stat-header-label">TOTAL PROVISIONED</span>
                 </div>
-                <div class="stat-card-val" id="statTotalCount">1</div>
-                <div class="stat-card-sub">In database investigator roster</div>
+                <div class="stat-big-val" id="statTotalCount">1</div>
+                <div class="stat-sub-text">In database investigator roster</div>
             </div>
 
-            <div class="admin-stat-card">
-                <div class="stat-card-label">
-                    <span>Suspended Badges</span>
-                    <span>🔒</span>
+            <div class="stat-card-box">
+                <div class="stat-top-line">
+                    <span class="stat-header-label">SUSPENDED BADGES</span>
                 </div>
-                <div class="stat-card-val" id="statSuspendedCount">0</div>
-                <div class="stat-card-sub">Revoked / Inactive terminals</div>
+                <div class="stat-big-val" id="statSuspendedCount">0</div>
+                <div class="stat-sub-text">Revoked / Inactive terminals</div>
             </div>
 
-            <div class="admin-stat-card">
-                <div class="stat-card-label">
-                    <span>Cloud State</span>
-                    <span>☁️</span>
+            <div class="stat-card-box">
+                <div class="stat-top-line">
+                    <span class="stat-header-label">CLOUD STATE</span>
                 </div>
-                <div class="stat-card-val" style="font-size: 1.25rem; color: #86efac; padding-top: 0.35rem;" id="statCloudDb">
-                    CONNECTED
-                </div>
-                <div class="stat-card-sub">Supabase PostgreSQL live sync</div>
+                <div class="stat-big-val connected" id="statCloudDb">CONNECTED</div>
+                <div class="stat-sub-text">Supabase PostgreSQL live sync</div>
             </div>
-        </div>
+        </section>
 
-        <!-- Main Content Area -->
-        <div class="admin-content-grid">
+        <!-- 3. TWO-COLUMN SPLIT: ROSTER (LEFT) + AUDIT TRAIL (RIGHT) -->
+        <div class="main-two-columns">
 
-            <!-- Left: Investigator Roster -->
-            <div class="panel-box">
-                <div class="panel-box-header">
-                    <h2>
-                        <span>👮 Duty Investigator Roster</span>
-                    </h2>
-                    <div style="display: flex; gap: 0.6rem;">
-                        <button class="btn-primary-action" id="btnOpenProvisionModal">
-                            <span>+ Provision New Officer</span>
-                        </button>
+            <!-- LEFT: DUTY INVESTIGATOR ROSTER (~68%) -->
+            <section class="console-panel-card" aria-label="Duty Investigator Roster">
+                <div class="panel-top-header">
+                    <div class="panel-title-group">
+                        <h2>Duty Investigator Roster</h2>
                     </div>
+
+                    <!-- EXACTLY ONE PROVISION OFFICER BUTTON IN THE WHOLE UI -->
+                    <button type="button" class="btn-provision-officer" id="btnOpenProvisionModal">
+                        <span>+ Provision New Officer</span>
+                    </button>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="roster-table">
+                <div class="roster-table-scroll">
+                    <table class="cyber-roster-table">
                         <thead>
                             <tr>
-                                <th>Officer & Badge</th>
-                                <th>Login ID</th>
-                                <th>Role</th>
-                                <th>Confidential Contact</th>
-                                <th>Duty Status</th>
-                                <th style="text-align: right;">Administrative Action</th>
+                                <th style="width: 22%;">OFFICER & BADGE</th>
+                                <th style="width: 15%;">LOGIN ID</th>
+                                <th style="width: 17%;">ROLE</th>
+                                <th style="width: 22%;">CONFIDENTIAL CONTACT</th>
+                                <th style="width: 11%;">DUTY STATUS</th>
+                                <th style="width: 13%; text-align: right;">ADMINISTRATIVE ACTION</th>
                             </tr>
                         </thead>
                         <tbody id="rosterTableBody">
                             <tr>
-                                <td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">
-                                    Loading duty roster...
+                                <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                                    Loading duty investigator roster...
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
-            <!-- Right: Real-Time Security Audit Trail -->
-            <div class="panel-box">
-                <div class="panel-box-header">
-                    <h2>
-                        <span>📜 Security Audit Trail</span>
-                    </h2>
-                    <span style="font-size: 0.72rem; color: var(--muted); font-family: monospace;">SHA-256 LOGGED</span>
+            <!-- RIGHT: SECURITY AUDIT TRAIL (~32%) -->
+            <section class="console-panel-card" aria-label="Security Audit Trail">
+                <div class="panel-top-header">
+                    <div class="panel-title-group">
+                        <h2>Security Audit Trail</h2>
+                    </div>
+                    <span class="badge-sha256">SHA-256 LOGGED</span>
                 </div>
 
-                <ul class="audit-list" id="auditList">
-                    <li style="padding: 1.5rem; text-align: center; color: var(--muted);">
-                        Loading audit logs...
-                    </li>
+                <ul class="audit-trail-stream" id="auditList">
+                    <li class="audit-empty-state">No audit events recorded yet.</li>
                 </ul>
-            </div>
+            </section>
 
         </div>
 
     </div>
 
-    <!-- Provisioning Modal -->
-    <div class="modal-overlay" id="provisionModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><span>🛡️ Provision New Investigator</span></h3>
-                <button type="button" class="btn-modal-close" id="btnCloseModal">×</button>
+    <!-- 4. MODAL: OFFICER DETAILS DOSSIER (CLICK ON OFFICER NAME) -->
+    <div class="modal-backdrop-wrap" id="officerDossierModal" role="dialog" aria-modal="true">
+        <div class="modal-window-box">
+            <div class="modal-header-line">
+                <h3>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                        style="color: var(--accent-green);">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span>Officer Dossier</span>
+                </h3>
+                <button type="button" class="btn-modal-close-x" id="btnCloseDossierModal">×</button>
             </div>
-            <form id="provisionForm" autocomplete="off">
-                <div class="modal-body">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="provUsername">Unique Login ID *</label>
-                            <input type="text" id="provUsername" placeholder="e.g. investigator_02" required />
+
+            <div class="modal-body-scroll">
+                <div class="dossier-top-box">
+                    <div class="dossier-avatar-initials" id="dossierAvatar">HS</div>
+                    <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                        <h2 style="font-size: 1rem; color: #ffffff;" id="dossierName">Insp. Haziq Shaikh</h2>
+                        <div style="display: flex; gap: 0.4rem; align-items: center;">
+                            <span class="badge-role-tag lead" id="dossierBadge">INV-7842</span>
+                            <span class="badge-role-tag" id="dossierRole">LEAD_INVESTIGATOR</span>
+                            <span class="status-badge-pill active" id="dossierStatusBadge">
+                                <span class="pulse-mini-dot"></span>
+                                <span>ACTIVE</span>
+                            </span>
                         </div>
-                        <div class="form-group">
-                            <label for="provBadge">Official Badge No. *</label>
+                    </div>
+                </div>
+
+                <div class="dossier-grid-info">
+                    <div class="dossier-info-block">
+                        <span>Login ID</span>
+                        <strong id="dossierUsername" style="font-family: var(--font-mono);">investigator_01</strong>
+                    </div>
+                    <div class="dossier-info-block">
+                        <span>Station Division</span>
+                        <strong id="dossierStation">Cyber Crime Police Station</strong>
+                    </div>
+                    <div class="dossier-info-block">
+                        <span>Confidential Email</span>
+                        <strong id="dossierEmail"
+                            style="font-family: var(--font-mono);">i***q@cyberpolice.gov.in</strong>
+                    </div>
+                    <div class="dossier-info-block">
+                        <span>Confidential Phone</span>
+                        <strong id="dossierPhone" style="font-family: var(--font-mono);">+91 **** 2345</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-line">
+                <button type="button" class="btn-modal-ghost" id="btnCloseDossierBtn">Close</button>
+                <button type="button" class="btn-table-action" id="btnDossierMagicLink"
+                    style="padding: 0.42rem 0.85rem;">
+                    Dispatch Link
+                </button>
+                <button type="button" class="btn-table-action danger" id="btnDossierToggleStatus"
+                    style="padding: 0.42rem 0.85rem;">
+                    Suspend Badge
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL: PROVISION NEW OFFICER -->
+    <div class="modal-backdrop-wrap" id="provisionModal" role="dialog" aria-modal="true">
+        <div class="modal-window-box">
+            <div class="modal-header-line">
+                <h3>Provision New Officer</h3>
+                <button type="button" class="btn-modal-close-x" id="btnCloseModal">×</button>
+            </div>
+
+            <form id="provisionForm" autocomplete="off">
+                <div class="modal-body-scroll">
+                    <div class="modal-row-pair">
+                        <div class="modal-field-unit">
+                            <label for="provUsername">Login ID *</label>
+                            <input type="text" id="provUsername" placeholder="e.g. investigator_02" required
+                                autofocus />
+                        </div>
+                        <div class="modal-field-unit">
+                            <label for="provBadge">Badge No. *</label>
                             <input type="text" id="provBadge" placeholder="e.g. INV-8910" required />
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
+                    <div class="modal-row-pair">
+                        <div class="modal-field-unit">
                             <label for="provName">Full Name *</label>
                             <input type="text" id="provName" placeholder="e.g. Sub-Insp. Priya Sharma" required />
                         </div>
-                        <div class="form-group">
-                            <label for="provRole">Duty Role *</label>
+                        <div class="modal-field-unit">
+                            <label for="provRole">Role *</label>
                             <select id="provRole" required>
                                 <option value="INVESTIGATOR">INVESTIGATOR</option>
                                 <option value="CYBER_FORENSIC_EXPERT">CYBER_FORENSIC_EXPERT</option>
@@ -732,49 +1180,46 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="provStation">Station / Division</label>
+                    <div class="modal-field-unit">
+                        <label for="provStation">Station / Division *</label>
                         <input type="text" id="provStation" value="Cyber Crime Police Station, BKC Mumbai" required />
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="provEmail">Confidential Official Email</label>
-                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@police.gov.in" required />
+                    <div class="modal-row-pair">
+                        <div class="modal-field-unit">
+                            <label for="provEmail">Email *</label>
+                            <input type="email" id="provEmail" placeholder="e.g. priya.sharma@cyberpolice.gov.in"
+                                required />
                         </div>
-                        <div class="form-group">
-                            <label for="provPhone">Confidential Phone No.</label>
+                        <div class="modal-field-unit">
+                            <label for="provPhone">Phone *</label>
                             <input type="text" id="provPhone" placeholder="e.g. +91 98765 43210" required />
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
-                            <label for="provPassword" style="margin: 0;">Initial Passcode *</label>
-                            <button type="button" class="btn-link" id="btnGenPass" style="font-size: 0.72rem; color: var(--accent);">Generate Passcode</button>
+                    <div class="modal-field-unit">
+                        <label for="provPassword">Passcode *</label>
+                        <div class="passcode-gen-wrap">
+                            <input type="text" id="provPassword" placeholder="Minimum 6 characters" required />
+                            <button type="button" class="btn-gen-passcode" id="btnGenPass">Generate</button>
                         </div>
-                        <input type="text" id="provPassword" placeholder="Minimum 6 characters" required />
-                        <small style="color: var(--muted); font-size: 0.72rem; margin-top: 0.2rem;">
-                            Password is set at database level (PBKDF2-HMAC-SHA256). User cannot change it via public web UI.
-                        </small>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-cancel" id="btnCancelModal">Cancel</button>
-                    <button type="submit" class="btn-primary-action" id="btnSubmitProvision">
-                        <span>Authorize & Provision Badge</span>
-                        <span>✓</span>
+                <div class="modal-footer-line">
+                    <button type="button" class="btn-modal-ghost" id="btnCancelModal">Cancel</button>
+                    <button type="submit" class="btn-provision-officer" id="btnSubmitProvision">
+                        <span>Authorize Badge</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast-notify" id="toastNotify">
-        <span id="toastIcon">✅</span>
-        <span id="toastMsg">Operation successful</span>
+    <!-- 6. FLOATING TOAST NOTIFICATION -->
+    <div class="cyber-toast-box" id="toastNotify" role="status" aria-live="polite">
+        <span class="toast-status-dot"></span>
+        <span id="toastMsg">Action completed successfully.</span>
     </div>
 
     <script>
@@ -782,7 +1227,6 @@
             const token = sessionStorage.getItem("cyberguard_token");
             const rawProfile = sessionStorage.getItem("cyberguard_investigator");
 
-            // Enforce Commander / Lead Investigator session
             if (!token || !rawProfile) {
                 window.location.href = "login.html";
                 return;
@@ -803,12 +1247,11 @@
                 return;
             }
 
-            // Populate header
+            // Populate Commander Profile
             document.getElementById("commRole").textContent = profile.role || "COMMANDER";
             document.getElementById("commBadge").textContent = profile.badge_id || "INV-7842";
             document.getElementById("commName").textContent = profile.name || "Station Commander";
 
-            // UI Elements
             const rosterTableBody = document.getElementById("rosterTableBody");
             const auditList = document.getElementById("auditList");
             const statActiveCount = document.getElementById("statActiveCount");
@@ -818,11 +1261,35 @@
             const toastMsg = document.getElementById("toastMsg");
             const toastIcon = document.getElementById("toastIcon");
 
+            let cachedInvestigators = [];
+            let cachedAuditLogs = [];
+
+            function getInitials(name) {
+                if (!name) return "OF";
+                const parts = name.replace(/^(Insp\.|Sub-Insp\.|Constable|Officer|Sergeant|Commander)\s+/i, "").trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                }
+                return name.slice(0, 2).toUpperCase();
+            }
+
+            function escapeHtml(str) {
+                if (!str) return "";
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            let toastTimer = null;
             function showToast(message, isSuccess = true) {
+                if (toastTimer) clearTimeout(toastTimer);
                 toastMsg.textContent = message;
-                toastIcon.textContent = isSuccess ? "✅" : "⚠️";
+                toastNotify.className = `cyber-toast-box ${isSuccess ? '' : 'error'}`;
                 toastNotify.style.display = "flex";
-                setTimeout(() => {
+                toastTimer = setTimeout(() => {
                     toastNotify.style.display = "none";
                 }, 3500);
             }
@@ -833,149 +1300,243 @@
                 return fetch(url, { ...options, headers });
             }
 
-            // Fetch and render roster
             async function loadRoster() {
                 try {
                     const res = await authFetch("/api/admin/investigators");
                     if (!res.ok) {
                         const err = await res.json();
-                        throw new Error(err.detail || "Failed to load investigator roster.");
+                        throw new Error(err.detail || "Failed to load roster.");
                     }
                     const data = await res.json();
-                    renderRoster(data.investigators || []);
+                    cachedInvestigators = data.investigators || [];
+                    renderRosterTable();
                 } catch (err) {
-                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">${err.message}</td></tr>`;
+                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">${escapeHtml(err.message)}</td></tr>`;
                 }
             }
 
-            function renderRoster(investigators) {
-                let active = 0;
-                let suspended = 0;
-
-                if (investigators.length === 0) {
-                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 2rem;">No provisioned officers found.</td></tr>`;
+            function renderRosterTable() {
+                if (cachedInvestigators.length === 0) {
+                    rosterTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">No officers found in database.</td></tr>`;
                     return;
                 }
 
-                rosterTableBody.innerHTML = investigators.map(inv => {
-                    if (inv.is_active) active++;
-                    else suspended++;
+                let activeCount = 0;
+                let suspendedCount = 0;
+
+                rosterTableBody.innerHTML = cachedInvestigators.map(inv => {
+                    if (inv.is_active) activeCount++;
+                    else suspendedCount++;
 
                     const isSelf = inv.username === profile.username;
-                    const isLead = inv.role === "LEAD_INVESTIGATOR" || inv.role === "SUPERINTENDENT";
+                    const isLead = inv.role === "LEAD_INVESTIGATOR" || inv.role === "SUPERINTENDENT" || inv.role === "STATION_COMMANDER";
 
                     return `
                         <tr>
+                            <!-- 1. OFFICER & BADGE (Hover & Clickable to Dossier Modal) -->
                             <td>
-                                <div class="officer-name-cell">
-                                    <span>${inv.name}</span>
-                                    <span class="officer-badge-tag">${inv.badge_id}</span>
+                                <div class="officer-badge-cell">
+                                    <span class="officer-click-name" onclick="openOfficerDossier('${escapeHtml(inv.username)}')" title="Click to inspect officer dossier">
+                                        ${escapeHtml(inv.name)}
+                                    </span>
+                                    <span class="officer-badge-sub">${escapeHtml(inv.badge_id)}</span>
                                 </div>
                             </td>
-                            <td><code>${inv.username}</code></td>
+
+                            <!-- 2. LOGIN ID -->
                             <td>
-                                <span class="role-pill ${isLead ? 'lead' : ''}">${inv.role}</span>
+                                <span class="login-id-mono">${escapeHtml(inv.username)}</span>
                             </td>
+
+                            <!-- 3. ROLE -->
                             <td>
-                                <div style="font-size: 0.76rem; display: flex; flex-direction: column; gap: 0.15rem;">
-                                    <span style="color: var(--text);">✉️ ${inv.email_masked || 'Confidential'}</span>
-                                    <span style="color: var(--muted);">📞 ${inv.phone_masked || 'Confidential'}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge ${inv.is_active ? 'active' : 'suspended'}">
-                                    <span class="status-dot"></span>
-                                    ${inv.is_active ? 'ACTIVE' : 'SUSPENDED'}
+                                <span class="badge-role-tag ${isLead ? 'lead' : ''}">
+                                    ${escapeHtml(inv.role)}
                                 </span>
                             </td>
+
+                            <!-- 4. CONFIDENTIAL CONTACT -->
+                            <td>
+                                <div class="contact-stack">
+                                    <div class="contact-item">
+                                        <span class="icon">✉</span>
+                                        <span>${escapeHtml(inv.email_masked || "Confidential")}</span>
+                                    </div>
+                                    <div class="contact-item">
+                                          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.75;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.49 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.4 1.26h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.69a16 16 0 0 0 6 6l.76-.76a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.04z"/></svg>
+                                        <span>${escapeHtml(inv.phone_masked || "Confidential")}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 5. DUTY STATUS -->
+                            <td>
+                                <span class="status-badge-pill ${inv.is_active ? 'active' : 'suspended'}">
+                                    <span class="pulse-mini-dot"></span>
+                                    <span>${inv.is_active ? 'ACTIVE' : 'SUSPENDED'}</span>
+                                </span>
+                            </td>
+
+                            <!-- 6. ADMINISTRATIVE ACTION -->
                             <td style="text-align: right;">
-                                <div class="table-action-btns" style="justify-content: flex-end;">
-                                    <button type="button" class="btn-table-action" 
-                                        onclick="dispatchMagicLink('${inv.username}', '${inv.name.replace(/'/g, "\\'")}')"
-                                        title="Dispatch one-time magic login link to confidential contact">
-                                        ✉️ Dispatch Link
+                                <div class="table-actions-group">
+                                    <button type="button" class="btn-table-action"
+                                        onclick="dispatchMagicLink('${escapeHtml(inv.username)}', '${escapeHtml(inv.name)}')"
+                                        title="Dispatch one-time login link">
+                                        ✉ Dispatch Link
                                     </button>
                                     ${!isSelf ? `
-                                        <button type="button" class="btn-table-action ${inv.is_active ? 'danger' : 'success'}" 
-                                            onclick="toggleOfficerStatus('${inv.username}', ${!inv.is_active})"
-                                            title="${inv.is_active ? 'Instantly suspend badge credentials' : 'Reactivate officer badge'}">
+                                        <button type="button" class="btn-table-action ${inv.is_active ? 'danger' : 'success'}"
+                                            onclick="toggleOfficerStatus('${escapeHtml(inv.username)}', ${!inv.is_active})"
+                                            title="${inv.is_active ? 'Suspend badge credentials' : 'Reactivate badge'}">
                                             ${inv.is_active ? '🔒 Suspend' : '✓ Activate'}
                                         </button>
-                                    ` : `<span style="font-size: 0.72rem; color: var(--muted);">(Your Account)</span>`}
+                                    ` : `
+                                        <span class="self-account-tag">(Your Account)</span>
+                                    `}
                                 </div>
                             </td>
                         </tr>
                     `;
                 }).join("");
 
-                statTotalCount.textContent = investigators.length;
-                statActiveCount.textContent = active;
-                statSuspendedCount.textContent = suspended;
+                statTotalCount.textContent = cachedInvestigators.length;
+                statActiveCount.textContent = activeCount;
+                statSuspendedCount.textContent = suspendedCount;
             }
 
-            // Fetch and render audit trail
+            // Officer Dossier Modal
+            window.openOfficerDossier = function (username) {
+                const inv = cachedInvestigators.find(i => i.username === username);
+                if (!inv) return;
+
+                const isSelf = inv.username === profile.username;
+                const modal = document.getElementById("officerDossierModal");
+                document.getElementById("dossierAvatar").textContent = getInitials(inv.name);
+                document.getElementById("dossierName").textContent = inv.name;
+                document.getElementById("dossierBadge").textContent = inv.badge_id;
+                document.getElementById("dossierRole").textContent = inv.role;
+                document.getElementById("dossierUsername").textContent = inv.username;
+                document.getElementById("dossierStation").textContent = inv.station || "Cyber Crime Police Station";
+                document.getElementById("dossierEmail").textContent = inv.email_masked || "Confidential";
+                document.getElementById("dossierPhone").textContent = inv.phone_masked || "Confidential";
+
+                const statusBadge = document.getElementById("dossierStatusBadge");
+                statusBadge.className = `status-badge-pill ${inv.is_active ? 'active' : 'suspended'}`;
+                statusBadge.innerHTML = `<span class="pulse-mini-dot"></span><span>${inv.is_active ? 'ACTIVE' : 'SUSPENDED'}</span>`;
+
+                const btnMagic = document.getElementById("btnDossierMagicLink");
+                btnMagic.onclick = () => {
+                    dispatchMagicLink(inv.username, inv.name);
+                };
+
+                const btnToggle = document.getElementById("btnDossierToggleStatus");
+                if (isSelf) {
+                    btnToggle.style.display = "none";
+                } else {
+                    btnToggle.style.display = "inline-flex";
+                    btnToggle.className = `btn-table-action ${inv.is_active ? 'danger' : 'success'}`;
+                    btnToggle.textContent = inv.is_active ? "🔒 Suspend Badge" : "✓ Reactivate Badge";
+                    btnToggle.onclick = async () => {
+                        await toggleOfficerStatus(inv.username, !inv.is_active);
+                        modal.style.display = "none";
+                    };
+                }
+
+                modal.style.display = "flex";
+            };
+
+            const dossierModal = document.getElementById("officerDossierModal");
+            document.getElementById("btnCloseDossierModal").addEventListener("click", () => {
+                dossierModal.style.display = "none";
+            });
+            document.getElementById("btnCloseDossierBtn").addEventListener("click", () => {
+                dossierModal.style.display = "none";
+            });
+            dossierModal.addEventListener("click", (e) => {
+                if (e.target === dossierModal) dossierModal.style.display = "none";
+            });
+
             async function loadAuditLogs() {
                 try {
-                    const res = await authFetch("/api/admin/audit-logs?limit=20");
+                    const res = await authFetch("/api/admin/audit-logs?limit=35");
                     if (!res.ok) return;
                     const data = await res.json();
-                    renderAuditLogs(data.logs || []);
+                    cachedAuditLogs = data.logs || [];
+                    renderAuditLedger();
                 } catch {
-                    // Soft fail for logs
+                    // Soft fail
                 }
             }
 
-            function renderAuditLogs(logs) {
-                if (logs.length === 0) {
-                    auditList.innerHTML = `<li style="padding: 1.5rem; text-align: center; color: var(--muted);">No audit events recorded yet.</li>`;
+            function renderAuditLedger() {
+                if (cachedAuditLogs.length === 0) {
+                    auditList.innerHTML = `<li class="audit-empty-state">No audit events recorded yet.</li>`;
                     return;
                 }
 
-                auditList.innerHTML = logs.map(l => {
-                    const timeStr = l.created_at ? new Date(l.created_at).toLocaleTimeString() : "Just now";
+                auditList.innerHTML = cachedAuditLogs.map(l => {
+                    const eventType = l.event_type || "AUDIT";
+                    let typeClass = "";
+                    if (eventType.includes("SUSPEND")) typeClass = "suspended";
+                    else if (eventType.includes("SYSTEM")) typeClass = "neutral";
+
+                    let timeFormatted = "Recent";
+                    if (l.created_at) {
+                        try {
+                            const d = new Date(l.created_at);
+                            timeFormatted = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        } catch {
+                            timeFormatted = "Recent";
+                        }
+                    }
+
                     let desc = "";
-                    if (l.event_type === "INVESTIGATOR_PROVISIONED") {
-                        desc = `New officer provisioned: ${l.details?.target_name || l.details?.target_username || ''} (${l.details?.target_badge || ''})`;
-                    } else if (l.event_type === "INVESTIGATOR_SUSPENDED") {
-                        desc = `Officer '${l.details?.target_username}' badge suspended by Commander.`;
-                    } else if (l.event_type === "INVESTIGATOR_ACTIVATED") {
-                        desc = `Officer '${l.details?.target_username}' badge reactivated.`;
-                    } else if (l.event_type === "MAGIC_LOGIN_LINK_DISPATCHED" || l.event_type === "COMMANDER_DISPATCHED_MAGIC_LINK") {
-                        desc = `One-time login link generated & dispatched to confidential contact.`;
+                    if (eventType === "LOGIN_SUCCESS") {
+                        desc = `LOGIN_SUCCESS - Investigator: ${escapeHtml(l.investigator_badge_id || '')}`;
+                    } else if (eventType === "INVESTIGATOR_PROVISIONED") {
+                        desc = `Provisioned: <strong>${escapeHtml(l.details?.target_name || l.details?.target_username || '')}</strong> (${escapeHtml(l.details?.target_badge || '')})`;
+                    } else if (eventType === "INVESTIGATOR_SUSPENDED") {
+                        desc = `Officer '${escapeHtml(l.details?.target_username || '')}' badge suspended by Commander.`;
+                    } else if (eventType === "INVESTIGATOR_ACTIVATED") {
+                        desc = `Officer '${escapeHtml(l.details?.target_username || '')}' badge reactivated by Commander.`;
+                    } else if (eventType.includes("MAGIC")) {
+                        desc = `One-time link dispatched for officer '${escapeHtml(l.details?.target_username || '')}'.`;
+                    } else if (eventType === "SYSTEM_INITIALIZED") {
+                        desc = `Station Commander Audit Ledger Online.`;
                     } else {
-                        desc = `${l.event_type} - Investigator: ${l.investigator_badge_id || 'System'}`;
+                        desc = `${escapeHtml(eventType)} - ${escapeHtml(l.investigator_name || 'System')}`;
                     }
 
                     return `
-                        <li class="audit-item">
-                            <div class="audit-meta">
-                                <span class="audit-type">${l.event_type}</span>
-                                <span>${timeStr}</span>
+                        <li class="audit-event-row">
+                            <div class="audit-event-top">
+                                <span class="audit-type-text ${typeClass}">${escapeHtml(eventType)}</span>
+                                <span class="audit-time-text">${escapeHtml(timeFormatted)}</span>
                             </div>
-                            <div class="audit-desc">${desc}</div>
+                            <div class="audit-desc-line">${desc}</div>
                         </li>
                     `;
                 }).join("");
             }
 
-            // Global Actions attached to window
-            window.dispatchMagicLink = async function(username, name) {
+            window.dispatchMagicLink = async function (username, name) {
                 try {
                     const res = await authFetch(`/api/admin/investigators/${encodeURIComponent(username)}/dispatch-link`, {
                         method: "POST"
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || "Dispatch failed.");
-                    showToast(`One-time magic login link dispatched to confidential contact for ${name}.`);
+                    showToast(`One-time link dispatched to ${name}.`);
                     loadAuditLogs();
                 } catch (err) {
                     showToast(err.message, false);
                 }
             };
 
-            window.toggleOfficerStatus = async function(username, newStatus) {
-                const actionLabel = newStatus ? "activate" : "suspend";
-                if (!confirm(`Are you sure you want to ${actionLabel} investigator '${username}'?`)) return;
+            window.toggleOfficerStatus = async function (username, newStatus) {
+                const actionLabel = newStatus ? "reactivate" : "suspend";
+                if (!confirm(`Are you sure you want to ${actionLabel.toUpperCase()} '${username}'?`)) return;
 
                 try {
                     const res = await authFetch(`/api/admin/investigators/${encodeURIComponent(username)}/status`, {
@@ -985,7 +1546,7 @@
                     });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || "Status update failed.");
-                    showToast(`Investigator '${username}' ${newStatus ? 'activated' : 'suspended'}.`);
+                    showToast(`Officer '${username}' ${newStatus ? 'reactivated' : 'suspended'}.`);
                     loadRoster();
                     loadAuditLogs();
                 } catch (err) {
@@ -993,7 +1554,7 @@
                 }
             };
 
-            // Modal Handlers
+            // Provision Modal Logic
             const provisionModal = document.getElementById("provisionModal");
             const btnOpenProvisionModal = document.getElementById("btnOpenProvisionModal");
             const btnCloseModal = document.getElementById("btnCloseModal");
@@ -1002,24 +1563,49 @@
             const btnGenPass = document.getElementById("btnGenPass");
             const provPassword = document.getElementById("provPassword");
 
-            btnOpenProvisionModal.addEventListener("click", () => {
+            function generatePasscode() {
+                const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+                let pass = "CG-";
+                for (let i = 0; i < 8; i++) {
+                    pass += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return pass;
+            }
+
+            function openModal() {
                 provisionForm.reset();
-                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+                provPassword.value = generatePasscode();
                 provisionModal.style.display = "flex";
+                document.getElementById("provUsername").focus();
+            }
+
+            function closeModal() {
+                provisionModal.style.display = "none";
+            }
+
+            btnOpenProvisionModal.addEventListener("click", openModal);
+            btnCloseModal.addEventListener("click", closeModal);
+            btnCancelModal.addEventListener("click", closeModal);
+            provisionModal.addEventListener("click", (e) => {
+                if (e.target === provisionModal) closeModal();
             });
 
-            btnCloseModal.addEventListener("click", () => provisionModal.style.display = "none");
-            btnCancelModal.addEventListener("click", () => provisionModal.style.display = "none");
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    if (provisionModal.style.display === "flex") closeModal();
+                    if (dossierModal.style.display === "flex") dossierModal.style.display = "none";
+                }
+            });
 
             btnGenPass.addEventListener("click", () => {
-                provPassword.value = "cyberguard" + Math.floor(1000 + Math.random() * 9000);
+                provPassword.value = generatePasscode();
             });
 
             provisionForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const btnSubmit = document.getElementById("btnSubmitProvision");
                 btnSubmit.disabled = true;
-                btnSubmit.innerHTML = `<span>Authorizing & provisioning...</span>`;
+                btnSubmit.innerHTML = `<span>Authorizing...</span>`;
 
                 try {
                     const payload = {
@@ -1042,24 +1628,28 @@
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.detail || "Provisioning failed.");
 
-                    showToast(`Officer ${payload.name} (${payload.badge_id}) provisioned successfully!`);
-                    provisionModal.style.display = "none";
+                    showToast(`Officer ${payload.name} provisioned!`);
+                    closeModal();
                     loadRoster();
                     loadAuditLogs();
                 } catch (err) {
                     showToast(err.message, false);
                 } finally {
                     btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = `<span>Authorize & Provision Badge</span> <span>✓</span>`;
+                    btnSubmit.innerHTML = `<span>Authorize Badge</span>`;
                 }
             });
 
-            // Initial Load
+            // Initial load & 25s auto-poll
             loadRoster();
             loadAuditLogs();
+
+            setInterval(() => {
+                loadRoster();
+                loadAuditLogs();
+            }, 25000);
         });
     </script>
 </body>
 
 </html>
-
