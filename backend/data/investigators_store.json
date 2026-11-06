@@ -54,5 +54,19 @@
     "last_login_at": null,
     "salt": "357511ba7b09c05412241601ddb7b925",
     "hash_hex": "c42a19fd6d9b6160204811e7efd775121cf76d2f738a62fddf57bdfed7f705bd"
+  },
+  "investigator_69": {
+    "username": "investigator_69",
+    "badge_id": "INV-69",
+    "name": "Aditi Patwa",
+    "role": "CYBER_FORENSIC_EXPERT",
+    "station": "Cyber Crime Police Station, Virar",
+    "email": "aditipatwa20@gmail.com",
+    "phone": "+919322114757",
+    "is_active": true,
+    "created_at": "2026-11-06T07:50:11Z",
+    "last_login_at": null,
+    "salt": "e5c5a140a7240a1fc92908e872ea68d3",
+    "hash_hex": "0fdd9ab66da946a1bcd00c1f4fdf527ef2924be789f34bbefb1680257efa5552"
   }
 }
