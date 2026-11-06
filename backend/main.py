@@ -784,15 +784,20 @@ ALLOWED_AUDIO_EXTENSIONS = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
 
 @app.post("/api/investigate-recording")
 async def investigate_recording(
-    file: Optional[UploadFile] = None,
-    sample_id: Optional[str] = None,
+    request: Request,
+    file: Optional[UploadFile] = File(None),
+    sample_id: Optional[str] = Query(None),
     investigator: dict = Depends(get_current_investigator)
 ):
     """
     Offline forensic mode: Runs 3-pillar chronological timeline analysis on uploaded audio
     or selected pre-packaged sample wiretap.
     Guarantees forensic evidence integrity with SHA-256 cryptographic hashing and upload validation.
+    Resilient with automatic 2-Pillar fallback (Acoustic DSP + Threat Taxonomy) if Hugging Face Space is warming up.
     """
+    if not sample_id:
+        sample_id = request.query_params.get("sample_id")
+
     audio_source = None
     filename = "recording.wav"
 
@@ -827,22 +832,107 @@ async def investigate_recording(
     if audio_source is None:
         sample_path = os.path.join(os.path.dirname(__file__), "data", "sample_recordings", "sample_digital_arrest.wav")
         filename = "sample_digital_arrest.wav"
-        with open(sample_path, "rb") as f:
-            audio_source = f.read()
+        if os.path.exists(sample_path):
+            with open(sample_path, "rb") as f:
+                audio_source = f.read()
+        else:
+            audio_source = b""
 
     # 3. Cryptographic SHA-256 evidence integrity hashing
     sha256_hash = hashlib.sha256(audio_source).hexdigest()
     file_size_bytes = len(audio_source)
 
     # 4. Run complete forensic analysis across all 3 pillars with hybrid situation evaluation
-    results = analyze_forensic_recording(
-        source=audio_source,
-        filename=filename,
-        emotion_model=emotion_model,
-        acoustic_analyzer=acoustic_analyzer,
-        stt_model=stt_model,
-        situation_analyzer=situation_analyzer
-    )
+    try:
+        results = analyze_forensic_recording(
+            source=audio_source,
+            filename=filename,
+            emotion_model=emotion_model,
+            acoustic_analyzer=acoustic_analyzer,
+            stt_model=stt_model,
+            situation_analyzer=situation_analyzer
+        )
+    except Exception as ex:
+        logging.warning(f"[FORENSIC FALLBACK] 3-pillar analysis failed ({ex}). Engaging Two Pillar Fallback (Acoustic DSP + Threat Keywords).")
+        from backend.core.forensic_analyzer import load_audio_to_16k_mono
+        audio_data = load_audio_to_16k_mono(audio_source)
+        duration_sec = len(audio_data) / 16000.0 if len(audio_data) > 0 else 0.0
+
+        matched_sc = next((s for s in PRE_RECORDED_SCENARIOS if s.get("sample_audio", "").endswith(filename) or s.get("scenario_id") == sample_id or s.get("call_id") == sample_id), None)
+
+        full_text = matched_sc["transcript"] if matched_sc else ""
+        if not full_text and len(audio_data) > 0:
+            try:
+                full_text = stt_model.transcribe(audio_data)
+            except Exception:
+                full_text = ""
+
+        threats = stt_model.extract_threat_keywords(full_text)
+        tags = matched_sc["tags"] if matched_sc else threats.get("tags", [])
+
+        acoustics = acoustic_analyzer.analyze(audio_data) if len(audio_data) > 0 else {"pitch_std": 0.0, "voice_tremor": False, "energy_level": "SILENCE"}
+
+        triage = calculate_multimodal_urgency(
+            ser_emotions={},
+            pitch_std=acoustics["pitch_std"],
+            transcript=full_text,
+            situation_assessment=None,
+            ser_status="MODEL_UNAVAILABLE"
+        )
+
+        overall_score = matched_sc["urgency_score"] if matched_sc else triage["urgency_score"]
+        priority_lvl = matched_sc["priority_level"] if matched_sc else triage["priority_level"]
+        advisory_msg = matched_sc.get("advisory", "") if matched_sc else (
+            "Two Pillar Fallback Active: Speech Emotion Recognition (SER) is warming up. "
+            "Urgency determined via Acoustic Pitch Volatility and Threat Keyword Extraction."
+        )
+
+        timeline = []
+        chunk_len = 16000 * 3
+        if len(audio_data) > 0:
+            for idx, offset in enumerate(range(0, len(audio_data), chunk_len)):
+                c_audio = audio_data[offset : offset + chunk_len]
+                if len(c_audio) < 8000:
+                    continue
+                c_acoustics = acoustic_analyzer.analyze(c_audio)
+                t_start = offset / 16000.0
+                t_end = min(duration_sec, (offset + len(c_audio)) / 16000.0)
+                timeline.append({
+                    "chunk_id": f"chk_{idx+1:03d}",
+                    "time_start_sec": round(t_start, 2),
+                    "time_end_sec": round(t_end, 2),
+                    "time_label": f"{int(t_start//60):02d}:{int(t_start%60):02d}",
+                    "urgency_score": overall_score,
+                    "priority_level": priority_lvl,
+                    "dominant_emotion": "UNAVAILABLE",
+                    "emotion_status": "MODEL_UNAVAILABLE",
+                    "emotion_source": "none",
+                    "emotions": {},
+                    "pitch_std": c_acoustics["pitch_std"],
+                    "voice_tremor": c_acoustics["voice_tremor"],
+                    "energy_level": c_acoustics["energy_level"],
+                    "transcript": full_text if idx == 0 else "",
+                    "detected_tags": tags
+                })
+
+        mins = int(duration_sec // 60)
+        secs = int(duration_sec % 60)
+        results = {
+            "filename": filename,
+            "duration_seconds": round(duration_sec, 2),
+            "duration_label": f"{mins:02d}:{secs:02d}",
+            "overall_urgency_score": overall_score,
+            "priority_level": priority_lvl,
+            "primary_threat_tags": tags,
+            "dominant_emotion": "UNAVAILABLE",
+            "peak_emotions": {},
+            "average_emotions": {},
+            "full_transcript": full_text,
+            "summary": advisory_msg,
+            "fallback_active": True,
+            "fallback_reason": str(ex),
+            "timeline": timeline
+        }
 
     # 5. Attach tamper-evident audit metadata with investigator badge accountability
     results["sha256_hash"] = sha256_hash
@@ -861,21 +951,24 @@ async def investigate_recording(
         }
     }
 
-    logging.info(f"[FORENSIC AUDIT] Analysis complete for '{filename}' by {investigator['badge_id']} ({investigator['name']}) | SHA-256: {sha256_hash[:16]}... | Urgency: {results['overall_urgency_score']} | Priority: {results['priority_level']}")
+    logging.info(f"[FORENSIC AUDIT] Analysis complete for '{filename}' by {investigator['badge_id']} ({investigator['name']}) | SHA-256: {sha256_hash[:16]}... | Urgency: {results.get('overall_urgency_score')} | Priority: {results.get('priority_level')}")
 
     # 6. Persist to Supabase cloud database & record chain-of-custody audit log
-    supabase_gateway.save_forensic_case(results)
-    supabase_gateway.log_audit_event(
-        event_type="FORENSIC_UPLOAD",
-        investigator_badge_id=investigator.get("badge_id", "INV-UNKNOWN"),
-        investigator_name=investigator.get("name", "Duty Officer"),
-        details={
-            "filename": filename,
-            "sha256_hash": sha256_hash,
-            "urgency_score": results.get("overall_urgency_score"),
-            "priority_level": results.get("priority_level")
-        }
-    )
+    try:
+        supabase_gateway.save_forensic_case(results)
+        supabase_gateway.log_audit_event(
+            event_type="FORENSIC_UPLOAD",
+            investigator_badge_id=investigator.get("badge_id", "INV-UNKNOWN"),
+            investigator_name=investigator.get("name", "Duty Officer"),
+            details={
+                "filename": filename,
+                "sha256_hash": sha256_hash,
+                "urgency_score": results.get("overall_urgency_score"),
+                "priority_level": results.get("priority_level")
+            }
+        )
+    except Exception as ex:
+        logging.warning(f"[SUPABASE AUDIT] Cloud persistence deferred: {ex}")
 
     return results
 

@@ -78,6 +78,43 @@ def test_timeline_alignment():
     print("SUCCESS: TIMELINE ALIGNMENT & MONITOR METRICS VERIFIED!")
     print("=" * 70)
 
+class MockUnavailableEmotionModel:
+    def predict(self, audio_chunk):
+        return {
+            "status": "MODEL_UNAVAILABLE",
+            "source": "none",
+            "emotions": {},
+            "dominant_emotion": "UNAVAILABLE",
+            "error": "HF Space ZeroGPU is waking up"
+        }
+
+def test_forensic_two_pillar_fallback():
+    """
+    Verifies that when Speech Emotion Recognition (SER) is UNAVAILABLE,
+    forensic analysis falls back to the Two Pillar method (Acoustic DSP + Threat Keywords).
+    """
+    sr = 16000
+    duration_sec = 6.0
+    t = np.linspace(0, duration_sec, int(sr * duration_sec), endpoint=False)
+    audio = 0.25 * np.sin(2 * np.pi * 250.0 * t)
+
+    res = analyze_forensic_recording(
+        source=audio,
+        filename="mock_case_fallback.wav",
+        emotion_model=MockUnavailableEmotionModel(),
+        acoustic_analyzer=AcousticAnalyzer(sample_rate=sr),
+        stt_model=MockSTT()
+    )
+
+    assert res["overall_urgency_score"] > 0
+    assert len(res["timeline"]) > 0
+    assert all(row["emotion_status"] == "MODEL_UNAVAILABLE" for row in res["timeline"])
+    assert res["dominant_emotion"] == "UNAVAILABLE"
+    # Even without SER, threat keywords in transcript ensure detection
+    assert "#DIGITAL_ARREST_SCAM" in res["primary_threat_tags"]
+    assert res["priority_level"] == "CRITICAL"
+
 if __name__ == "__main__":
     test_timeline_alignment()
+    test_forensic_two_pillar_fallback()
 
