@@ -344,15 +344,17 @@ body {
 /* Atmospheric Ambient Glow Bloom Behind Arc (Velopay / InferaAI style) */
 .arc-ambient-glow {
     position: absolute;
-    top: 5%;
+    top: 2%;
     left: 50%;
     transform: translateX(-50%);
-    width: 84%;
-    height: 190px;
-    background: radial-gradient(ellipse at 50% 35%, rgba(61, 255, 160, 0.38) 0%, rgba(47, 232, 144, 0.18) 38%, rgba(15, 60, 40, 0.05) 70%, transparent 85%);
-    filter: blur(45px);
+    width: 90%;
+    height: 220px;
+    background: radial-gradient(ellipse 65% 50% at 50% 35%, rgba(61, 255, 160, 0.32) 0%, rgba(47, 232, 144, 0.14) 38%, rgba(15, 60, 40, 0.03) 65%, transparent 80%);
+    filter: blur(50px);
     pointer-events: none;
     z-index: 0;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgba(0, 0, 0, 0.5) 70%, transparent 92%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgba(0, 0, 0, 0.5) 70%, transparent 92%);
     animation: arcAuraBreath 5s ease-in-out infinite alternate;
 }
 
@@ -360,12 +362,12 @@ body {
     0% {
         opacity: 0.80;
         transform: translateX(-50%) scale(0.96);
-        filter: blur(32px);
+        filter: blur(40px);
     }
     100% {
         opacity: 1;
         transform: translateX(-50%) scale(1.04);
-        filter: blur(44px);
+        filter: blur(55px);
     }
 }
 
@@ -373,13 +375,13 @@ body {
 @keyframes arcVectorBreath {
     0%, 100% {
         filter: 
-            drop-shadow(0 -4px 18px rgba(61, 255, 160, 0.50))
-            drop-shadow(0 0 50px rgba(47, 232, 144, 0.28));
+            drop-shadow(0 -4px 18px rgba(61, 255, 160, 0.45))
+            drop-shadow(0 0 50px rgba(47, 232, 144, 0.25));
     }
     50% {
         filter: 
-            drop-shadow(0 -8px 30px rgba(61, 255, 160, 0.82))
-            drop-shadow(0 0 80px rgba(61, 255, 160, 0.48));
+            drop-shadow(0 -8px 30px rgba(61, 255, 160, 0.75))
+            drop-shadow(0 0 70px rgba(61, 255, 160, 0.40));
     }
 }
 
@@ -388,7 +390,9 @@ body {
     z-index: 2;
     width: 100%;
     height: auto;
-    max-height: 220px;
+    overflow: visible;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 50%, rgba(0, 0, 0, 0.6) 72%, transparent 94%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 50%, rgba(0, 0, 0, 0.6) 72%, transparent 94%);
     animation: arcVectorBreath 4.5s ease-in-out infinite;
 }
 
