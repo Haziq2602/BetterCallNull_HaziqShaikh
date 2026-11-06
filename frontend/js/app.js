@@ -1796,6 +1796,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function openForensicModal(data, audioSrc) {
         if (!forensicModal) return;
+        currentForensicData = data;
 
         modalFilename.textContent = data.filename || "CASE_EVIDENCE.WAV";
         modalScore.textContent = Math.round(data.overall_urgency_score || 0);
@@ -2087,35 +2088,84 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function generatePoliceDossierPDF(sourceType, explicitData) {
-        if (!policeDossierPrintContainer) return;
-
-        let data = {};
-        const officer = getStoredInvestigator() || {
-            name: "Insp. Haziq Shaikh",
-            badge_id: "INV-7842",
-            role: "LEAD_INVESTIGATOR",
-            station: "Cyber Crime Police Station, BKC, Mumbai"
-        };
-
-        if (sourceType === "forensic") {
-            const src = explicitData || currentForensicData || {};
-            data = {
-                caseId: src.filename ? src.filename.toUpperCase() : (modalFilename ? modalFilename.textContent : "CASE_EVIDENCE_WIRETAP.WAV"),
-                channel: "Citizen Distress Wiretap Ingestion",
-                duration: src.duration_label || (modalDuration ? modalDuration.textContent : "00:24"),
-                score: Math.round(src.overall_urgency_score || (modalScore ? parseFloat(modalScore.textContent) || 88 : 88)),
-                priority: src.priority_level || (modalPriority ? modalPriority.textContent : "CRITICAL"),
-                advisory: src.summary || (modalSummary ? modalSummary.textContent : "High probability of active digital arrest coercion. Immediate bank account freeze recommended."),
-                sha256: src.sha256_hash || (document.getElementById("modalHash")?.title?.replace("Full SHA-256: ", "")) || generateDeterministicSha256(src.filename || "WIRETAP_EVIDENCE"),
-                tags: src.primary_threat_tags || ["#DIGITAL_ARREST", "#CBI_IMPERSONATION", "#MONEY_LAUNDERING"],
-                transcript: src.full_transcript || (modalFullTranscript ? modalFullTranscript.textContent.replace(/^"|"$/g, '') : ""),
-                timeline: src.timeline || [],
-                emotions: src.peak_emotions || src.average_emotions || { "Fear & Panic": 0.86, "Hostility & Anger": 0.88, "Sadness & Crying": 0.64, "Baseline Neutral": 0.04 },
-                dominantEmotion: src.dominant_emotion || "FEAR_AND_PANIC",
-                pitchStd: (src.timeline && src.timeline.length > 0) ? Math.max(...src.timeline.map(t => t.pitch_std || 0)) : 48.6,
-                vocalTremor: (src.timeline && src.timeline.some(t => t.voice_tremor)) ? "POSITIVE (DETECTED)" : "NEGATIVE (STABLE)"
+        try {
+            let data = {};
+            const officer = (typeof getStoredInvestigator === "function" ? getStoredInvestigator() : null) || {
+                name: "Insp. Haziq Shaikh",
+                badge_id: "INV-7842",
+                role: "LEAD_INVESTIGATOR",
+                station: "Cyber Crime Police Station, BKC, Mumbai"
             };
-        } else if (sourceType === "live") {
+
+            if (sourceType === "forensic") {
+                let src = explicitData || currentForensicData;
+                if (!src) {
+                    const sampleId = (typeof sampleSelect !== "undefined" && sampleSelect) ? sampleSelect.value : "sample_digital_arrest";
+                    src = PRE_RECORDED_SCENARIOS_CLIENT[sampleId] || PRE_RECORDED_SCENARIOS_CLIENT["sample_digital_arrest"] || {};
+                }
+
+                const filenameEl = document.getElementById("modalFilename");
+                const scoreEl = document.getElementById("modalScore");
+                const prioEl = document.getElementById("modalPriority");
+                const durEl = document.getElementById("modalDuration");
+                const sumEl = document.getElementById("modalSummary");
+                const transEl = document.getElementById("modalFullTranscript");
+                const hashEl = document.getElementById("modalHash");
+
+                let realHash = src.sha256_hash;
+                if (!realHash && hashEl && hashEl.title && hashEl.title.startsWith("Full SHA-256: ")) {
+                    realHash = hashEl.title.replace("Full SHA-256: ", "").trim();
+                }
+                if (!realHash || realHash.length < 32) {
+                    realHash = generateDeterministicSha256(src.filename || "WIRETAP_EVIDENCE");
+                }
+
+                let timelineData = (src.timeline && Array.isArray(src.timeline) && src.timeline.length > 0) ? src.timeline : [];
+                if (timelineData.length === 0) {
+                    const domRows = document.querySelectorAll("#modalTimelineBody tr");
+                    if (domRows && domRows.length > 0) {
+                        timelineData = Array.from(domRows).map(tr => {
+                            const tds = tr.querySelectorAll("td");
+                            if (tds.length >= 7) {
+                                return {
+                                    time_label: tds[0]?.textContent?.trim() || "00:00",
+                                    urgency_score: parseFloat(tds[1]?.textContent) || 80,
+                                    priority_level: tds[2]?.textContent?.trim() || "CRITICAL",
+                                    dominant_emotion: tds[3]?.textContent?.trim() || "Fear & Panic",
+                                    pitch_std: tds[4]?.textContent?.trim() || "40 Hz",
+                                    voice_tremor: tds[5]?.textContent?.includes("DETECTED"),
+                                    detected_tags: [tds[6]?.textContent?.trim() || "#DIGITAL_ARREST"],
+                                    transcript: tds[7]?.textContent?.trim() || ""
+                                };
+                            }
+                            return null;
+                        }).filter(Boolean);
+                    }
+                }
+
+                let maxPitch = 48.6;
+                if (timelineData.length > 0) {
+                    const pitches = timelineData.map(t => parseFloat(String(t.pitch_std || 20).replace(/[^0-9.]/g, '')) || 20.0);
+                    maxPitch = Math.max(...pitches);
+                }
+
+                data = {
+                    caseId: src.filename ? src.filename.toUpperCase() : (filenameEl ? filenameEl.textContent : "CASE_EVIDENCE_WIRETAP.WAV"),
+                    channel: "Citizen Distress Wiretap Ingestion",
+                    duration: src.duration_label || src.duration || (durEl ? durEl.textContent : "00:24"),
+                    score: Math.round(src.overall_urgency_score || (scoreEl ? parseFloat(scoreEl.textContent) || 88 : 88)),
+                    priority: src.priority_level || (prioEl ? prioEl.textContent : "CRITICAL"),
+                    advisory: src.summary || (sumEl ? sumEl.textContent : "High probability of active digital arrest coercion. Immediate bank account freeze recommended."),
+                    sha256: realHash,
+                    tags: src.primary_threat_tags || src.tags || ["#DIGITAL_ARREST", "#CBI_IMPERSONATION", "#MONEY_LAUNDERING"],
+                    transcript: src.full_transcript || src.transcript || (transEl ? transEl.textContent.replace(/^"|"$/g, '') : ""),
+                    timeline: timelineData,
+                    emotions: src.peak_emotions || src.emotions || { "Fear & Panic": 0.86, "Hostility & Anger": 0.88, "Sadness & Distress": 0.64, "Baseline Neutral": 0.04 },
+                    dominantEmotion: src.dominant_emotion || "FEAR_AND_PANIC",
+                    pitchStd: maxPitch.toFixed(1),
+                    vocalTremor: (src.voice_tremor || (timelineData && timelineData.some(t => t.voice_tremor))) ? "POSITIVE (DETECTED)" : "NEGATIVE (STABLE)"
+                };
+            } else if (sourceType === "live") {
             const src = explicitData || currentLiveDebriefData || {};
             data = {
                 caseId: src.callId ? `#${src.callId}` : (liveModalCallId ? liveModalCallId.textContent : "#CALL-LIVE-DISPATCH"),
@@ -2219,7 +2269,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const svgTrendMarkup = buildSvgTrendChart(data.timeline, data.score);
 
         // Assemble Full Government Dossier HTML
-        policeDossierPrintContainer.innerHTML = `
+        const dossierBodyContent = `
             <div class="dossier-doc">
                 <!-- TOP HEADER -->
                 <header class="dossier-header">
@@ -2475,11 +2525,203 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        // Trigger native browser print dialog (Save as PDF)
-        setTimeout(() => {
-            window.print();
-        }, 150);
+        // Update in-page container for native print
+        if (policeDossierPrintContainer) {
+            policeDossierPrintContainer.innerHTML = dossierBodyContent;
+        }
+
+        // Create self-contained document for popup window
+        const fullDocHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CyberGuard Forensic Dossier - ${data.caseId}</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #e2e8f0;
+            color: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px 0;
+            font-size: 9pt;
+            line-height: 1.35;
+        }
+
+        .print-toolbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 48px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-print-action {
+            background: #10b981;
+            color: #022c15;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .btn-print-action:hover { background: #34d399; }
+
+        .btn-close-action {
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .dossier-paper {
+            max-width: 210mm;
+            min-height: 297mm;
+            margin: 50px auto 30px auto;
+            background: #ffffff;
+            padding: 12mm 14mm;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+            border-radius: 2px;
+        }
+
+        .dossier-doc { width: 100%; color: #0f172a; }
+        .dossier-header { border-bottom: 2.5px solid #0f172a; padding-bottom: 8px; margin-bottom: 10px; }
+        .dossier-gov-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .dossier-emblem-wrap { width: 52px; height: 52px; flex-shrink: 0; }
+        .dossier-gov-title { text-align: center; flex-grow: 1; }
+        .dossier-gov-title h1 { font-size: 13pt; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #042f2e; margin: 0 0 2px 0; }
+        .dossier-gov-title h2 { font-size: 10pt; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #0f172a; margin: 0 0 2px 0; }
+        .dossier-gov-title h3 { font-size: 8.5pt; font-weight: 600; color: #047857; margin: 0 0 2px 0; letter-spacing: 0.02em; }
+        .dossier-gov-title p { font-size: 6.8pt; color: #64748b; margin: 0; font-style: italic; }
+        .dossier-badge-col { text-align: right; flex-shrink: 0; }
+        .dossier-stamp-box { display: inline-block; border: 1.5px solid #b91c1c; color: #b91c1c; padding: 2.5px 6px; font-size: 6.5pt; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 3px; margin-bottom: 3px; }
+        .dossier-ref-tag { font-family: 'JetBrains Mono', Courier, monospace; font-size: 7.2pt; color: #334155; font-weight: 600; }
+        .dossier-section { margin-bottom: 10px; }
+        .dossier-sec-head { background: #f1f5f9; border-left: 3.5px solid #047857; padding: 3.5px 8px; font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #0f172a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .dossier-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+        .dossier-cell { border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 7px; background: #fafafa; }
+        .dossier-cell-label { font-size: 6.2pt; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 1.5px; letter-spacing: 0.03em; }
+        .dossier-cell-val { font-size: 8pt; font-weight: 700; color: #0f172a; }
+        .dossier-hash-strip { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 3.5px 8px; font-family: 'JetBrains Mono', Courier, monospace; font-size: 6.8pt; color: #334155; word-break: break-all; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .dossier-exec-box { display: grid; grid-template-columns: 130px 1fr; gap: 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; background: #ffffff; }
+        .dossier-score-card { text-align: center; border-right: 1px solid #e2e8f0; padding-right: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .dossier-score-num { font-size: 24pt; font-weight: 900; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-bottom: 2px; }
+        .dossier-score-num.crit { color: #b91c1c; }
+        .dossier-score-num.elev { color: #d97706; }
+        .dossier-score-num.rout { color: #059669; }
+        .dossier-score-badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 6.8pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+        .dossier-score-badge.crit { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .dossier-score-badge.elev { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; }
+        .dossier-score-badge.rout { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .dossier-advisory-content h4 { margin: 0 0 3px 0; font-size: 8pt; font-weight: 800; color: #0f172a; text-transform: uppercase; }
+        .dossier-advisory-content p { margin: 0 0 5px 0; font-size: 7.8pt; line-height: 1.35; color: #1e293b; }
+        .dossier-tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
+        .dossier-tag { display: inline-block; font-size: 6.5pt; font-weight: 700; font-family: 'JetBrains Mono', monospace; padding: 1.5px 5px; border-radius: 3px; border: 1px solid #f87171; background: #fef2f2; color: #991b1b; }
+        .dossier-pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .dossier-pillar-card { border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px 8px; background: #ffffff; }
+        .dossier-pillar-title { font-size: 7.2pt; font-weight: 800; text-transform: uppercase; color: #047857; border-bottom: 1px solid #e2e8f0; padding-bottom: 2.5px; margin-bottom: 5px; letter-spacing: 0.03em; }
+        .dossier-bar-row { margin-bottom: 3.5px; }
+        .dossier-bar-label { display: flex; justify-content: space-between; font-size: 6.2pt; font-weight: 600; color: #475569; margin-bottom: 1px; }
+        .dossier-bar-track { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .dossier-bar-fill { height: 100%; background: #059669; border-radius: 3px; }
+        .dossier-bar-fill.red { background: #dc2626; }
+        .dossier-bar-fill.amber { background: #d97706; }
+        .dossier-bar-fill.green { background: #059669; }
+        .dossier-chart-container { border: 1px solid #e2e8f0; border-radius: 5px; padding: 6px 8px; margin-bottom: 10px; background: #ffffff; }
+        .dossier-svg-chart { width: 100%; height: 80px; display: block; }
+        .dossier-table { width: 100%; border-collapse: collapse; font-size: 7.2pt; margin-bottom: 10px; }
+        .dossier-table th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 3.5px 5px; font-weight: 800; text-transform: uppercase; font-size: 6.2pt; letter-spacing: 0.03em; color: #334155; text-align: left; }
+        .dossier-table td { border: 1px solid #e2e8f0; padding: 3.5px 5px; vertical-align: top; }
+        .dossier-table tr:nth-child(even) td { background: #f8fafc; }
+        .dossier-transcript-box { border: 1px solid #cbd5e1; border-radius: 5px; padding: 7px 9px; background: #fafafa; font-size: 7.8pt; line-height: 1.45; font-style: italic; color: #1e293b; margin-bottom: 10px; }
+        .dossier-cert-box { border: 1.5px solid #0f172a; border-radius: 6px; padding: 7px 10px; background: #fcfcfc; margin-top: 8px; }
+        .dossier-cert-title { font-size: 7.8pt; font-weight: 800; text-transform: uppercase; color: #0f172a; margin-bottom: 3px; text-align: center; letter-spacing: 0.04em; }
+        .dossier-cert-text { font-size: 6.5pt; line-height: 1.35; color: #334155; text-align: justify; margin-bottom: 10px; }
+        .dossier-sign-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: flex-end; }
+        .dossier-sign-col { font-size: 6.8pt; color: #334155; }
+        .dossier-sign-line { border-top: 1px solid #0f172a; padding-top: 3px; margin-top: 20px; font-weight: 700; font-size: 7.2pt; color: #0f172a; }
+        .dossier-stamp-placeholder { width: 65px; height: 65px; border: 1.5px dashed #047857; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 5.2pt; font-weight: 700; color: #047857; text-transform: uppercase; padding: 3px; }
+        .dossier-footer { border-top: 1px solid #cbd5e1; margin-top: 8px; padding-top: 3px; display: flex; justify-content: space-between; font-size: 6.2pt; color: #64748b; }
+
+        @media print {
+            .no-print, .print-toolbar { display: none !important; }
+            body { background: #ffffff !important; padding: 0 !important; }
+            .dossier-paper { margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; min-height: auto !important; }
+            @page { size: A4 portrait; margin: 10mm 12mm 12mm 12mm; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar no-print">
+        <div style="font-size:13px; font-weight:600;">
+            <span>🛡️ CyberGuard Indian Police Evidence Dossier</span>
+            <span style="font-size:11px; color:#94a3b8; margin-left:8px;">[ ${data.caseId} ] · Section 63 BSA, 2023 Compliant</span>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn-print-action">🖨️ Save as PDF / Print</button>
+            <button onclick="window.close()" class="btn-close-action">✕ Close</button>
+        </div>
+    </div>
+    <div class="dossier-paper">
+        ${dossierBodyContent}
+    </div>
+    <script>
+        function triggerPrint() {
+            setTimeout(function() {
+                try { window.print(); } catch (e) {}
+            }, 350);
+        }
+        if (document.readyState === "complete") {
+            triggerPrint();
+        } else {
+            window.addEventListener("load", triggerPrint);
+        }
+    </script>
+</body>
+</html>`;
+
+        // Try opening dedicated printable window
+        let printWin = null;
+        try {
+            printWin = window.open("", "_blank", "width=920,height=850,menubar=no,toolbar=no,location=no,status=no");
+        } catch (e) {
+            printWin = null;
+        }
+
+        if (printWin && !printWin.closed) {
+            printWin.document.open();
+            printWin.document.write(fullDocHtml);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => {
+                try {
+                    printWin.focus();
+                    printWin.print();
+                } catch (e) {}
+            }, 450);
+        } else {
+            // Fallback to in-page print if popups are blocked
+            setTimeout(() => {
+                window.print();
+            }, 150);
+        }
+    } catch (err) {
+        console.error("Error generating police dossier PDF:", err);
+        alert("Failed to generate forensic dossier: " + (err.message || err));
     }
+}
 
     // Attach Event Listeners
     if (btnExportForensicPdf) {
